@@ -175,6 +175,30 @@ class DettesPageTest extends TestCase
         $this->assertStringContainsString("/admin/remboursements/create?agent_id={$agent->id}", $html);
     }
 
+    /** Bouton Détails : renvoie vers la page détail dette de cet agent */
+    public function test_details_button_links_to_agent_debt_detail_page(): void
+    {
+        $agent = $this->creerAgentAvecDette(150_000);
+
+        $html = Livewire::test(DettesPage::class)->html();
+
+        $this->assertStringContainsString(
+            \App\Filament\Pages\AgentDebtDetailPage::getUrl(['agent' => $agent->id]),
+            $html
+        );
+    }
+
+    /** Colonne Date/Heure fusionnée : une seule colonne "Date et heure", pas deux */
+    public function test_date_and_time_are_merged_into_a_single_column(): void
+    {
+        $this->creerAgentAvecDette(75_000);
+
+        $html = Livewire::test(DettesPage::class)->html();
+
+        $this->assertStringContainsString('Date et heure', $html);
+        $this->assertStringNotContainsString('>Heure<', $html);
+    }
+
     /** Recherche par nom d'agent */
     public function test_search_by_agent_name(): void
     {

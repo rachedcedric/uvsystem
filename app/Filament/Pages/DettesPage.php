@@ -130,13 +130,11 @@ class DettesPage extends Page implements HasTable
                     ->alignEnd(),
 
                 Tables\Columns\TextColumn::make('last_debt_at')
-                    ->label('Date')
-                    ->date('d/m/Y')
+                    ->label('Date et heure')
+                    ->formatStateUsing(fn ($state) => $state
+                        ? \Illuminate\Support\Carbon::parse($state)->translatedFormat('d/m/Y').' '.\Illuminate\Support\Carbon::parse($state)->format('H:i')
+                        : '—')
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('last_debt_at')
-                    ->label('Heure')
-                    ->time('H:i'),
 
                 Tables\Columns\TextColumn::make('debt_status')
                     ->label('Statut')
@@ -197,6 +195,12 @@ class DettesPage extends Page implements HasTable
                     ->color('success')
                     ->url(fn (Agent $record) => "/admin/remboursements/create?agent_id={$record->id}")
                     ->visible(fn (Agent $record) => $record->current_debt > 0 && Auth::user()?->can('create_remboursements')),
+
+                Tables\Actions\Action::make('details')
+                    ->label('Détails')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->url(fn (Agent $record) => AgentDebtDetailPage::getUrl(['agent' => $record->id])),
             ])
             ->paginated([10, 25, 50])
             ->defaultPaginationPageOption(10)
