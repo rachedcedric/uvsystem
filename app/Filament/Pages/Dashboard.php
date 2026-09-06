@@ -9,6 +9,7 @@ use App\Filament\Widgets\MonthlyChartWidget;
 use App\Filament\Widgets\MonthlyPerformanceWidget;
 use App\Filament\Widgets\NotificationsRecentesWidget;
 use App\Filament\Widgets\RealTimeActivityWidget;
+use App\Filament\Widgets\RevenueChargesNetWidget;
 use App\Filament\Widgets\TopAgentsWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
 
@@ -27,6 +28,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             MainKpisWidget::class,
+            RevenueChargesNetWidget::class,
             RealTimeActivityWidget::class,
             CaChartWidget::class,
             MonthlyPerformanceWidget::class,

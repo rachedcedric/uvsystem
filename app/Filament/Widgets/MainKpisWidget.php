@@ -2,6 +2,10 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Pages\DettesPage;
+use App\Filament\Resources\ApprovisionnementResource;
+use App\Filament\Resources\RemboursementResource;
+use App\Filament\Resources\UvTransactionResource;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Commission;
@@ -76,6 +80,7 @@ class MainKpisWidget extends BaseWidget
                 $ventesAujourdhui,
                 $ventesHier,
                 'heroicon-o-shopping-cart',
+                url: UvTransactionResource::getUrl('index'),
             ),
 
             $this->buildStat(
@@ -83,6 +88,7 @@ class MainKpisWidget extends BaseWidget
                 $approAujourdhui,
                 $approHier,
                 'heroicon-o-truck',
+                url: ApprovisionnementResource::getUrl('index'),
             ),
 
             $this->buildStat(
@@ -91,6 +97,7 @@ class MainKpisWidget extends BaseWidget
                 $detteHier,
                 'heroicon-o-exclamation-triangle',
                 invertColors: true,
+                url: DettesPage::getUrl(),
             ),
 
             $this->buildStat(
@@ -98,6 +105,7 @@ class MainKpisWidget extends BaseWidget
                 $remboursementsAujourdhui,
                 $remboursementsHier,
                 'heroicon-o-arrow-uturn-left',
+                url: RemboursementResource::getUrl('index'),
             ),
 
             $this->buildStat(
@@ -109,7 +117,7 @@ class MainKpisWidget extends BaseWidget
         ];
     }
 
-    private function buildStat(string $label, float $valeurAujourdhui, float $valeurHier, string $icon, bool $invertColors = false): Stat
+    private function buildStat(string $label, float $valeurAujourdhui, float $valeurHier, string $icon, bool $invertColors = false, ?string $url = null): Stat
     {
         ['pct' => $pct, 'trend' => $trend] = $this->variation($valeurAujourdhui, $valeurHier);
 
@@ -131,11 +139,13 @@ class MainKpisWidget extends BaseWidget
         $sign = $pct > 0 ? '+' : '';
         $description = $sign.number_format($pct, 1, ',', ' ').' % par rapport à hier';
 
-        return Stat::make($label, $this->formatMoney($valeurAujourdhui))
+        $stat = Stat::make($label, $this->formatMoney($valeurAujourdhui))
             ->description($description)
             ->descriptionIcon($trendIcon)
             ->icon($icon)
             ->color($color);
+
+        return $url ? $stat->url($url) : $stat;
     }
 
     /**

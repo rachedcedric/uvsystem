@@ -24,13 +24,12 @@
             <table class="fi-ta-table w-full text-start">
                 <thead>
                     <tr class="border-b border-gray-200 dark:border-white/10">
-                        <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Type</th>
-                        <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Référence</th>
-                        <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Tenant / Utilisateur</th>
-                        <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-end">Montant</th>
-                        <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Date</th>
-                        <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Heure</th>
-                        <th class="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Statut</th>
+                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Type</th>
+                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Référence</th>
+                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Tenant / Utilisateur</th>
+                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-end">Montant</th>
+                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Date et heure</th>
+                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Statut</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-white/5">
@@ -41,27 +40,29 @@
                             $date = \Illuminate\Support\Carbon::parse($item['date_operation']);
                         @endphp
                         <tr wire:key="activity-{{ $item['type'] }}-{{ $item['reference'] }}">
-                            <td class="px-3 py-2.5">
-                                <x-filament::badge :color="$type['color']" :icon="$type['icon']">
+                            <td class="px-2.5 py-1.5">
+                                <x-filament::badge :color="$type['color']" :icon="$type['icon']" size="sm">
                                     {{ $type['label'] }}
                                 </x-filament::badge>
                             </td>
-                            <td class="px-3 py-2.5 font-mono text-sm text-gray-700 dark:text-gray-300">{{ $item['reference'] }}</td>
-                            <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300">{{ $item['tiers'] }}</td>
-                            <td class="px-3 py-2.5 text-end text-sm font-semibold text-gray-950 dark:text-white">
+                            <td class="px-2.5 py-1.5 font-mono text-xs text-gray-700 dark:text-gray-300">{{ $item['reference'] }}</td>
+                            <td class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $item['tiers'] }}</td>
+                            <td class="px-2.5 py-1.5 text-end text-sm font-semibold text-gray-950 dark:text-white">
                                 {{ number_format($item['amount'], 0, ',', ' ') }} FCFA
                             </td>
-                            <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300">{{ $date->translatedFormat('d/m/Y') }}</td>
-                            <td class="px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300">{{ $date->format('H:i') }}</td>
-                            <td class="px-3 py-2.5">
-                                <x-filament::badge :color="$status['color']">
+                            <td class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300">
+                                {{ $date->translatedFormat('d/m/Y') }}
+                                <span class="block text-xs text-gray-500 dark:text-gray-400">{{ $date->format('H:i') }}</span>
+                            </td>
+                            <td class="px-2.5 py-1.5">
+                                <x-filament::badge :color="$status['color']" size="sm">
                                     {{ $status['label'] }}
                                 </x-filament::badge>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-3 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="6" class="px-2.5 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 Aucune activité enregistrée pour le moment.
                             </td>
                         </tr>
