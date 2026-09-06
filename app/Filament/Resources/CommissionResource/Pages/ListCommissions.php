@@ -4,6 +4,8 @@ namespace App\Filament\Resources\CommissionResource\Pages;
 
 use App\Exports\CommissionsExport;
 use App\Filament\Resources\CommissionResource;
+use App\Filament\Widgets\CommissionKpisWidget;
+use App\Filament\Widgets\CommissionMonthlyChartWidget;
 use App\Models\Agent;
 use App\Models\Commission;
 use App\Services\CommissionService;
@@ -23,7 +25,10 @@ class ListCommissions extends ListRecords
 
     protected function getHeaderWidgets(): array
     {
-        return [];
+        return [
+            CommissionKpisWidget::class,
+            CommissionMonthlyChartWidget::class,
+        ];
     }
 
     protected function getHeaderActions(): array

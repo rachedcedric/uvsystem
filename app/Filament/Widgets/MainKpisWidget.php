@@ -8,7 +8,6 @@ use App\Filament\Resources\RemboursementResource;
 use App\Filament\Resources\UvTransactionResource;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
-use App\Models\Commission;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
 use App\Services\CommissionService;
@@ -64,8 +63,8 @@ class MainKpisWidget extends BaseWidget
         $remboursementsHier = (float) Remboursement::whereDate('payment_date', $yesterday)->sum('amount');
 
         // 6. Commission prévisionnelle (règles de commission réelles, par paliers)
-        $commissionAujourdhui = $this->commissionPourDate($commissionService, $today);
-        $commissionHier = $this->commissionPourDate($commissionService, $yesterday);
+        $commissionAujourdhui = $commissionService->commissionPourJourneeMetier($today);
+        $commissionHier = $commissionService->commissionPourJourneeMetier($yesterday);
 
         return [
             $this->buildStat(
@@ -170,27 +169,6 @@ class MainKpisWidget extends BaseWidget
     private function formatMoney(float $amount): string
     {
         return number_format($amount, 0, ',', ' ').' FCFA';
-    }
-
-    /**
-     * Commission globale du jour donné : la valeur réellement calculée si elle
-     * existe déjà (clôture passée), sinon une projection en direct basée sur le
-     * volume de la période en cours et les mêmes paliers de commission.
-     */
-    private function commissionPourDate(CommissionService $service, Carbon $date): float
-    {
-        if (Commission::existeCommissionGlobalePour($date)) {
-            return (float) Commission::getCommissionGlobalePour($date)->commission_globale;
-        }
-
-        [$debut, $fin] = $service->getPeriodeVentes($date);
-
-        $volume = (float) UvTransaction::where('transaction_type', 'distribution')
-            ->where('status', '!=', 'cancelled')
-            ->whereBetween('created_at', [$debut, $fin])
-            ->sum('amount');
-
-        return $service->calculerCommissionGlobale($volume);
     }
 
     protected function getHeading(): ?string

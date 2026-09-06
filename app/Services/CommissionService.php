@@ -43,6 +43,38 @@ class CommissionService
     }
 
     /**
+     * Volume brut des ventes (FCFA) d'une journée métier donnée, quelle que
+     * soit la commission qui en résultera. Même fenêtre de temps que
+     * verifierEtCorrigerCommission() (created_at, jamais transaction_date,
+     * pour rester cohérent avec la clôture officielle).
+     */
+    public function volumePourJourneeMetier(Carbon $businessDate): float
+    {
+        [$debut, $fin] = $this->dateResolver->periodFor($businessDate);
+
+        return (float) UvTransaction::where('transaction_type', 'distribution')
+            ->where('status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$debut, $fin])
+            ->sum('amount');
+    }
+
+    /**
+     * Commission globale d'une journée métier donnée : la valeur réellement
+     * clôturée si elle existe déjà, sinon une projection en direct sur le
+     * volume actuellement accumulé pour cette période (mêmes paliers).
+     * Source unique utilisée par le dashboard ("Commission prévisionnelle")
+     * ET la page Commissions ("Aujourd'hui" / "Hier") — jamais deux formules.
+     */
+    public function commissionPourJourneeMetier(Carbon $businessDate): float
+    {
+        if (Commission::existeCommissionGlobalePour($businessDate)) {
+            return (float) Commission::getCommissionGlobalePour($businessDate)->commission_globale;
+        }
+
+        return $this->calculerCommissionGlobale($this->volumePourJourneeMetier($businessDate));
+    }
+
+    /**
      * @deprecated Utiliser CommissionBusinessDateResolver::resolve() directement.
      *             Conservé pour compatibilité (utilisé par MainKpisWidget).
      */

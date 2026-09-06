@@ -101,6 +101,13 @@ class CaChartWidget extends ChartWidget
     {
         return [
             'maintainAspectRatio' => false,
+            // mode 'index' + intersect:false : le tooltip apparaît dès que le
+            // curseur/le doigt est proche d'un point sur l'axe X, sans viser
+            // le pixel exact — essentiel pour un tap fiable sur mobile.
+            'interaction' => [
+                'mode' => 'index',
+                'intersect' => false,
+            ],
             'plugins' => [
                 'legend' => [
                     'display' => false,
