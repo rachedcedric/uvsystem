@@ -76,15 +76,26 @@ class AgentDebtDetailPage extends Page
      */
     public function getSummary(): array
     {
+        return static::summaryFor($this->agent);
+    }
+
+    /**
+     * Statique et paramétrée par agent pour être réutilisable telle quelle
+     * par AgentDebtSummaryWidget, sans dupliquer le calcul.
+     *
+     * @return array{detteDuJour: float, totalDette: float, rembourse: float, resteAPayer: float}
+     */
+    public static function summaryFor(Agent $agent): array
+    {
         $today = app(BusinessPeriodResolver::class)->today();
 
-        $distribueAujourdhui = (float) $this->agent->transactions()
+        $distribueAujourdhui = (float) $agent->transactions()
             ->where('transaction_type', 'distribution')
             ->where('status', '!=', 'cancelled')
             ->whereBetween('transaction_date', [$today['start'], $today['end']])
             ->sum('amount');
 
-        $retourneAujourdhui = (float) $this->agent->transactions()
+        $retourneAujourdhui = (float) $agent->transactions()
             ->where('transaction_type', 'retour')
             ->where('status', '!=', 'cancelled')
             ->whereBetween('transaction_date', [$today['start'], $today['end']])
@@ -92,9 +103,9 @@ class AgentDebtDetailPage extends Page
 
         return [
             'detteDuJour' => $distribueAujourdhui - $retourneAujourdhui,
-            'totalDette' => (float) ($this->agent->solde?->total_uv_distribues ?? $this->agent->current_debt),
-            'rembourse' => (float) ($this->agent->solde?->total_rembourse ?? 0),
-            'resteAPayer' => (float) $this->agent->current_debt,
+            'totalDette' => (float) ($agent->solde?->total_uv_distribues ?? $agent->current_debt),
+            'rembourse' => (float) ($agent->solde?->total_rembourse ?? 0),
+            'resteAPayer' => (float) $agent->current_debt,
         ];
     }
 

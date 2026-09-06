@@ -72,9 +72,12 @@ class DettesPage extends Page implements HasTable
      * Résumé (tuiles en haut de page), toujours calculé sur les dettes
      * actives réelles, indépendamment du filtre courant du tableau.
      *
+     * Statique (au lieu d'une méthode d'instance) pour être réutilisable
+     * telle quelle par DettesGlobalStatsWidget, sans dupliquer le calcul.
+     *
      * @return array{count: int, totalInitial: float, totalRembourse: float, totalReste: float}
      */
-    public function getSummary(): array
+    public static function getSummary(): array
     {
         $agents = static::agentsEndettesQuery()->with('solde')->get();
 
