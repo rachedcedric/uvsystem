@@ -4,6 +4,7 @@ namespace App\Filament\Resources\UvTransactionResource\Pages;
 
 use App\Exports\UvTransactionsExport;
 use App\Filament\Resources\UvTransactionResource;
+use App\Filament\Widgets\Top5AgentsTodayWidget;
 use App\Filament\Widgets\VentesUvStatsWidget;
 use App\Models\Agent;
 use App\Models\UvTransaction;
@@ -22,6 +23,13 @@ class ListUvTransactions extends ListRecords
     {
         return [
             VentesUvStatsWidget::class,
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            Top5AgentsTodayWidget::class,
         ];
     }
 

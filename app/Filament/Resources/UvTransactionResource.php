@@ -262,8 +262,7 @@ class UvTransactionResource extends Resource
                     ->sortable()
                     ->copyable()
                     ->weight('bold')
-                    ->color('primary')
-                    ->description(fn (UvTransaction $record) => $record->created_at->format('d/m/Y à H:i')),
+                    ->color('primary'),
 
                 Tables\Columns\TextColumn::make('agent.name')
                     ->label('Agent')
@@ -282,13 +281,6 @@ class UvTransactionResource extends Resource
                         ? 'heroicon-m-arrow-up-right'
                         : 'heroicon-m-arrow-down-left')
                     ->alignEnd(),
-
-                Tables\Columns\TextColumn::make('solde_uv_avant')
-                    ->label('Solde Avant')
-                    ->formatStateUsing(fn ($state) => $state !== null ? number_format($state, 0, ',', ' ').' FCFA' : 'Non disponible')
-                    ->color(fn ($state) => $state !== null ? 'gray' : 'warning')
-                    ->alignEnd()
-                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('solde_uv_apres')
                     ->label('Solde Après')
@@ -327,7 +319,7 @@ class UvTransactionResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('transaction_date')
-                    ->label('Date')
+                    ->label('Date et heure')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->icon('heroicon-m-calendar')
