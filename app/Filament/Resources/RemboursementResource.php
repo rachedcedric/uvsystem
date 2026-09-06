@@ -179,8 +179,7 @@ class RemboursementResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->copyable()
-                    ->weight('bold')
-                    ->description(fn (Remboursement $record) => 'Créé le '.$record->created_at->format('d/m/Y à H:i')),
+                    ->weight('bold'),
 
                 Tables\Columns\TextColumn::make('agent.name')
                     ->label('Agent')

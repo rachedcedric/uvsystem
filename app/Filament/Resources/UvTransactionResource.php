@@ -156,10 +156,21 @@ class UvTransactionResource extends Resource
 
                         Forms\Components\Radio::make('transaction_type')
                             ->label('Type de transaction')
-                            ->options([
-                                'distribution' => '📤 Distribution (Vente UV à l\'agent)',
-                                'retour' => '📥 Retour (Reprise UV de l\'agent)',
-                            ])
+                            // "Retour" n'est plus proposé à la création (le
+                            // service UvDistributionService::processReturn()
+                            // et tout le calcul de dette/solde associé
+                            // restent intacts) : seule l'option ne s'affiche
+                            // plus dans /admin/uv-transactions/create. Une
+                            // transaction "retour" historique reste éditable
+                            // normalement, l'option réapparaît alors ici.
+                            ->options(fn (?UvTransaction $record): array => $record?->transaction_type === 'retour'
+                                ? [
+                                    'distribution' => '📤 Distribution (Vente UV à l\'agent)',
+                                    'retour' => '📥 Retour (Reprise UV de l\'agent)',
+                                ]
+                                : [
+                                    'distribution' => '📤 Distribution (Vente UV à l\'agent)',
+                                ])
                             ->descriptions([
                                 'distribution' => 'L\'agent reçoit des UV et sa dette augmente',
                                 'retour' => 'L\'agent retourne des UV et sa dette diminue',
