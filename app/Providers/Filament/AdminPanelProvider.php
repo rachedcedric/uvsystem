@@ -1,0 +1,111 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use App\Http\Middleware\Require2FA;
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+class AdminPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->default()
+            ->id('admin')
+            ->path('admin')
+            ->login()
+            ->brandName('MODELEC CI')
+            ->brandLogo(asset('images/logo.png'))
+            ->darkModeBrandLogo(asset('images/logo-dark.png'))
+            ->brandLogoHeight('2.5rem')
+            ->favicon(asset('favicon-32.png'))
+            ->colors([
+                'primary' => Color::Blue,
+                'danger' => Color::Rose,
+                'warning' => Color::Orange,
+                'success' => Color::Emerald,
+                'info' => Color::Sky,
+            ])
+            ->font('Inter')
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Gestion Agents')
+                    ->icon('heroicon-o-users'),
+                NavigationGroup::make()
+                    ->label('Transactions')
+                    ->icon('heroicon-o-currency-dollar'),
+                NavigationGroup::make()
+                    ->label('Gestion des Charges')
+                    ->icon('heroicon-o-receipt-percent'),
+                NavigationGroup::make()
+                    ->label('Gestion Approvisionnement')
+                    ->icon('heroicon-o-truck'),
+                NavigationGroup::make()
+                    ->label('Analytics')
+                    ->icon('heroicon-o-chart-bar'),
+                NavigationGroup::make()
+                    ->label('Mon Compte')
+                    ->icon('heroicon-o-user-circle'),
+                NavigationGroup::make()
+                    ->label('Données')
+                    ->icon('heroicon-o-folder-open'),
+                NavigationGroup::make()
+                    ->label('Gestion des Ventes')
+                    ->icon('heroicon-o-shopping-cart'),
+                NavigationGroup::make()
+                    ->label('Système')
+                    ->icon('heroicon-o-cog-8-tooth'),
+                NavigationGroup::make()
+                    ->label('Paramètres')
+                    ->icon('heroicon-o-cog-6-tooth'),
+                NavigationGroup::make()
+                    ->label('Administration')
+                    ->icon('heroicon-o-wrench-screwdriver'),
+            ])
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarFullyCollapsibleOnDesktop()
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->globalSearchFieldKeyBindingSuffix()
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            // App\Filament\Pages\Dashboard (notre page d'accueil personnalisée)
+            // vit dans ce dossier et est donc récupérée automatiquement ici,
+            // sans registration explicite (qui la dupliquerait).
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            // Enregistre tous les widgets du dossier auprès de Livewire (y
+            // compris ceux utilisés uniquement sur d'autres pages, ex:
+            // RemboursementsStatsWidget). Le tableau de bord lui-même
+            // n'affiche que le sous-ensemble curé défini dans
+            // App\Filament\Pages\Dashboard::getWidgets().
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+                // Require2FA::class, // 2FA désactivé temporairement
+            ]);
+    }
+}

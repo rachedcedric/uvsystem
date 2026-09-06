@@ -1,0 +1,144 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Models\User;
+
+class RolesAndPermissionsSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // ============================================
+        // Define Permissions
+        // ============================================
+
+        $permissions = [
+            // Agent Permissions
+            'view_agents',
+            'create_agents',
+            'edit_agents',
+            'delete_agents',
+            'export_agents',
+            'import_agents',
+            
+            // Transaction Permissions
+            'view_transactions',
+            'create_transactions',
+            'edit_transactions',
+            'delete_transactions',
+            'export_transactions',
+            'import_transactions',
+            
+            // Remboursement Permissions
+            'view_remboursements',
+            'create_remboursements',
+            'edit_remboursements',
+            'delete_remboursements',
+            'export_remboursements',
+            'import_remboursements',
+            
+            // Fournisseur Permissions
+            'view_fournisseurs',
+            'create_fournisseurs',
+            'edit_fournisseurs',
+            'delete_fournisseurs',
+            
+            // Dashboard & Reports
+            'view_dashboard',
+            'view_statistics',
+            'view_reports',
+            'export_reports',
+            
+            // Activity Log
+            'view_activity_logs',
+            
+            // Settings & Admin
+            'manage_settings',
+            'manage_users',
+            'manage_roles',
+            
+            // API Access
+            'access_api',
+        ];
+
+        // Create all permissions
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // ============================================
+        // Create Roles with Permissions
+        // ============================================
+
+        // Master (Super Admin) - Full access
+        $masterRole = Role::firstOrCreate(['name' => 'master']);
+        $masterRole->givePermissionTo(Permission::all());
+
+        // Admin - All except role management
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole->givePermissionTo([
+            'view_agents', 'create_agents', 'edit_agents', 'delete_agents', 'export_agents', 'import_agents',
+            'view_transactions', 'create_transactions', 'edit_transactions', 'export_transactions', 'import_transactions',
+            'view_remboursements', 'create_remboursements', 'edit_remboursements', 'export_remboursements', 'import_remboursements',
+            'view_fournisseurs', 'create_fournisseurs', 'edit_fournisseurs', 'delete_fournisseurs',
+            'view_dashboard', 'view_statistics', 'view_reports', 'export_reports',
+            'view_activity_logs',
+            'manage_settings',
+            'access_api',
+        ]);
+
+        // Comptable - View + Financial operations
+        $comptableRole = Role::firstOrCreate(['name' => 'comptable']);
+        $comptableRole->givePermissionTo([
+            'view_agents', 'export_agents',
+            'view_transactions', 'export_transactions',
+            'view_remboursements', 'create_remboursements', 'export_remboursements',
+            'view_fournisseurs',
+            'view_dashboard', 'view_statistics', 'view_reports', 'export_reports',
+        ]);
+
+        // Commercial - Agent & Transaction focus
+        $commercialRole = Role::firstOrCreate(['name' => 'commercial']);
+        $commercialRole->givePermissionTo([
+            'view_agents', 'create_agents', 'edit_agents',
+            'view_transactions', 'create_transactions',
+            'view_remboursements',
+            'view_fournisseurs',
+            'view_dashboard',
+        ]);
+
+        // Agent (self-service portal - for future use)
+        $agentRole = Role::firstOrCreate(['name' => 'agent']);
+        $agentRole->givePermissionTo([
+            'view_dashboard',
+            'access_api',
+        ]);
+
+        // ============================================
+        // Assign Master Role to First User
+        // ============================================
+
+        $firstUser = User::first();
+        if ($firstUser && !$firstUser->hasRole('master')) {
+            $firstUser->assignRole('master');
+        }
+
+        $this->command->info('Roles and Permissions created successfully!');
+        $this->command->table(
+            ['Role', 'Permissions Count'],
+            [
+                ['master', Permission::count()],
+                ['admin', $adminRole->permissions->count()],
+                ['comptable', $comptableRole->permissions->count()],
+                ['commercial', $commercialRole->permissions->count()],
+                ['agent', $agentRole->permissions->count()],
+            ]
+        );
+    }
+}
