@@ -66,7 +66,7 @@ class DashboardWidgetsSmokeTest extends TestCase
 
         $agent = Agent::factory()->create(['status' => 'active']);
 
-        UvTransaction::create([
+        $uvTransaction = UvTransaction::create([
             'agent_id' => $agent->id,
             'fournisseur_id' => $fournisseur->id,
             'amount' => 1_500_000,
@@ -102,7 +102,7 @@ class DashboardWidgetsSmokeTest extends TestCase
 
         Livewire::test(\App\Filament\Widgets\RealTimeActivityWidget::class)
             ->assertSee('Activité en temps réel')
-            ->assertSee('UV-');
+            ->assertSee($uvTransaction->reference);
 
         Livewire::test(\App\Filament\Widgets\CaChartWidget::class)
             ->assertSee('Chiffre d\'Affaires');

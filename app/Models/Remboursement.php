@@ -57,7 +57,7 @@ class Remboursement extends Model
 
         static::creating(function ($remboursement) {
             if (! $remboursement->reference) {
-                $remboursement->reference = 'RMB-'.strtoupper(uniqid());
+                $remboursement->reference = app(\App\Services\ShortReferenceGenerator::class)->generate('R', 'remboursements');
             }
             if (! $remboursement->payment_date) {
                 $remboursement->payment_date = now();

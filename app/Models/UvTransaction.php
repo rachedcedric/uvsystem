@@ -81,7 +81,7 @@ class UvTransaction extends Model
 
         static::creating(function ($transaction) {
             if (! $transaction->reference) {
-                $transaction->reference = 'UV-'.strtoupper(uniqid());
+                $transaction->reference = app(\App\Services\ShortReferenceGenerator::class)->generate('V', 'uv_transactions');
             }
             if (! $transaction->transaction_date) {
                 $transaction->transaction_date = now();

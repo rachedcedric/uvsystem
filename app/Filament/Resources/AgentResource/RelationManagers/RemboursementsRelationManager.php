@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\AgentResource\RelationManagers;
 
+use App\Models\Agent;
+use App\Models\Remboursement;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
 
 class RemboursementsRelationManager extends RelationManager
 {
@@ -84,8 +87,32 @@ class RemboursementsRelationManager extends RelationManager
                     ->label('Ajouter Remboursement'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                // Verrou sur l'agent + transaction : RemboursementObserver
+                // recalcule ensuite AgentSolde/current_debt à partir d'un
+                // état garanti non concurrent (même garantie que
+                // EditRemboursement::handleRecordUpdate()).
+                Tables\Actions\EditAction::make()
+                    ->using(function (Remboursement $record, array $data): Remboursement {
+                        return DB::transaction(function () use ($record, $data) {
+                            if ($record->agent_id) {
+                                Agent::whereKey($record->agent_id)->lockForUpdate()->first();
+                            }
+
+                            $record->update($data);
+
+                            return $record;
+                        });
+                    }),
+                Tables\Actions\DeleteAction::make()
+                    ->using(function (Remboursement $record): void {
+                        DB::transaction(function () use ($record) {
+                            if ($record->agent_id) {
+                                Agent::whereKey($record->agent_id)->lockForUpdate()->first();
+                            }
+
+                            $record->delete();
+                        });
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

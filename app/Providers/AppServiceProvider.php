@@ -10,6 +10,7 @@ use App\Models\VenteUv;
 use App\Observers\ApprovisionnementObserver;
 use App\Observers\CommissionObserver;
 use App\Observers\CommissionRecalculationObserver;
+use App\Observers\LedgerCascadeObserver;
 use App\Observers\RemboursementAgentObserver;
 use App\Observers\RemboursementObserver;
 use App\Observers\UvTransactionObserver;
@@ -44,6 +45,12 @@ class AppServiceProvider extends ServiceProvider
         // Détecte les ventes ajoutées/modifiées/supprimées après la clôture
         // d'une journée de commission et déclenche sa correction
         UvTransaction::observe(CommissionRecalculationObserver::class);
+
+        // Reconstruit le grand livre partagé (solde_uv_avant/apres) quand
+        // une vente/retour ou un approvisionnement passé est édité,
+        // supprimé, restauré, ou créé avec une date antidatée.
+        UvTransaction::observe(LedgerCascadeObserver::class);
+        Approvisionnement::observe(LedgerCascadeObserver::class);
 
         // Observer pour mise à jour automatique du solde Master
         Approvisionnement::observe(ApprovisionnementObserver::class);
