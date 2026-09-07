@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Pages\NotificationsPage;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -14,7 +15,7 @@ class NotificationsRecentesWidget extends BaseWidget
 
     protected static ?int $sort = 14;
 
-    protected int|string|array $columnSpan = 1;
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?string $pollingInterval = '15s';
 
@@ -32,7 +33,6 @@ class NotificationsRecentesWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('data.title')
                     ->label('Notification')
                     ->wrap()
-                    ->description(fn ($record) => $record->data['body'] ?? null)
                     ->icon(fn ($record) => $record->read_at ? 'heroicon-o-check' : 'heroicon-o-bell')
                     ->color(fn ($record) => $record->read_at ? 'gray' : 'primary'),
 
@@ -85,7 +85,7 @@ class NotificationsRecentesWidget extends BaseWidget
                     ->icon('heroicon-o-arrow-right')
                     ->color('primary')
                     ->size('sm')
-                    ->url('/admin/notifications'),
+                    ->url(NotificationsPage::getUrl()),
             ]);
     }
 }
