@@ -38,14 +38,29 @@ class DebtReminderNotification extends Notification
         $reste = number_format($this->resteDu, 0, ',', ' ');
 
         return [
+            // Champs attendus par Filament\Notifications\Notification::fromArray()
+            // (vendor/filament/notifications/src/Notification.php) : sans
+            // 'format' => 'filament', la cloche du panel (qui filtre les
+            // notifications avec `where('data->format', 'filament')`, voir
+            // Filament\Notifications\Livewire\DatabaseNotifications::getNotificationsQuery())
+            // ignore purement et simplement cette notification, même si elle
+            // existe bien en base et s'affiche dans le widget "Notifications
+            // Récentes" (qui lit data.title directement, sans ce filtre).
+            'format' => 'filament',
             'title' => "⚠️ Dette en cours — Agent : {$this->agent->name} — Reste à payer : {$reste} FCFA",
-            'body' => sprintf(
-                "Dette initiale : %s FCFA\nDéjà remboursé : %s FCFA\nReste à payer : %s FCFA\nStatut : %s",
-                number_format($this->totalInitial, 0, ',', ' '),
-                number_format($this->totalRembourse, 0, ',', ' '),
-                $reste,
-                $this->debtStatusLabel,
-            ),
+            'body' => null,
+            'icon' => 'heroicon-o-exclamation-triangle',
+            'iconColor' => 'warning',
+            'color' => 'warning',
+            'status' => 'warning',
+            'duration' => 'persistent',
+            'view' => null,
+            'viewData' => [],
+            'actions' => [],
+
+            // Champs métier propres, lus directement par
+            // NotificationsRecentesWidget (data.title/data.url) et
+            // NotificationsPage::lastReminderAt() (data->agent_id).
             'url' => "/admin/remboursements/create?agent_id={$this->agent->id}",
             'type' => 'warning',
             'notification_kind' => 'debt_reminder',

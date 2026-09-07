@@ -94,6 +94,32 @@ class DebtReminderTest extends TestCase
         $this->assertSame($agent->id, $notif->data['agent_id']);
         $this->assertSame('En cours', $notif->data['debt_status_label']);
         $this->assertSame($this->admin->id, $notif->notifiable_id);
+
+        // Sans data->format === 'filament', la cloche du panel (topbar) ignore
+        // purement et simplement cette notification : voir
+        // Filament\Notifications\Livewire\DatabaseNotifications::getNotificationsQuery(),
+        // qui filtre explicitement sur `where('data->format', 'filament')`.
+        $this->assertSame('filament', $notif->data['format']);
+        $this->assertSame(
+            1,
+            DatabaseNotification::where('notifiable_id', $this->admin->id)
+                ->where('data->format', 'filament')
+                ->count()
+        );
+    }
+
+    public function test_notifications_page_lists_agents_with_active_debt(): void
+    {
+        $agent = $this->creerAgentAvecDette(150_000, 'KOFFI Jean');
+        $this->service->checkAndSendDebtReminders();
+
+        $this->actingAs($this->admin)
+            ->get('/admin/notifications')
+            ->assertOk()
+            ->assertSee($agent->name)
+            ->assertSee('150 000 FCFA')
+            ->assertSee('15/06/2026 à 08:00')
+            ->assertSee('Prochain rappel');
     }
 
     /** Dette partiellement remboursée : toujours éligible, statut adapté */
@@ -178,6 +204,20 @@ class DebtReminderTest extends TestCase
         $result = $this->service->checkAndSendDebtReminders();
 
         $this->assertSame(1, $result['sent']);
+        $this->assertSame(2, DatabaseNotification::where('type', DebtReminderNotification::class)->count());
+    }
+
+    public function test_admin_fallback_runs_once_per_two_hour_cycle(): void
+    {
+        $this->creerAgentAvecDette(150_000);
+
+        $first = $this->service->checkAndSendDebtRemindersOncePerCycle(Carbon::parse('2026-06-15 08:00:00'));
+        $sameCycle = $this->service->checkAndSendDebtRemindersOncePerCycle(Carbon::parse('2026-06-15 09:30:00'));
+        $nextCycle = $this->service->checkAndSendDebtRemindersOncePerCycle(Carbon::parse('2026-06-15 10:00:00'));
+
+        $this->assertSame(1, $first['sent']);
+        $this->assertNull($sameCycle);
+        $this->assertSame(1, $nextCycle['sent']);
         $this->assertSame(2, DatabaseNotification::where('type', DebtReminderNotification::class)->count());
     }
 
