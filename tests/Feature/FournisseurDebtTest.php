@@ -144,7 +144,7 @@ describe('DettesFournisseursPage and FournisseurDebtStatsWidget', function () {
             ->assertSee('300 000 FCFA');
     });
 
-    it('lists credit suppliers with an Encaisser action linking to the create form', function () {
+    it('lists credit suppliers with a Payer action linking to the create form', function () {
         $admin = fournisseurDebtAdmin();
         $this->actingAs($admin);
         $fournisseur = creditFournisseur('Grossiste XYZ');

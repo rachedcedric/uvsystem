@@ -117,7 +117,7 @@ class DettesFournisseursPage extends Page implements HasTable
             ])
             ->actions([
                 Tables\Actions\Action::make('encaisser')
-                    ->label('Encaisser')
+                    ->label('Payer')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
                     ->url(fn (Fournisseur $record) => RemboursementFournisseurResource::getUrl('create', ['fournisseur_id' => $record->id]))
