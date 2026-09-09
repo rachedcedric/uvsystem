@@ -88,19 +88,6 @@ class DettesFournisseursPage extends Page implements HasTable
                     ->weight('bold')
                     ->description(fn (Fournisseur $record) => $record->contact ?? ''),
 
-                Tables\Columns\TextColumn::make('dette_totale')
-                    ->label('Dette totale')
-                    ->getStateUsing(fn (Fournisseur $record) => $service->soldeTotals($record)['distribue'])
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 0, ',', ' ').' FCFA')
-                    ->alignEnd(),
-
-                Tables\Columns\TextColumn::make('rembourse')
-                    ->label('Remboursé')
-                    ->getStateUsing(fn (Fournisseur $record) => $service->soldeTotals($record)['rembourse'])
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 0, ',', ' ').' FCFA')
-                    ->color('success')
-                    ->alignEnd(),
-
                 Tables\Columns\TextColumn::make('reste')
                     ->label('Reste à payer')
                     ->getStateUsing(fn (Fournisseur $record) => $service->detteRestante($record))
