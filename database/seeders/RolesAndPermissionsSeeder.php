@@ -86,6 +86,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'delete_charges' => 'Supprimer des charges',
             'export_charges' => 'Exporter les charges',
 
+            // === MA CAISSE (liquidité manuelle) ===
+            'view_caisse' => 'Voir la caisse',
+            'create_caisse' => 'Ajouter des mouvements de caisse',
+            'edit_caisse' => 'Modifier des mouvements de caisse',
+            'delete_caisse' => 'Supprimer des mouvements de caisse',
+
             // === FINANCES (Comptable) ===
             'view_finances' => 'Voir les finances',
             'manage_finances' => 'Gérer les finances',
@@ -156,6 +162,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_soldes',
             'edit_soldes',
             'reconcile_accounts',
+
+            // Ma caisse (gestion complète)
+            'view_caisse',
+            'create_caisse',
+            'edit_caisse',
+            'delete_caisse',
 
             // Remboursements (gestion complète)
             'view_remboursements',
