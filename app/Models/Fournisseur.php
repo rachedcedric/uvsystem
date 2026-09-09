@@ -37,6 +37,21 @@ class Fournisseur extends Model
         return $this->hasMany(Approvisionnement::class);
     }
 
+    public function remboursementsFournisseurs(): HasMany
+    {
+        return $this->hasMany(RemboursementFournisseur::class);
+    }
+
+    /**
+     * Fournisseurs qui approvisionnent à crédit (à rembourser), à la
+     * différence d'un fournisseur "Banque" payé comptant. Base unique
+     * utilisée par FournisseurDebtService et DettesFournisseursPage.
+     */
+    public function scopeCreditFournisseurs($query)
+    {
+        return $query->where('type', 'AGENT_PREMIUM');
+    }
+
     // Activity Log
     public function getActivitylogOptions(): LogOptions
     {

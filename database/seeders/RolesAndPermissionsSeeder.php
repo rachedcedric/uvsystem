@@ -65,6 +65,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'delete_remboursements' => 'Supprimer des remboursements',
             'export_remboursements' => 'Exporter les remboursements',
 
+            // === REMBOURSEMENTS FOURNISSEURS (dettes envers les fournisseurs Agent Premium) ===
+            'view_remboursements_fournisseurs' => 'Voir les remboursements fournisseurs',
+            'create_remboursements_fournisseurs' => 'Créer des remboursements fournisseurs',
+            'edit_remboursements_fournisseurs' => 'Modifier des remboursements fournisseurs',
+            'delete_remboursements_fournisseurs' => 'Supprimer des remboursements fournisseurs',
+            'export_remboursements_fournisseurs' => 'Exporter les remboursements fournisseurs',
+
             // === COMMISSIONS ===
             'view_commissions' => 'Voir les commissions',
             'create_commissions' => 'Créer des commissions',
@@ -156,6 +163,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit_remboursements',
             'export_remboursements',
 
+            // Remboursements fournisseurs (gestion complète)
+            'view_remboursements_fournisseurs',
+            'create_remboursements_fournisseurs',
+            'edit_remboursements_fournisseurs',
+            'export_remboursements_fournisseurs',
+
             // Commissions (gestion complète)
             'view_commissions',
             'create_commissions',
@@ -225,6 +238,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Remboursements (lecture seule)
             'view_remboursements',
+
+            // Remboursements fournisseurs (lecture seule)
+            'view_remboursements_fournisseurs',
 
             // Commissions (lecture seule)
             'view_commissions',
