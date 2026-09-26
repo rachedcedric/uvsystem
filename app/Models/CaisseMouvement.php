@@ -26,6 +26,7 @@ class CaisseMouvement extends Model
     protected $fillable = [
         'user_id',
         'type',
+        'caisse_categorie_id',
         'amount',
         'libelle',
         'notes',
@@ -41,6 +42,11 @@ class CaisseMouvement extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function categorie(): BelongsTo
+    {
+        return $this->belongsTo(CaisseCategorie::class, 'caisse_categorie_id');
     }
 
     protected static function boot()

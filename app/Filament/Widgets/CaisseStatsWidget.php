@@ -2,13 +2,14 @@
 
 namespace App\Filament\Widgets;
 
+use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
- * 3 tuiles de "Ma Caisse" : Solde actuel / Total entrées / Total sorties.
- * Aucun calcul propre : délègue entièrement à CaisseService.
+ * "Solde aujourd'hui" / "Solde hier" : journées de caisse 08h30 → 08h29:59.
+ * Aucun calcul propre : tout vient de CaisseService.
  */
 class CaisseStatsWidget extends BaseWidget
 {
@@ -16,30 +17,27 @@ class CaisseStatsWidget extends BaseWidget
 
     protected function getColumns(): int
     {
-        return 3;
+        return 2;
     }
 
     protected function getStats(): array
     {
-        $totals = app(CaisseService::class)->totals();
+        $service = app(CaisseService::class);
+        $periods = app(CaissePeriodResolver::class);
+
+        $hier = $periods->yesterdayDate();
+        $today = $service->soldeAujourdhui();
 
         return [
-            Stat::make('Solde actuel', $this->formatMoney($totals['solde']))
+            Stat::make("Solde aujourd'hui", CaisseService::fcfa($today))
+                ->description('Journée de caisse : 08h30 à 08h29')
                 ->icon('heroicon-o-wallet')
-                ->color($totals['solde'] >= 0 ? 'success' : 'danger'),
+                ->color(bccomp($today, '0', 2) >= 0 ? 'success' : 'danger'),
 
-            Stat::make('Total entrées', $this->formatMoney($totals['entrees']))
-                ->icon('heroicon-o-arrow-trending-up')
-                ->color('success'),
-
-            Stat::make('Total sorties', $this->formatMoney($totals['sorties']))
-                ->icon('heroicon-o-arrow-trending-down')
-                ->color('danger'),
+            Stat::make('Solde hier', CaisseService::fcfa($service->soldeHier()))
+                ->description($hier->translatedFormat('j F Y'))
+                ->icon('heroicon-o-calendar-days')
+                ->color('gray'),
         ];
-    }
-
-    private function formatMoney(float $amount): string
-    {
-        return number_format($amount, 0, ',', ' ').' FCFA';
     }
 }

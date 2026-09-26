@@ -2,29 +2,32 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\CaisseCategorieResource;
+use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
+use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
+use App\Support\Money;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Tables;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Url;
+use Livewire\WithPagination;
 
 /**
- * "Ma Caisse" : liquidité manuelle (entrées/sorties saisies à la main, avec
- * un libellé), avec un historique permettant de connaître le solde de la
- * caisse à n'importe quel moment. Aucune colonne de solde mise en cache :
- * le solde avant/après de chaque mouvement est recalculé en direct par
- * CaisseService::historyWithRunningBalance() (voir ce service pour le
- * détail) — même principe que les autres soldes du projet.
+ * "Ma Caisse" : historique regroupé par journée de caisse (08h30 → 08h29:59,
+ * Africa/Abidjan). Tout calcul passe par CaisseService (source unique).
  */
-class MaCaissePage extends Page implements HasTable
+class MaCaissePage extends Page
 {
-    use InteractsWithTable;
+    use WithPagination;
 
     protected static ?string $navigationIcon = 'heroicon-o-wallet';
 
@@ -34,197 +37,265 @@ class MaCaissePage extends Page implements HasTable
 
     protected static ?string $title = 'Ma Caisse';
 
-    // Pas de groupe : la caisse est un suivi personnel de liquidité,
-    // indépendant des domaines Agents/Fournisseurs/Transactions déjà
-    // groupés — elle apparaît donc comme un lien de premier niveau.
     protected static ?string $navigationGroup = null;
 
     protected static ?int $navigationSort = 2;
 
     protected static string $view = 'filament.pages.ma-caisse-page';
 
+    #[Url]
+    public string $search = '';
+
+    #[Url]
+    public ?string $dateFrom = null;
+
+    #[Url]
+    public ?string $dateTo = null;
+
+    public int $statsKey = 0;
+
     public static function canAccess(): bool
     {
         return (bool) Auth::user()?->can('view_caisse');
     }
 
-    /**
-     * Calculé une seule fois par rendu (pas par ligne du tableau) : le solde
-     * avant/après de chaque mouvement dépend de tout l'historique, jamais
-     * seulement de la page affichée.
-     *
-     * @return array<int, array{solde_avant: float, solde_apres: float}>
-     */
-    public function runningBalances(): array
+    public function updatedSearch(): void
     {
-        return app(CaisseService::class)
-            ->historyWithRunningBalance()
-            ->keyBy(fn (array $entry) => $entry['mouvement']->id)
-            ->map(fn (array $entry) => [
-                'solde_avant' => $entry['solde_avant'],
-                'solde_apres' => $entry['solde_apres'],
-            ])
-            ->all();
+        $this->resetPage();
     }
 
-    public static function mouvementFormSchema(): array
+    public function updatedDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedDateTo(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset('search', 'dateFrom', 'dateTo');
+        $this->resetPage();
+    }
+
+    private function parseDate(?string $value): ?Carbon
+    {
+        if (! $value) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value, CaissePeriodResolver::TIMEZONE)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    public function summaries()
+    {
+        return app(CaisseService::class)->daySummaries(
+            $this->parseDate($this->dateFrom),
+            $this->parseDate($this->dateTo),
+            $this->search,
+        );
+    }
+
+    public function getPaginatedDays(): LengthAwarePaginator
+    {
+        $all = $this->summaries();
+        $perPage = 10;
+        $page = max(1, $this->getPage());
+
+        return new LengthAwarePaginator(
+            $all->forPage($page, $perPage)->values(),
+            $all->count(),
+            $perPage,
+            $page,
+            ['path' => static::getUrl()]
+        );
+    }
+
+    /** @return array<int, string> */
+    public static function activeCategoryOptions(): array
+    {
+        return CaisseCategorie::active()->orderBy('sort_order')->orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    public static function mouvementsFormSchema(): array
     {
         return [
-            Forms\Components\Section::make('Mouvement de caisse')
+            Forms\Components\Repeater::make('mouvements')
+                ->label('')
                 ->schema([
-                    Forms\Components\Radio::make('type')
+                    Forms\Components\Select::make('type')
                         ->label('Type')
                         ->options([
-                            CaisseMouvement::TYPE_ENTREE => '💵 Entrée (ajout de liquidité)',
-                            CaisseMouvement::TYPE_SORTIE => '💸 Sortie (retrait de liquidité)',
+                            CaisseMouvement::TYPE_ENTREE => 'Entrée',
+                            CaisseMouvement::TYPE_SORTIE => 'Sortie',
                         ])
                         ->default(CaisseMouvement::TYPE_ENTREE)
-                        ->required()
-                        ->inline(false)
-                        ->columnSpanFull(),
+                        ->required()->native(false)->live()
+                        ->columnSpan(2),
+
+                    Forms\Components\Select::make('caisse_categorie_id')
+                        ->label('Catégorie caisse')
+                        ->options(fn () => static::activeCategoryOptions())
+                        ->required()->native(false)->searchable()
+                        ->createOptionForm([
+                            Forms\Components\TextInput::make('name')
+                                ->label('Nom de la catégorie')->required()->maxLength(100)
+                                ->rules([fn () => function (string $attribute, $value, \Closure $fail) {
+                                    if (CaisseCategorie::nameIsTaken((string) $value)) {
+                                        $fail('Une catégorie portant ce nom existe déjà.');
+                                    }
+                                }]),
+                            Forms\Components\ColorPicker::make('color')->label('Couleur (optionnel)')->hex(),
+                        ])
+                        ->createOptionModalHeading('Nouvelle catégorie caisse')
+                        ->createOptionAction(fn (Forms\Components\Actions\Action $action) => $action
+                            ->modalSubmitActionLabel('Ajouter')
+                            ->visible(fn () => (bool) Auth::user()?->can('create_caisse')))
+                        ->createOptionUsing(fn (array $data): int => CaisseCategorie::create([
+                            'name' => $data['name'],
+                            'color' => $data['color'] ?? null,
+                            'sort_order' => ((int) CaisseCategorie::max('sort_order')) + 1,
+                            'is_active' => true,
+                        ])->id)
+                        ->suffixAction(
+                            Forms\Components\Actions\Action::make('manageCategories')
+                                ->icon('heroicon-o-cog-6-tooth')
+                                ->tooltip('Gérer les catégories')
+                                ->url(CaisseCategorieResource::getUrl(), shouldOpenInNewTab: true)
+                        )
+                        ->columnSpan(4),
 
                     Forms\Components\TextInput::make('libelle')
-                        ->label('Libellé')
-                        ->required()
-                        ->maxLength(255)
-                        ->placeholder('Ex : Dépôt espèces, Achat fournitures...'),
+                        ->label('Libellé')->required()->maxLength(255)
+                        ->placeholder('Libellé du mouvement')
+                        ->columnSpan(3),
 
                     Forms\Components\TextInput::make('amount')
-                        ->label('Montant')
-                        ->money(min: 1)
-                        ->required(),
-
-                    Forms\Components\DateTimePicker::make('date_mouvement')
-                        ->label('Date et heure')
-                        ->required()
-                        ->default(now())
-                        ->maxDate(now())
-                        ->seconds(false)
-                        ->native(false),
-
-                    Forms\Components\Textarea::make('notes')
-                        ->label('Notes (facultatif)')
-                        ->rows(2)
-                        ->columnSpanFull(),
+                        ->label('Montant (FCFA)')
+                        ->money(min: 1)->required()->live(onBlur: true)
+                        ->columnSpan(3),
                 ])
-                ->columns(2),
+                ->columns(12)
+                ->defaultItems(1)
+                ->minItems(1)
+                ->addActionLabel('+ Ajouter une ligne')
+                ->deleteAction(fn (Forms\Components\Actions\Action $action) => $action->label('Supprimer la ligne'))
+                ->live()
+                ->reorderable(false),
+
+            Forms\Components\DatePicker::make('caisse_date')
+                ->label('Date de caisse')
+                ->default(fn () => app(CaissePeriodResolver::class)->currentDate()->toDateString())
+                ->maxDate(fn () => app(CaissePeriodResolver::class)->currentDate()->toDateString())
+                ->required()->native(false)->displayFormat('d/m/Y'),
+
+            Forms\Components\Grid::make(3)->schema([
+                Forms\Components\Placeholder::make('total_entrees')->label('Total entrées')
+                    ->content(fn (Get $get) => CaisseService::fcfa(static::sumLines($get('mouvements'), CaisseMouvement::TYPE_ENTREE))),
+                Forms\Components\Placeholder::make('total_sorties')->label('Total sorties')
+                    ->content(fn (Get $get) => CaisseService::fcfa(static::sumLines($get('mouvements'), CaisseMouvement::TYPE_SORTIE))),
+                Forms\Components\Placeholder::make('solde_calcule')->label('Solde calculé')
+                    ->content(fn (Get $get) => CaisseService::fcfa(
+                        static::sumLines($get('mouvements'), CaisseMouvement::TYPE_ENTREE) - static::sumLines($get('mouvements'), CaisseMouvement::TYPE_SORTIE)
+                    )),
+            ]),
         ];
     }
 
-    public function table(Table $table): Table
+    public static function sumLines(?array $lignes, string $type): float
     {
-        $balances = $this->runningBalances();
+        return collect($lignes ?? [])
+            ->where('type', $type)
+            ->sum(fn ($l) => Money::toFloat($l['amount'] ?? 0));
+    }
 
-        return $table
-            ->query(CaisseMouvement::query()->with('user'))
-            ->columns([
-                Tables\Columns\TextColumn::make('date_mouvement')
-                    ->label('Date et heure')
-                    ->formatStateUsing(fn ($state) => $state
-                        ? \Illuminate\Support\Carbon::parse($state)->translatedFormat('d/m/Y').' '.\Illuminate\Support\Carbon::parse($state)->format('H:i')
-                        : '—')
-                    ->sortable(),
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('add')
+                ->label('Ajouter un mouvement')
+                ->icon('heroicon-o-plus')
+                ->modalHeading('Ajouter des mouvements')
+                ->modalDescription('Enregistrez tous les mouvements de la caisse')
+                ->modalWidth('5xl')
+                ->modalSubmitActionLabel('Enregistrer les mouvements')
+                ->modalCancelActionLabel('Annuler')
+                ->form(static::mouvementsFormSchema())
+                ->visible(fn () => (bool) Auth::user()?->can('create_caisse'))
+                ->action(function (array $data, Action $action) {
+                    try {
+                        $created = app(CaisseService::class)->enregistrerLot($data['mouvements'], $data['caisse_date'] ?? null);
+                    } catch (ValidationException $e) {
+                        Notification::make()->danger()->title('Enregistrement impossible')
+                            ->body(collect($e->errors())->flatten()->implode(' '))->persistent()->send();
+                        $action->halt();
 
-                Tables\Columns\TextColumn::make('type')
-                    ->label('Type')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state) => $state === CaisseMouvement::TYPE_ENTREE ? 'Entrée' : 'Sortie')
-                    ->color(fn (string $state) => $state === CaisseMouvement::TYPE_ENTREE ? 'success' : 'danger'),
+                        return;
+                    }
 
-                Tables\Columns\TextColumn::make('libelle')
-                    ->label('Libellé')
-                    ->searchable()
-                    ->weight('bold')
-                    ->description(fn (CaisseMouvement $record) => $record->notes ?? ''),
+                    $this->statsKey++;
+                    Notification::make()->success()
+                        ->title($created->count().' mouvement(s) enregistré(s)')->send();
+                }),
 
-                Tables\Columns\TextColumn::make('amount')
-                    ->label('Montant')
-                    ->formatStateUsing(fn ($state, CaisseMouvement $record) => ($record->type === CaisseMouvement::TYPE_ENTREE ? '+' : '-').number_format((float) $state, 0, ',', ' ').' FCFA')
-                    ->weight('bold')
-                    ->color(fn (CaisseMouvement $record) => $record->type === CaisseMouvement::TYPE_ENTREE ? 'success' : 'danger')
-                    ->alignEnd(),
+            Action::make('exportPdf')
+                ->label('Exporter PDF')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('gray')
+                ->action(fn () => $this->exportPdf()),
 
-                Tables\Columns\TextColumn::make('solde_apres')
-                    ->label('Solde après')
-                    ->getStateUsing(fn (CaisseMouvement $record) => $balances[$record->id]['solde_apres'] ?? null)
-                    ->formatStateUsing(fn ($state) => $state !== null ? number_format((float) $state, 0, ',', ' ').' FCFA' : '—')
-                    ->alignEnd(),
+            Action::make('categories')
+                ->label('Gérer les catégories')
+                ->icon('heroicon-o-cog-6-tooth')
+                ->color('gray')
+                ->url(CaisseCategorieResource::getUrl()),
+        ];
+    }
 
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('Enregistré par')
-                    ->placeholder('Système')
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->defaultSort('date_mouvement', 'desc')
-            ->actions([
-                Tables\Actions\ActionGroup::make([
-                    Tables\Actions\EditAction::make()
-                        ->form(static::mouvementFormSchema())
-                        ->using(function (CaisseMouvement $record, array $data) {
-                            try {
-                                app(CaisseService::class)->validateMouvement($data['type'], (float) $data['amount']);
-                            } catch (ValidationException $e) {
-                                Notification::make()
-                                    ->danger()
-                                    ->title('Validation échouée')
-                                    ->body(collect($e->errors())->flatten()->implode(' '))
-                                    ->persistent()
-                                    ->send();
+    public function exportPdf()
+    {
+        $service = app(CaisseService::class);
+        $from = $this->parseDate($this->dateFrom);
+        $to = $this->parseDate($this->dateTo);
+        $days = $this->summaries();
 
-                                throw $e;
-                            }
+        $entrees = $days->reduce(fn ($c, $d) => bcadd($c, $d['entrees'], 2), '0');
+        $sorties = $days->reduce(fn ($c, $d) => bcadd($c, $d['sorties'], 2), '0');
 
-                            $record->update($data);
+        $pdf = Pdf::loadView('exports.caisse-historique-pdf', [
+            'tenant' => config('app.name'),
+            'periode' => $this->periodLabel($from, $to),
+            'days' => $days,
+            'totalEntrees' => $entrees,
+            'totalSorties' => $sorties,
+            'solde' => bcsub($entrees, $sorties, 2),
+            'categories' => $service->categoryBalances($from, $to),
+            'generatedAt' => now(),
+        ])->setPaper('a4', 'portrait');
 
-                            return $record;
-                        })
-                        ->visible(fn () => Auth::user()?->can('edit_caisse') ?? false),
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            'caisse_historique_'.now()->format('Y-m-d_His').'.pdf'
+        );
+    }
 
-                    Tables\Actions\DeleteAction::make()
-                        ->visible(fn () => Auth::user()?->can('delete_caisse') ?? false),
-                ])
-                    ->icon('heroicon-m-ellipsis-vertical')
-                    ->tooltip('Actions'),
-            ])
-            ->headerActions([
-                Tables\Actions\Action::make('add')
-                    ->label('Ajouter un mouvement')
-                    ->icon('heroicon-o-plus')
-                    ->color('primary')
-                    ->form(static::mouvementFormSchema())
-                    ->visible(fn () => Auth::user()?->can('create_caisse') ?? false)
-                    ->action(function (array $data) {
-                        try {
-                            app(CaisseService::class)->enregistrer(
-                                $data['type'],
-                                (float) $data['amount'],
-                                $data['libelle'],
-                                $data['date_mouvement'] ?? null,
-                                $data['notes'] ?? null,
-                            );
-                        } catch (ValidationException $e) {
-                            Notification::make()
-                                ->danger()
-                                ->title('Validation échouée')
-                                ->body(collect($e->errors())->flatten()->implode(' '))
-                                ->persistent()
-                                ->send();
+    private function periodLabel(?Carbon $from, ?Carbon $to): string
+    {
+        if (! $from && ! $to) {
+            return 'Toutes les journées';
+        }
 
-                            return;
-                        }
+        return 'Du '.($from?->format('d/m/Y') ?? '…').' au '.($to?->format('d/m/Y') ?? '…');
+    }
 
-                        Notification::make()
-                            ->success()
-                            ->title('Mouvement enregistré')
-                            ->send();
-                    }),
-            ])
-            ->paginated([10, 25, 50])
-            ->defaultPaginationPageOption(25)
-            ->striped()
-            ->poll('30s')
-            ->emptyStateHeading('Aucun mouvement de caisse')
-            ->emptyStateDescription('Ajoutez votre premier mouvement pour commencer le suivi de votre liquidité.')
-            ->emptyStateIcon('heroicon-o-wallet');
+    public function getDetailUrl(Carbon $date): string
+    {
+        return MaCaisseJourPage::getUrl(['date' => $date->toDateString()]);
     }
 }
