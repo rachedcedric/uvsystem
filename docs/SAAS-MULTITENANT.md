@@ -117,3 +117,11 @@ Défauts trouvés et corrigés grâce à cette passe :
 - **API fournisseurs** désynchronisée du schéma (recherche sur des colonnes inexistantes → erreur 500 sur MySQL, types `bank/premium_agent/other` refusés par la base) → alignée sur `contact` et `BANQUE|AGENT_PREMIUM` (alias `bank`/`premium_agent` conservés).
 
 Routes volontairement hors balayage : liste/création sans identifiant (`/m/g/{resource}`), téléchargements Filament `exports/imports` (liés à l'utilisateur, non utilisés), et les ressources héritées `vente-uvs` / `remboursement-agents` dont les tables n'existent plus.
+
+## Vérification sur émulateur Android (APK debug, Pixel 1080×2400, WebView 133)
+
+Parcours réalisé avec l'APK de débogage branché sur un serveur local (copie migrée de la base de démo) : lancement → splash natif → accueil ; barre d'état, barre d'onglets et zones sûres corrects ; jeton push enregistré côté serveur ; feuille « Que voulez-vous faire ? » ; formulaire Nouvelle vente (masque de montant « 125 000 », date/heure côte à côte, puces 40 px) ; bandeau 2FA → page d'activation autonome (QR code, clé, champ) puis retour par le bouton Retour du téléphone ; coupure puis rétablissement du réseau (bandeau orange « Hors connexion », contenu conservé, reprise sans plantage) ; aucun `FATAL EXCEPTION` / ANR dans logcat.
+
+Corrigé suite à ce test : la page d'activation 2FA n'avait pas de lien de retour (seulement « Se déconnecter »).
+
+Non vérifié : clavier virtuel docké (l'émulateur affichait un clavier flottant « matériel »), caméra, notification push reçue, APK de production signé, appareil physique.
