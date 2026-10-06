@@ -6,7 +6,7 @@
                :options="['day' => 'Aujourd\'hui', 'week' => 'Semaine', 'month' => 'Mois', 'quarter' => 'Trimestre', 'year' => 'Année', 'custom' => 'Dates']" />
 
     @if ($period === 'custom')
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px 0">
+        <div class="m-pair" style="gap:10px;padding:10px 12px 0">
             <input type="date" wire:model.live="from" class="m-input" max="{{ today()->toDateString() }}">
             <input type="date" wire:model.live="to" class="m-input" max="{{ today()->toDateString() }}">
         </div>

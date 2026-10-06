@@ -1,6 +1,6 @@
 @props(['dateModel' => 'date', 'timeModel' => 'time'])
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="m-pair" style="gap:12px">
     <x-m.field label="Date" :error="$errors->first($dateModel)">
         <input
             type="date"

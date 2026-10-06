@@ -9,7 +9,7 @@
                 <x-m.agent-picker :agents="$agents" :selected="$selectedAgent" model="agentId" label="Tous les agents" id="report-agent" />
                 @if ($selectedAgent)<button type="button" class="m-section__link" style="margin:6px 4px 0" wire:click="$set('agentId', null)">Tous les agents</button>@endif
             </x-m.field>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="m-pair" style="gap:12px">
                 <x-m.field label="Du"><input type="date" wire:model.live="from" class="m-input"></x-m.field>
                 <x-m.field label="Au"><input type="date" wire:model.live="to" class="m-input"></x-m.field>
             </div>

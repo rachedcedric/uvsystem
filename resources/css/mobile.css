@@ -408,7 +408,23 @@ a.m-stat:active {
 }
 
 .m-stat__label .m-ico-sm {
+    flex: none;
     color: var(--fg-3);
+}
+
+/* Un libellé long (« Approvisionnements ») ne doit jamais sortir de sa carte : il se tronque. */
+.m-stat__label > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 340px) {
+    .m-stat__label {
+        gap: 4px;
+        font-size: 12px;
+    }
 }
 
 .m-stat__value {
@@ -920,6 +936,7 @@ button.m-row:active {
 .m-input {
     display: block;
     width: 100%;
+    min-width: 0;
     height: 52px;
     padding: 0 14px;
     border: 1.5px solid var(--line);
@@ -1280,7 +1297,7 @@ button.m-row:active {
 
 .m-chip {
     flex: none;
-    height: 36px;
+    height: 40px;
     padding: 0 15px;
     border-radius: 999px;
     background: var(--surface);
@@ -1403,7 +1420,7 @@ button.m-row:active {
 
 .m-quick .m-chip {
     background: var(--surface-2);
-    height: 34px;
+    height: 40px;
     font-size: 13.5px;
 }
 
@@ -1521,7 +1538,7 @@ button.m-row:active {
 
 .m-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     margin: 14px 12px 0;
 }
@@ -1825,4 +1842,79 @@ button.m-row:active {
 .m-bars__col.is-selected .m-bars__lbl {
     color: var(--fg);
     font-weight: 700;
+}
+
+/* ------------------------------------------------- grilles à 2 colonnes */
+
+/* minmax(0, 1fr) : une colonne peut rétrécir sous la largeur intrinsèque de son champ (date, heure),
+   sinon deux <input type="date"> font déborder la page à 320 px. */
+.m-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.m-pair > * {
+    min-width: 0;
+}
+
+/* ------------------------------------------- tablette / ordinateur (≥ 600 px) */
+
+/* L'interface est pensée pour un téléphone : on la garde en colonne centrée plutôt que de l'étirer
+   sur toute la largeur (cartes, barre d'onglets et feuilles incluses). */
+@media (min-width: 600px) {
+    :root {
+        --m-col: 560px;
+    }
+
+    html {
+        background: color-mix(in srgb, var(--bg) 82%, #000);
+    }
+
+    .m-app {
+        max-width: var(--m-col);
+        margin: 0 auto;
+        background: var(--bg);
+        box-shadow: 0 0 0 1px var(--line), 0 12px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .m-tabbar,
+    .m-sheet,
+    .m-offline {
+        left: 50%;
+        right: auto;
+        width: min(100%, var(--m-col));
+        transform: translateX(-50%);
+    }
+
+    .m-sheet {
+        transform: translate(-50%, 105%);
+    }
+
+    .m-sheet[data-open] {
+        transform: translate(-50%, 0);
+    }
+
+    .m-offline {
+        transform: translate(-50%, -120%);
+    }
+
+    .m-offline[data-show] {
+        transform: translateX(-50%);
+    }
+
+    .m-fab {
+        right: max(16px, calc(50% - var(--m-col) / 2 + 16px));
+    }
+
+    .m-toast {
+        left: 50%;
+        right: auto;
+        width: calc(min(100%, var(--m-col)) - 32px);
+        transform: translate(-50%, 24px);
+    }
+
+    .m-toast[data-show] {
+        transform: translateX(-50%);
+    }
 }

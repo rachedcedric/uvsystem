@@ -95,3 +95,14 @@ Le premier super admin doit activer sa 2FA dès sa première connexion à `/plat
 ## Export des données d'un tenant
 
 Le `master` d'un tenant actif télécharge toutes ses données (un CSV par table, comptes sans mot de passe ni 2FA, justificatifs, `manifest.json`) : application mobile → Rapports et exports → « Exporter toutes mes données (ZIP) », ou `/exports/mes-donnees` (limité à 3 par 10 minutes, tracé dans le journal d'activité). Le contenu est borné au tenant courant par les modèles scopés ; les cellules commençant par `=`, `+`, `-` ou `@` sont neutralisées contre l'injection de formules Excel.
+
+## Revue responsive de l'interface mobile (/m)
+
+Mesurée dans Chrome sur 57 écrans (écrans, formulaires et fiches) à 320, 360, 375, 390, 414, 768, 1024 et 1440 px, avec des données de démonstration : aucun débordement horizontal de la page, zones tactiles ≥ 40 px, sauf barres internes volontairement défilantes (rangées de cartes, puces, onglets).
+
+Corrigé :
+- **320 px** : deux champs date côte à côte (Rapports, Statistiques, Commissions, date/heure) faisaient déborder la page de 41 px → colonnes `minmax(0, 1fr)` (classe `.m-pair`) ; le libellé « Approvisionnements » dépassait de sa carte de 3 px → troncature.
+- **≥ 600 px** (tablette, navigateur de bureau) : l'interface s'étirait sur toute la largeur ; elle reste maintenant en colonne centrée de 560 px, barre d'onglets, feuilles, bouton flottant et notifications compris.
+- **Zones tactiles** : puces de filtre et de montant rapide 36/34 → 40 px ; le bandeau 2FA est entièrement cliquable (44 px).
+
+Non vérifié ici : clavier virtuel Android, encoche/zones sûres et mode hors ligne sur appareil réel (à contrôler sur l'émulateur ou un téléphone). Les fichiers `public/build` sont ignorés par git : lancer `npm run build` et téléverser `public/build/` avec le code.

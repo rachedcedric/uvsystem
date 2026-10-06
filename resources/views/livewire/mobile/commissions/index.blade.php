@@ -90,7 +90,7 @@
                 @if ($recalcMode === 'date')
                     <input type="date" wire:model="recalcDate" class="m-input">
                 @elseif ($recalcMode === 'periode')
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                    <div class="m-pair" style="gap:10px">
                         <input type="date" wire:model="recalcStart" class="m-input"><input type="date" wire:model="recalcEnd" class="m-input">
                     </div>
                 @endif
