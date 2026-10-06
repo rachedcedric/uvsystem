@@ -38,6 +38,7 @@ describe('Reference search — old and new formats coexist', function () {
         // Ancienne référence : insérée directement (le générateur court ne
         // s'applique qu'aux nouvelles créations, jamais en écrasant l'existant).
         DB::table('uv_transactions')->insert([
+            'tenant_id' => 1,
             'agent_id' => $agent->id,
             'amount' => 100_000,
             'transaction_type' => 'distribution',
@@ -76,6 +77,7 @@ describe('Reference search — old and new formats coexist', function () {
         $agent = Agent::factory()->create(['status' => 'active']);
 
         DB::table('remboursements')->insert([
+            'tenant_id' => 1,
             'agent_id' => $agent->id,
             'amount' => 20_000,
             'payment_method' => 'cash',

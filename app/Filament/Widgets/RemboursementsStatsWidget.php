@@ -4,7 +4,6 @@ namespace App\Filament\Widgets;
 
 use App\Models\Remboursement;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class RemboursementsStatsWidget extends BaseWidget
 {
@@ -43,23 +42,22 @@ class RemboursementsStatsWidget extends BaseWidget
             : ($weekAmount > 0 ? 100 : 0);
 
         return [
-            Stat::make('💰 Aujourd\'hui', number_format($todayAmount, 0, ',', ' ').' FCFA')
+            CompactStat::make('💰 Aujourd\'hui', number_format($todayAmount, 0, ',', ' ').' FCFA')
                 ->description($todayCount.' remboursement(s)')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
-                ->color('success')
-                ->chart([0, $todayAmount > 0 ? 1 : 0]),
+                ->color('success'),
 
-            Stat::make('📅 Cette semaine', number_format($weekAmount, 0, ',', ' ').' FCFA')
+            CompactStat::make('📅 Cette semaine', number_format($weekAmount, 0, ',', ' ').' FCFA')
                 ->description($weekCount.' remboursement(s) • '.($weekTrend >= 0 ? '+' : '').$weekTrend.'%')
                 ->descriptionIcon($weekTrend >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($weekTrend >= 0 ? 'success' : 'danger'),
 
-            Stat::make('📆 Ce mois', number_format($monthAmount, 0, ',', ' ').' FCFA')
+            CompactStat::make('📆 Ce mois', number_format($monthAmount, 0, ',', ' ').' FCFA')
                 ->description($monthCount.' remboursement(s)')
                 ->descriptionIcon('heroicon-m-calendar')
                 ->color('info'),
 
-            Stat::make('📊 Total cumulé', number_format($totalAmount, 0, ',', ' ').' FCFA')
+            CompactStat::make('📊 Total cumulé', number_format($totalAmount, 0, ',', ' ').' FCFA')
                 ->description($totalCount.' remboursement(s) au total')
                 ->descriptionIcon('heroicon-m-chart-bar')
                 ->color('primary'),

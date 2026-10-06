@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Tenancy\TenantContext;
 use App\Models\User;
 use App\Models\UvTransaction;
 use Carbon\Carbon;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 
 class SecurityService
 {
@@ -229,7 +230,7 @@ class SecurityService
         }
 
         // Vérifier les soldes agents
-        $agents = DB::table('agents')
+        $agents = TenantContext::table('agents')
             ->join('agent_soldes', 'agents.id', '=', 'agent_soldes.agent_id')
             ->select('agents.id', 'agents.name', 'agent_soldes.*')
             ->get();

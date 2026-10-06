@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class CaisseCategorie extends Model
 {
+    use BelongsToTenant;
     use LogsActivity;
 
     protected $table = 'caisse_categories';

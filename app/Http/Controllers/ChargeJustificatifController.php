@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Charge;
+use App\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -15,12 +16,20 @@ class ChargeJustificatifController extends Controller
 {
     public function download(Charge $charge)
     {
-        abort_unless(request()->user()?->can('view_charges'), 403);
+        $this->authorize('view', $charge);
 
-        if (! $charge->justificatif_path || ! Storage::disk('local')->exists($charge->justificatif_path)) {
+        $path = (string) $charge->justificatif_path;
+
+        // Défense en profondeur : le chemin stocké doit rester dans le dossier du tenant. Seuls les
+        // fichiers antérieurs au multi-tenant (charges/…) du tenant n°1 sont tolérés, en attendant
+        // `php artisan tenancy:relocate-files`.
+        $allowed = str_starts_with($path, 'tenants/'.TenantContext::requireId().'/')
+            || (TenantContext::requireId() === 1 && str_starts_with($path, 'charges/'));
+
+        if ($path === '' || str_contains($path, '..') || ! $allowed || ! Storage::disk('local')->exists($path)) {
             abort(404, 'Justificatif introuvable');
         }
 
-        return Storage::disk('local')->response($charge->justificatif_path);
+        return Storage::disk('local')->response($path);
     }
 }

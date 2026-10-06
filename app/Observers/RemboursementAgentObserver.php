@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Tenancy\TenantContext;
 use App\Models\DetteAgent;
 use App\Models\RemboursementAgent;
 use Illuminate\Support\Facades\DB;
@@ -46,13 +47,13 @@ class RemboursementAgentObserver
     private function updateDetteAgent(int $agentPartenaireId): void
     {
         // Calculer le total des achats (ventes)
-        $totalAchats = DB::table('ventes_uv')
+        $totalAchats = TenantContext::table('ventes_uv')
             ->where('agent_partenaire_id', $agentPartenaireId)
             ->whereNull('deleted_at')
             ->sum('montant_total');
 
         // Calculer le total remboursé
-        $totalRembourse = DB::table('remboursements_agents')
+        $totalRembourse = TenantContext::table('remboursements_agents')
             ->where('agent_partenaire_id', $agentPartenaireId)
             ->whereNull('deleted_at')
             ->sum('montant');

@@ -42,3 +42,18 @@ _ide_helper_models.php
 *.tmp
 npm-debug.log
 yarn-error.log
+
+# Android / Capacitor : clés de signature (ne jamais committer)
+*.jks
+*.keystore
+keystore.properties
+/android/keystore.properties
+
+# Dev local mobile
+.env.mobiledev
+/storage/mobiledev.sqlite
+
+# Firebase (clé du projet) et fichiers temporaires Excel
+/android/app/google-services.json
+/storage/app/firebase/
+/storage/framework/cache/laravel-excel/

@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Models\Agent;
 use Illuminate\Console\Command;
 
 class RecalculateAgentDebtsCommand extends Command
 {
+    use RunsPerTenant;
+
     /**
      * The name and signature of the console command.
      *

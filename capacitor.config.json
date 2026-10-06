@@ -1,0 +1,24 @@
+{
+  "appId": "pro.uvsystem.app",
+  "appName": "MODELEC CI",
+  "webDir": "capacitor-www",
+  "appendUserAgent": "ModelecCIApp",
+  "server": {
+    "url": "https://uvsystem.pro/m",
+    "cleartext": false,
+    "errorPath": "index.html"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 300,
+      "backgroundColor": "#F5F7F2",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}

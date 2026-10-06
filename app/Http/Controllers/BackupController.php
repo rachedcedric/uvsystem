@@ -3,24 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BackupController extends Controller
 {
     /**
-     * Download a backup file.
+     * Télécharger une sauvegarde.
+     *
+     * Réservé aux rôles master et admin, et limité aux archives .zip du
+     * dossier de sauvegarde : sans ces contrôles, tout utilisateur connecté
+     * pouvait lire n'importe quel fichier du disque privé (path traversal).
      */
     public function download(string $path): StreamedResponse
     {
-        $decodedPath = base64_decode($path);
-        $disk = Storage::disk('local');
+        abort_unless(request()->user()?->isSuperAdmin(), 403); // Les sauvegardes contiennent les données de TOUS les tenants : réservées au super admin de plateforme.
 
-        if (! $disk->exists($decodedPath)) {
+        $disk = Storage::disk('local');
+        $directory = config('app.name', 'uv-system');
+        $decodedPath = $directory.'/'.basename((string) base64_decode($path, true));
+
+        if (! Str::endsWith($decodedPath, '.zip') || ! $disk->exists($decodedPath)) {
             abort(404, 'Backup not found');
         }
 
-        $filename = basename($decodedPath);
-
-        return $disk->download($decodedPath, $filename);
+        return $disk->download($decodedPath, basename($decodedPath));
     }
 }

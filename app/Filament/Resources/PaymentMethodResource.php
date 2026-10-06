@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Tenancy\TenantContext;
 use App\Filament\Resources\PaymentMethodResource\Pages;
 use App\Models\PaymentMethod;
 use Filament\Forms;
@@ -35,7 +36,7 @@ class PaymentMethodResource extends Resource
                         Forms\Components\TextInput::make('code')
                             ->label('Code')
                             ->required()
-                            ->unique(ignoreRecord: true)
+                            ->unique(ignoreRecord: true, modifyRuleUsing: TenantContext::scopeUnique())
                             ->maxLength(50)
                             ->alphaDash()
                             ->helperText('Identifiant unique (ex: cash, mobile_money, virement)')

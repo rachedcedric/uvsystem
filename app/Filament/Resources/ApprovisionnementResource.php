@@ -87,18 +87,20 @@ class ApprovisionnementResource extends Resource
                         Forms\Components\TextInput::make('amount')
                             ->label('Montant de l\'approvisionnement')
                             ->required()
+                            ->autocomplete(false)
                             ->money(min: 1)
                             ->prefix('💰')
                             ->helperText('Ce montant sera ajouté au solde principal')
                             ->columnSpan(1),
 
-                        Forms\Components\DatePicker::make('date_approvisionnement')
-                            ->label('Date d\'approvisionnement')
+                        Forms\Components\DateTimePicker::make('date_approvisionnement')
+                            ->label('Date et heure d\'approvisionnement')
                             ->required()
                             ->default(now())
                             ->maxDate(now())
+                            ->seconds(false)
                             ->native(false)
-                            ->displayFormat('d/m/Y')
+                            ->displayFormat('d/m/Y H:i')
                             ->columnSpan(1),
 
                         Forms\Components\Textarea::make('notes')
@@ -119,7 +121,7 @@ class ApprovisionnementResource extends Resource
                         Forms\Components\Placeholder::make('created_info')
                             ->label('Informations de création')
                             ->content(fn ($record) => $record
-                                ? "Créé le " . $record->created_at->format('d/m/Y à H:i') . " par " . ($record->user->name ?? 'Système')
+                                ? 'Créé le '.$record->created_at->format('d/m/Y à H:i').' par '.($record->user->name ?? 'Système')
                                 : 'Non encore créé')
                             ->visible(fn ($record) => $record !== null),
                     ])
@@ -244,8 +246,8 @@ class ApprovisionnementResource extends Resource
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('date_approvisionnement')
-                    ->label('Date')
-                    ->date('d/m/Y')
+                    ->label('Date et heure')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->icon('heroicon-o-calendar')
                     ->description(fn (Approvisionnement $record): string => $record->created_at->diffForHumans()),
@@ -309,10 +311,11 @@ class ApprovisionnementResource extends Resource
                             );
                     })
                     ->indicateUsing(function (array $data): ?string {
-                        if (!$data['date_from'] && !$data['date_to']) {
+                        if (! $data['date_from'] && ! $data['date_to']) {
                             return null;
                         }
-                        return 'Du ' . ($data['date_from'] ?? '...') . ' au ' . ($data['date_to'] ?? '...');
+
+                        return 'Du '.($data['date_from'] ?? '...').' au '.($data['date_to'] ?? '...');
                     }),
 
                 Tables\Filters\TrashedFilter::make(),
@@ -326,8 +329,8 @@ class ApprovisionnementResource extends Resource
                     Tables\Actions\DeleteAction::make()
                         ->requiresConfirmation(),
                 ])
-                ->icon('heroicon-m-ellipsis-vertical')
-                ->tooltip('Actions'),
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->tooltip('Actions'),
             ])
             ->headerActions([
                 Tables\Actions\Action::make('export')

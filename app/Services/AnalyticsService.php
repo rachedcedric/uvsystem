@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Tenancy\TenantContext;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
@@ -21,7 +22,7 @@ class AnalyticsService
      */
     public function getDashboardKpis(string $period = 'month'): array
     {
-        $cacheKey = "analytics_kpis_{$period}";
+        $cacheKey = TenantContext::cacheKey("analytics_kpis_{$period}");
 
         return Cache::remember($cacheKey, $this->cacheTtl * 60, function () use ($period) {
             [$startDate, $endDate] = $this->getPeriodDates($period);
@@ -88,7 +89,7 @@ class AnalyticsService
      */
     public function predictCashFlow(int $days = 30): array
     {
-        $cacheKey = "analytics_cashflow_prediction_{$days}";
+        $cacheKey = TenantContext::cacheKey("analytics_cashflow_prediction_{$days}");
 
         return Cache::remember($cacheKey, $this->cacheTtl * 60, function () use ($days) {
             // Historique des 90 derniers jours
@@ -154,7 +155,7 @@ class AnalyticsService
      */
     public function getAgentScoring(): Collection
     {
-        $cacheKey = 'analytics_agent_scoring';
+        $cacheKey = TenantContext::cacheKey('analytics_agent_scoring');
 
         return Cache::remember($cacheKey, $this->cacheTtl * 60, function () {
             $agents = Agent::with(['transactions', 'remboursements'])->get();
@@ -277,7 +278,7 @@ class AnalyticsService
      */
     public function getTrends(int $months = 6): array
     {
-        $cacheKey = "analytics_trends_{$months}";
+        $cacheKey = TenantContext::cacheKey("analytics_trends_{$months}");
 
         return Cache::remember($cacheKey, $this->cacheTtl * 60, function () use ($months) {
             $trends = [];
@@ -435,17 +436,17 @@ class AnalyticsService
 
         // Simplification : on vide les clés connues
         foreach (['today', 'week', 'month', 'quarter', 'year'] as $period) {
-            Cache::forget("analytics_kpis_{$period}");
+            Cache::forget(TenantContext::cacheKey("analytics_kpis_{$period}"));
         }
 
         foreach ([7, 14, 30, 60, 90] as $days) {
-            Cache::forget("analytics_cashflow_prediction_{$days}");
+            Cache::forget(TenantContext::cacheKey("analytics_cashflow_prediction_{$days}"));
         }
 
         foreach ([3, 6, 12] as $months) {
-            Cache::forget("analytics_trends_{$months}");
+            Cache::forget(TenantContext::cacheKey("analytics_trends_{$months}"));
         }
 
-        Cache::forget('analytics_agent_scoring');
+        Cache::forget(TenantContext::cacheKey('analytics_agent_scoring'));
     }
 }

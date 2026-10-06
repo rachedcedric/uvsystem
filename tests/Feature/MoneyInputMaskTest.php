@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Filament\Resources\AgentResource\Pages\EditAgent;
+use App\Filament\Resources\ApprovisionnementResource\Pages\CreateApprovisionnement;
 use App\Filament\Resources\RemboursementResource\Pages\CreateRemboursement;
 use App\Filament\Resources\UvTransactionResource\Pages\CreateUvTransaction;
 use App\Models\Agent;
@@ -39,6 +40,7 @@ class MoneyInputMaskTest extends TestCase
         $permissions = [
             'view_uv_transactions', 'create_uv_transactions',
             'view_remboursements', 'create_remboursements',
+            'view_approvisionnements', 'create_approvisionnements',
             'view_agents', 'edit_agents',
         ];
 
@@ -61,6 +63,36 @@ class MoneyInputMaskTest extends TestCase
             'amount' => 100_000_000,
             'date_approvisionnement' => now(),
         ]);
+    }
+
+    public function test_remboursement_amount_disables_browser_history_suggestions(): void
+    {
+        $html = Livewire::test(CreateRemboursement::class)->html();
+
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*\bid="data\.amount")(?=[^>]*\bautocomplete="off")[^>]*>/',
+            $html
+        );
+    }
+
+    public function test_uv_transaction_amount_disables_browser_history_suggestions(): void
+    {
+        $html = Livewire::test(CreateUvTransaction::class)->html();
+
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*\bid="data\.amount")(?=[^>]*\bautocomplete="off")[^>]*>/',
+            $html
+        );
+    }
+
+    public function test_approvisionnement_amount_disables_browser_history_suggestions(): void
+    {
+        $html = Livewire::test(CreateApprovisionnement::class)->html();
+
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*\bid="data\.amount")(?=[^>]*\bautocomplete="off")[^>]*>/',
+            $html
+        );
     }
 
     /** Une vente UV saisie avec espaces ("1 000 000") est enregistrée comme 1000000, pas comme texte */

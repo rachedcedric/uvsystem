@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Tenancy\TenantContext;
 use App\Filament\Resources\ChargeCategorieResource\Pages;
 use App\Models\ChargeCategorie;
 use Filament\Forms;
@@ -41,7 +42,7 @@ class ChargeCategorieResource extends Resource
                         Forms\Components\TextInput::make('code')
                             ->label('Code')
                             ->required()
-                            ->unique(ignoreRecord: true)
+                            ->unique(ignoreRecord: true, modifyRuleUsing: TenantContext::scopeUnique())
                             ->maxLength(50)
                             ->alphaDash()
                             ->helperText('Identifiant unique (ex: loyer, internet)')

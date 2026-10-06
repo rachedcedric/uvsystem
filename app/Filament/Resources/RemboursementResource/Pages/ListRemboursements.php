@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RemboursementResource\Pages;
 
+use App\Tenancy\TenantContext;
 use App\Exports\RemboursementsExport;
 use App\Filament\Resources\RemboursementResource;
 use App\Filament\Widgets\RemboursementsStatsWidget;
@@ -65,7 +66,7 @@ class ListRemboursements extends ListRecords
                     ])
                     ->action(function (array $data) {
                         $filename = 'remboursements_'.now()->format('Y-m-d_His').'.xlsx';
-                        $path = 'exports/'.$filename;
+                        $path = TenantContext::storagePath('exports/'.$filename);
 
                         Excel::store(
                             new RemboursementsExport(
@@ -75,7 +76,7 @@ class ListRemboursements extends ListRecords
                                 $data['payment_method'] ?: null
                             ),
                             $path,
-                            'public'
+                            'local'
                         );
 
                         return redirect()->route('exports.download', ['filename' => $filename]);

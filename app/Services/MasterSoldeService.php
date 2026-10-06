@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Tenancy\TenantContext;
 use App\Models\MasterSolde;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
@@ -56,14 +57,14 @@ class MasterSoldeService
      */
     public function getGlobalTotals(?Carbon $asOf = null): array
     {
-        $approQuery = DB::table('approvisionnements')->whereNull('deleted_at');
+        $approQuery = TenantContext::table('approvisionnements')->whereNull('deleted_at');
 
-        $distQuery = DB::table('uv_transactions')
+        $distQuery = TenantContext::table('uv_transactions')
             ->where('transaction_type', 'distribution')
             ->where('status', '!=', 'cancelled')
             ->whereNull('deleted_at');
 
-        $retQuery = DB::table('uv_transactions')
+        $retQuery = TenantContext::table('uv_transactions')
             ->where('transaction_type', 'retour')
             ->where('status', '!=', 'cancelled')
             ->whereNull('deleted_at');

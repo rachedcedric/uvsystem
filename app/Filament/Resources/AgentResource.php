@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Tenancy\TenantContext;
 use App\Exports\AgentSituationExport;
 use App\Filament\Resources\AgentResource\Pages;
 use App\Filament\Resources\AgentResource\RelationManagers;
@@ -49,7 +50,7 @@ class AgentResource extends Resource
                             ->label('Téléphone')
                             ->tel()
                             ->required()
-                            ->unique(ignoreRecord: true)
+                            ->unique(ignoreRecord: true, modifyRuleUsing: TenantContext::scopeUnique())
                             ->placeholder('+225 01 23 45 67 89')
                             ->regex('/^[0-9+\s]{8,20}$/')
                             ->helperText('Format: 8 à 15 chiffres')
@@ -58,7 +59,7 @@ class AgentResource extends Resource
                             ->label('Email')
                             ->email()
                             ->placeholder('agent@example.com')
-                            ->unique(ignoreRecord: true)
+                            ->unique(ignoreRecord: true, modifyRuleUsing: TenantContext::scopeUnique())
                             ->maxLength(255),
                         Forms\Components\TextInput::make('address')
                             ->label('Adresse')
@@ -331,9 +332,9 @@ class AgentResource extends Resource
                         ->action(function (Collection $records) {
                             $ids = $records->pluck('id')->toArray();
                             $filename = 'agents_selection_'.now()->format('Y-m-d_His').'.xlsx';
-                            $path = 'exports/'.$filename;
+                            $path = TenantContext::storagePath('exports/'.$filename);
 
-                            Excel::store(new AgentSituationExport(null, false, $ids), $path, 'public');
+                            Excel::store(new AgentSituationExport(null, false, $ids), $path, 'local');
 
                             return redirect()->route('exports.download', ['filename' => $filename]);
                         }),

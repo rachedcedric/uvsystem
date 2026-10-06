@@ -67,7 +67,7 @@ class UserResource extends Resource
                         Forms\Components\Select::make('roles')
                             ->label('Rôles')
                             ->multiple()
-                            ->relationship('roles', 'name')
+                            ->relationship('roles', 'name', fn ($query) => $query->whereIn('name', User::assignableRoleNames()))
                             ->preload()
                             ->searchable()
                             ->helperText('master = accès total, admin = tout sauf gestion rôles, comptable = finances, commercial = agents/transactions'),
@@ -115,7 +115,7 @@ class UserResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('roles')
                     ->label('Rôle')
-                    ->relationship('roles', 'name')
+                    ->relationship('roles', 'name', fn ($query) => $query->whereIn('name', User::assignableRoleNames()))
                     ->multiple()
                     ->preload(),
             ])

@@ -3,6 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Services\AnalyticsService;
+use App\Support\DailyBarChart;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 
 class CashFlowPredictionWidget extends ChartWidget
@@ -33,37 +35,28 @@ class CashFlowPredictionWidget extends ChartWidget
         $upper = [];
 
         foreach ($prediction['predictions'] as $day) {
-            $labels[] = $day['day'];
+            $labels[] = \Carbon\Carbon::parse($day['date'])->format('d/m/Y');
             $predicted[] = $day['predicted'];
             $lower[] = $day['lower'];
             $upper[] = $day['upper'];
         }
+
+        $colors = DailyBarChart::colors($predicted, 'rgba(59, 130, 246, 0.68)', 'rgb(37, 99, 235)');
 
         return [
             'datasets' => [
                 [
                     'label' => 'Prédit',
                     'data' => $predicted,
-                    'borderColor' => '#3b82f6',
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
-                    'fill' => true,
-                    'tension' => 0.3,
-                ],
-                [
-                    'label' => 'Min',
-                    'data' => $lower,
-                    'borderColor' => '#ef4444',
-                    'borderDash' => [5, 5],
-                    'fill' => false,
-                    'tension' => 0.3,
-                ],
-                [
-                    'label' => 'Max',
-                    'data' => $upper,
-                    'borderColor' => '#22c55e',
-                    'borderDash' => [5, 5],
-                    'fill' => false,
-                    'tension' => 0.3,
+                    'minimums' => $lower,
+                    'maximums' => $upper,
+                    'backgroundColor' => $colors['background'],
+                    'borderColor' => $colors['border'],
+                    'borderWidth' => 1,
+                    'borderRadius' => 4,
+                    'borderSkipped' => false,
+                    'barPercentage' => 0.72,
+                    'categoryPercentage' => 0.82,
                 ],
             ],
             'labels' => $labels,
@@ -72,36 +65,12 @@ class CashFlowPredictionWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
     }
 
-    protected function getOptions(): array
+    protected function getOptions(): RawJs
     {
-        return [
-            'plugins' => [
-                'legend' => [
-                    'display' => true,
-                    'position' => 'top',
-                ],
-                'tooltip' => [
-                    'callbacks' => [
-                        'label' => "function(context) {
-                            return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.raw) + ' FCFA';
-                        }",
-                    ],
-                ],
-            ],
-            'scales' => [
-                'y' => [
-                    'beginAtZero' => true,
-                    'ticks' => [
-                        'callback' => "function(value) {
-                            return new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value) + ' FCFA';
-                        }",
-                    ],
-                ],
-            ],
-        ];
+        return DailyBarChart::options(showPredictionRange: true);
     }
 
     public function getDescription(): ?string
@@ -118,6 +87,11 @@ class CashFlowPredictionWidget extends ChartWidget
         $total = number_format($prediction['total_predicted'], 0, ',', ' ');
         $confidence = $prediction['confidence'];
 
-        return "{$trend} | Prévu: {$total} FCFA | Confiance: {$confidence}%";
+        $data = $this->getData();
+        $indicators = $data['datasets'] === []
+            ? null
+            : DailyBarChart::indicators($data['labels'], $data['datasets'][0]['data']);
+
+        return "{$trend} | Prévu: {$total} FCFA | Confiance: {$confidence}%".($indicators ? " | {$indicators}" : '');
     }
 }

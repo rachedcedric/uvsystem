@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
+use App\Tenancy\UserTenantScope;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -13,7 +16,12 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use BelongsToTenant, HasApiTokens, HasFactory, HasRoles, Notifiable;
+
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+
+    /** Rôles métier d'un tenant (le rôle super_admin n'appartient à aucun tenant). */
+    public const TENANT_ROLES = ['master', 'admin', 'comptable', 'commercial'];
 
     /**
      * The attributes that are mass assignable.
@@ -59,13 +67,53 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    protected static function tenantScope(): Scope
+    {
+        return new UserTenantScope;
+    }
+
+    /** Un super admin de plateforme n'a pas de tenant : tenant_id peut rester vide. */
+    protected static function tenantIdRequired(): bool
+    {
+        return false;
+    }
+
     /**
-     * Determine if the user can access the Filament panel.
+     * Super admin de plateforme : rôle super_admin ET aucun tenant. Les deux conditions sont
+     * exigées : un compte de tenant qui recevrait ce rôle par erreur n'obtient aucun pouvoir.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->tenant_id === null && $this->hasRole(self::ROLE_SUPER_ADMIN);
+    }
+
+    /** Le tenant de cet utilisateur est-il actif (non suspendu, essai non expiré) ? */
+    public function hasActiveTenant(): bool
+    {
+        return $this->tenant_id !== null && (bool) $this->tenant?->isActive();
+    }
+
+    /**
+     * Rôles qu'un utilisateur de tenant peut attribuer : jamais super_admin.
+     *
+     * @return list<string>
+     */
+    public static function assignableRoleNames(): array
+    {
+        return self::TENANT_ROLES;
+    }
+
+    /**
+     * Panneau /platform : super admin uniquement. Panneaux /admin et /agent : rôle métier
+     * dans un tenant actif. Fail closed : sans tenant (hors super admin) ou tenant suspendu => refus.
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Allow access if user has any of these roles
-        return $this->hasAnyRole(['master', 'admin', 'comptable', 'commercial']);
+        if ($panel->getId() === 'platform') {
+            return $this->isSuperAdmin();
+        }
+
+        return $this->hasActiveTenant() && $this->hasAnyRole(self::TENANT_ROLES);
     }
 
     /**

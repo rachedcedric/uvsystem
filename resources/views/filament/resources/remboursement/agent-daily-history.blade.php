@@ -34,6 +34,7 @@
     <x-filament::section
         heading="📋 Historique du jour — Remboursements &amp; Dettes"
         description="Opérations enregistrées aujourd'hui pour l'agent sélectionné"
+        compact
     >
         @if (! $history['agentId'])
             <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -55,28 +56,28 @@
             </div>
         @else
             {{-- Résumé de l'agent --}}
-            <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <div class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-white/5">
+            <div class="mb-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+                <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/5">
                     <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Remboursements aujourd'hui</p>
-                    <p class="text-lg font-semibold text-success-600 dark:text-success-400">{{ number_format($history['summary']['totalRefunds'], 0, ',', ' ') }} FCFA</p>
+                    <p class="text-base font-semibold text-success-600 dark:text-success-400">{{ number_format($history['summary']['totalRefunds'], 0, ',', ' ') }} FCFA</p>
                 </div>
-                <div class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-white/5">
+                <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/5">
                     <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Dettes créées aujourd'hui</p>
-                    <p class="text-lg font-semibold text-warning-600 dark:text-warning-400">{{ number_format($history['summary']['totalDebtsCreated'], 0, ',', ' ') }} FCFA</p>
+                    <p class="text-base font-semibold text-warning-600 dark:text-warning-400">{{ number_format($history['summary']['totalDebtsCreated'], 0, ',', ' ') }} FCFA</p>
                 </div>
-                <div class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-white/5">
+                <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/5">
                     <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Dette restante actuelle</p>
                     <p @class([
-                        'text-lg font-semibold',
+                        'text-base font-semibold',
                         'text-danger-600 dark:text-danger-400' => $history['summary']['remainingDebt'] > 0,
                         'text-success-600 dark:text-success-400' => $history['summary']['remainingDebt'] <= 0,
                     ])>
                         {{ number_format($history['summary']['remainingDebt'], 0, ',', ' ') }} FCFA
                     </p>
                 </div>
-                <div class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-white/5">
+                <div class="rounded-lg bg-gray-50 px-3 py-2 dark:bg-white/5">
                     <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Opérations aujourd'hui</p>
-                    <p class="text-lg font-semibold text-gray-950 dark:text-white">{{ $history['summary']['transactionsCount'] }}</p>
+                    <p class="text-base font-semibold text-gray-950 dark:text-white">{{ $history['summary']['transactionsCount'] }}</p>
                 </div>
             </div>
 
@@ -151,8 +152,8 @@
                 </div>
 
                 @if ($history['totalPages'] > 1)
-                    <div class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 dark:border-white/5 sm:flex-row sm:items-center sm:justify-between">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <div class="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 dark:border-white/5 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
                             Page {{ $history['page'] }} / {{ $history['totalPages'] }} &middot; {{ $history['total'] }} opération(s)
                         </p>
 

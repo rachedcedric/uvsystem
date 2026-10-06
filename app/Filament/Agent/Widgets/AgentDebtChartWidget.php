@@ -5,6 +5,8 @@ namespace App\Filament\Agent\Widgets;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Support\DailyBarChart;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
 
@@ -53,43 +55,43 @@ class AgentDebtChartWidget extends ChartWidget
             $debtData[] = round($cumulativeDebt, 2);
         }
 
+        $labels = $dates->map(fn ($date) => \Carbon\Carbon::parse($date)->format('d/m/Y'))->toArray();
+        $colors = DailyBarChart::colors($debtData, 'rgba(59, 130, 246, 0.68)', 'rgb(37, 99, 235)', false);
+
         return [
             'datasets' => [
                 [
                     'label' => 'Dette (FCFA)',
                     'data' => $debtData,
-                    'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
-                    'borderColor' => 'rgb(239, 68, 68)',
-                    'borderWidth' => 2,
-                    'fill' => true,
-                    'tension' => 0.4,
+                    'backgroundColor' => $colors['background'],
+                    'borderColor' => $colors['border'],
+                    'borderWidth' => 1,
+                    'borderRadius' => 4,
+                    'borderSkipped' => false,
+                    'barPercentage' => 0.72,
+                    'categoryPercentage' => 0.82,
                 ],
             ],
-            'labels' => $dates->map(fn ($date) => \Carbon\Carbon::parse($date)->format('d/m'))->toArray(),
+            'labels' => $labels,
         ];
     }
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
     }
 
-    protected function getOptions(): array
+    public function getDescription(): ?string
     {
-        return [
-            'plugins' => [
-                'legend' => [
-                    'display' => true,
-                ],
-            ],
-            'scales' => [
-                'y' => [
-                    'beginAtZero' => true,
-                    'ticks' => [
-                        'callback' => 'function(value) { return value.toLocaleString() + " FCFA"; }',
-                    ],
-                ],
-            ],
-        ];
+        $data = $this->getData();
+
+        return $data['datasets'] === []
+            ? null
+            : DailyBarChart::indicators($data['labels'], $data['datasets'][0]['data'], false);
+    }
+
+    protected function getOptions(): RawJs
+    {
+        return DailyBarChart::options();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class SousDistributeurRemboursement extends Model
 {
+    use BelongsToTenant;
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $table = 'sous_distributeur_remboursements';
@@ -27,7 +29,7 @@ class SousDistributeurRemboursement extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'payment_date' => 'date',
+        'payment_date' => 'datetime',
     ];
 
     // ==================== RELATIONS ====================

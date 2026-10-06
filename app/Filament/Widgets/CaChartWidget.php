@@ -3,7 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\UvTransaction;
+use App\Support\DailyBarChart;
 use Carbon\Carbon;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 
 class CaChartWidget extends ChartWidget
@@ -20,8 +22,8 @@ class CaChartWidget extends ChartWidget
 
     /**
      * @return array<int, float> montant du CA (ventes) pour chacun des 7 derniers
-     *                            jours calendaires (aujourd'hui inclus), les jours
-     *                            sans vente valent explicitement 0 (jamais omis).
+     *                           jours calendaires (aujourd'hui inclus), les jours
+     *                           sans vente valent explicitement 0 (jamais omis).
      */
     private function getDailyRevenue(): array
     {
@@ -45,22 +47,24 @@ class CaChartWidget extends ChartWidget
         $revenue = $this->getDailyRevenue();
 
         $labels = array_map(
-            fn (string $date) => Carbon::parse($date)->translatedFormat('D d/m'),
+            fn (string $date) => Carbon::parse($date)->format('d/m/Y'),
             array_keys($revenue)
         );
+        $values = array_values($revenue);
+        $colors = DailyBarChart::colors($values, 'rgba(59, 130, 246, 0.68)', 'rgb(37, 99, 235)');
 
         return [
             'datasets' => [
                 [
                     'label' => 'CA Journalier (FCFA)',
-                    'data' => array_values($revenue),
-                    'backgroundColor' => 'rgba(59, 130, 246, 0.15)',
-                    'borderColor' => 'rgb(59, 130, 246)',
-                    'borderWidth' => 2,
-                    'fill' => true,
-                    'tension' => 0.35,
-                    'pointRadius' => 4,
-                    'pointBackgroundColor' => 'rgb(59, 130, 246)',
+                    'data' => $values,
+                    'backgroundColor' => $colors['background'],
+                    'borderColor' => $colors['border'],
+                    'borderWidth' => 1,
+                    'borderRadius' => 4,
+                    'borderSkipped' => false,
+                    'barPercentage' => 0.72,
+                    'categoryPercentage' => 0.82,
                 ],
             ],
             'labels' => $labels,
@@ -69,7 +73,7 @@ class CaChartWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
     }
 
     public function getDescription(): ?string
@@ -87,45 +91,24 @@ class CaChartWidget extends ChartWidget
             : ($total > 0 ? 100.0 : 0.0);
 
         $sign = $variation > 0 ? '+' : '';
+        $labels = array_map(
+            fn (string $date) => Carbon::parse($date)->format('d/m/Y'),
+            array_keys($this->getDailyRevenue())
+        );
+        $indicators = DailyBarChart::indicators($labels, $revenue);
 
         return sprintf(
-            'Total : %s FCFA · Moyenne/jour : %s FCFA · %s%% %s vs 7 jours précédents',
+            'Total : %s FCFA · Moyenne/jour : %s FCFA · %s%% %s vs 7 jours précédents · %s',
             number_format($total, 0, ',', ' '),
             number_format($moyenne, 0, ',', ' '),
             $sign.number_format($variation, 1, ',', ' '),
             $variation >= 0 ? '📈' : '📉',
+            $indicators,
         );
     }
 
-    protected function getOptions(): array
+    protected function getOptions(): RawJs
     {
-        return [
-            'maintainAspectRatio' => false,
-            // mode 'index' + intersect:false : le tooltip apparaît dès que le
-            // curseur/le doigt est proche d'un point sur l'axe X, sans viser
-            // le pixel exact — essentiel pour un tap fiable sur mobile.
-            'interaction' => [
-                'mode' => 'index',
-                'intersect' => false,
-            ],
-            'plugins' => [
-                'legend' => [
-                    'display' => false,
-                ],
-                'tooltip' => [
-                    'callbacks' => [
-                        'label' => "function(context) { return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.raw) + ' FCFA'; }",
-                    ],
-                ],
-            ],
-            'scales' => [
-                'y' => [
-                    'beginAtZero' => true,
-                    'ticks' => [
-                        'callback' => "function(value) { return new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value) + ' F'; }",
-                    ],
-                ],
-            ],
-        ];
+        return DailyBarChart::options();
     }
 }

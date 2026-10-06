@@ -7,7 +7,7 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 
 class ActivityLogPage extends Page implements HasTable
 {

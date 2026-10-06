@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Tenancy\TenantContext;
 use App\Models\Agent;
 use App\Models\User;
 use Filament\Widgets\Widget;
@@ -45,7 +46,7 @@ class RealTimeActivityWidget extends Widget
      */
     private function buildUnionQuery(): \Illuminate\Database\Query\Builder
     {
-        $ventes = DB::table('uv_transactions')
+        $ventes = TenantContext::table('uv_transactions')
             ->where('transaction_type', 'distribution')
             ->whereNull('deleted_at')
             ->select([
@@ -59,7 +60,7 @@ class RealTimeActivityWidget extends Widget
                 'status',
             ]);
 
-        $approvisionnements = DB::table('approvisionnements')
+        $approvisionnements = TenantContext::table('approvisionnements')
             ->whereNull('deleted_at')
             ->select([
                 DB::raw("'approvisionnement' as type"),
@@ -72,7 +73,7 @@ class RealTimeActivityWidget extends Widget
                 DB::raw("'completed' as status"),
             ]);
 
-        $remboursements = DB::table('remboursements')
+        $remboursements = TenantContext::table('remboursements')
             ->whereNull('deleted_at')
             ->select([
                 DB::raw("'remboursement' as type"),

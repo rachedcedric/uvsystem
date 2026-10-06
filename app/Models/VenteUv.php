@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,6 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class VenteUv extends Model
 {
+    use BelongsToTenant;
     use LogsActivity, SoftDeletes;
 
     protected $table = 'ventes_uv';
@@ -29,7 +31,7 @@ class VenteUv extends Model
         'quantity_uv' => 'decimal:2',
         'montant_total' => 'decimal:2',
         'prix_unitaire' => 'decimal:2',
-        'date_vente' => 'date',
+        'date_vente' => 'datetime',
     ];
 
     public function getActivitylogOptions(): LogOptions

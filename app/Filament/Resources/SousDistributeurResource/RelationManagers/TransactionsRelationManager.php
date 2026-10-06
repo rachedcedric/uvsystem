@@ -59,10 +59,13 @@ class TransactionsRelationManager extends RelationManager
                     ->default('distribution')
                     ->required(),
 
-                Forms\Components\DatePicker::make('transaction_date')
-                    ->label('Date')
+                Forms\Components\DateTimePicker::make('transaction_date')
+                    ->label('Date et heure')
                     ->default(now())
-                    ->required(),
+                    ->required()
+                    ->maxDate(now())
+                    ->seconds(false)
+                    ->native(false),
 
                 Forms\Components\Hidden::make('reference')
                     ->default(fn () => SousDistributeurTransaction::generateReference()),
@@ -97,8 +100,8 @@ class TransactionsRelationManager extends RelationManager
                     }),
 
                 Tables\Columns\TextColumn::make('transaction_date')
-                    ->label('Date')
-                    ->date('d/m/Y')
+                    ->label('Date et heure')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->filters([

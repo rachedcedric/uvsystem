@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Même fond que l'interface mobile (papier) : évite toute bande de couleur autour de la WebView. -->
+    <color name="m_bg">#F5F7F2</color>
+    <color name="m_brand">#0B6B3A</color>
+</resources>

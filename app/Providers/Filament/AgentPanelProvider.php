@@ -8,6 +8,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Assets\Css;
 use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -26,6 +27,9 @@ class AgentPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::Emerald,
+            ])
+            ->assets([
+                Css::make('compact-ui', asset('css/filament-compact.css')),
             ])
             ->brandName('MODELEC CI - Portail Agent')
             ->brandLogo(asset('images/logo.png'))

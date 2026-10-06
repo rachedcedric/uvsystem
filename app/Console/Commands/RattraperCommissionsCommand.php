@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\CommissionService;
 use Illuminate\Console\Command;
 
 class RattraperCommissionsCommand extends Command
 {
+    use RunsPerTenant;
+
     /**
      * The name and signature of the console command.
      *

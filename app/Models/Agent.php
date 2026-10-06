@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +15,7 @@ use Illuminate\Notifications\Notifiable;
 
 class Agent extends Model
 {
+    use BelongsToTenant;
     use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
@@ -150,6 +153,27 @@ class Agent extends Model
         $query->where('status', 'active');
     }
 
+    /** Un agent est considéré inactif quand il n'a effectué aucun achat depuis ce nombre de jours. */
+    public const INACTIVITY_DAYS = 30;
+
+    /**
+     * Agents sans achat (vente d'UV non annulée) depuis $days jours.
+     *
+     * Un agent créé il y a moins de $days jours qui n'a encore rien acheté n'est pas inactif : il vient
+     * d'arriver. En revanche, un agent récemment importé qui a un historique d'achats anciens l'est.
+     */
+    public function scopeInactiveForDays(Builder $query, int $days = self::INACTIVITY_DAYS): void
+    {
+        $since = now()->subDays($days);
+        $purchases = fn (Builder $q) => $q->where('transaction_type', 'distribution')->where('status', '!=', 'cancelled');
+
+        $query
+            ->whereDoesntHave('transactions', fn (Builder $q) => $purchases($q)->where('transaction_date', '>=', $since))
+            ->where(fn (Builder $q) => $q
+                ->where('agents.created_at', '<=', $since)
+                ->orWhereHas('transactions', $purchases));
+    }
+
     public function scopeWithDebt(Builder $query): void
     {
         $query->where('current_debt', '>', 0);
@@ -266,19 +290,19 @@ class Agent extends Model
      */
     public static function totalDetteActiveAsOf(?\Carbon\Carbon $asOf = null): float
     {
-        $distributedQuery = \Illuminate\Support\Facades\DB::table('uv_transactions')
+        $distributedQuery = TenantContext::table('uv_transactions')
             ->select('agent_id', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total'))
             ->where('transaction_type', 'distribution')
             ->where('status', '!=', 'cancelled')
             ->whereNull('deleted_at');
 
-        $returnedQuery = \Illuminate\Support\Facades\DB::table('uv_transactions')
+        $returnedQuery = TenantContext::table('uv_transactions')
             ->select('agent_id', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total'))
             ->where('transaction_type', 'retour')
             ->where('status', '!=', 'cancelled')
             ->whereNull('deleted_at');
 
-        $repaidQuery = \Illuminate\Support\Facades\DB::table('remboursements')
+        $repaidQuery = TenantContext::table('remboursements')
             ->select('agent_id', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total'))
             ->whereNull('deleted_at');
 

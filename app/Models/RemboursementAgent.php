@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,6 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class RemboursementAgent extends Model
 {
+    use BelongsToTenant;
     use LogsActivity, SoftDeletes;
 
     protected $table = 'remboursements_agents';
@@ -25,7 +27,7 @@ class RemboursementAgent extends Model
 
     protected $casts = [
         'montant' => 'decimal:2',
-        'date_remboursement' => 'date',
+        'date_remboursement' => 'datetime',
     ];
 
     public function getActivitylogOptions(): LogOptions

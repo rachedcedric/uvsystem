@@ -42,8 +42,13 @@ class CleanupExports extends Command
 
         $this->newLine();
 
-        $disk = Storage::disk('public');
-        $files = $disk->files('exports');
+        $disk = Storage::disk('local');
+        // Exports par tenant (tenants/{id}/exports/*) + anciens exports à plat (avant le multi-tenant).
+        $files = collect($disk->allFiles('tenants'))
+            ->filter(fn ($file) => str_contains($file, '/exports/'))
+            ->merge($disk->files('exports'))
+            ->values()
+            ->all();
 
         $deletedCount = 0;
         $deletedSize = 0;

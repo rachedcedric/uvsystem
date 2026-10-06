@@ -84,6 +84,7 @@ class RemboursementResource extends Resource
                         Forms\Components\TextInput::make('amount')
                             ->label('Montant du remboursement')
                             ->required()
+                            ->autocomplete(false)
                             ->money(min: 1)
                             ->live(debounce: 500)
                             ->rules([
@@ -148,7 +149,7 @@ class RemboursementResource extends Resource
                             ->label('Référence')
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->default(fn () => 'RMB-'.strtoupper(uniqid()))
+                            ->default(fn () => app(\App\Services\ShortReferenceGenerator::class)->generate('R', 'remboursements'))
                             ->disabled()
                             ->dehydrated(),
 

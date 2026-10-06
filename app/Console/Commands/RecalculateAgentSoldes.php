@@ -2,12 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Models\Agent;
 use App\Models\AgentSolde;
 use Illuminate\Console\Command;
 
 class RecalculateAgentSoldes extends Command
 {
+    use RunsPerTenant;
+
     /**
      * The name and signature of the console command.
      *

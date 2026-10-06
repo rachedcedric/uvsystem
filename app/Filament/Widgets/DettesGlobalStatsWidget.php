@@ -32,15 +32,15 @@ class DettesGlobalStatsWidget extends BaseWidget
                 ->icon('heroicon-o-user-group')
                 ->color('danger'),
 
-            Stat::make('Total des dettes', $this->formatMoney($summary['totalInitial']))
+            Stat::make('Dettes du jour', $this->formatMoney($summary['debtToday']))
                 ->icon('heroicon-o-banknotes')
                 ->color('primary'),
 
-            Stat::make('Déjà remboursé', $this->formatMoney($summary['totalRembourse']))
+            Stat::make('Remboursements du jour', $this->formatMoney($summary['repaidToday']))
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('success'),
 
-            Stat::make('Reste à encaisser', $this->formatMoney($summary['totalReste']))
+            Stat::make('Dette non remboursée', $this->formatMoney($summary['outstanding']))
                 ->icon('heroicon-o-exclamation-triangle')
                 ->color('warning'),
         ];

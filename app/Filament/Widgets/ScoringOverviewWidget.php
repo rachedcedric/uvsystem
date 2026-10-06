@@ -42,8 +42,7 @@ class ScoringOverviewWidget extends BaseWidget
             Stat::make('📊 Score Moyen', "{$avgScore}/100")
                 ->description($this->getScoreDescription($avgScore))
                 ->descriptionIcon($avgScore >= 60 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
-                ->color($avgScore >= 60 ? 'success' : ($avgScore >= 40 ? 'warning' : 'danger'))
-                ->chart($this->getDistributionChart($scoring)),
+                ->color($avgScore >= 60 ? 'success' : ($avgScore >= 40 ? 'warning' : 'danger')),
 
             Stat::make('🥇 Meilleur Agent', $bestAgent['name'])
                 ->description("Score: {$bestAgent['score']}/100 ({$bestAgent['grade']})")
@@ -80,17 +79,5 @@ class ScoringOverviewWidget extends BaseWidget
             $avgScore >= 40 => 'À améliorer',
             default => 'Besoin d\'attention',
         };
-    }
-
-    private function getDistributionChart($scoring): array
-    {
-        // Distribution par tranches de 10
-        $distribution = [];
-        for ($i = 0; $i <= 100; $i += 10) {
-            $count = $scoring->filter(fn ($s) => $s['score'] >= $i && $s['score'] < $i + 10)->count();
-            $distribution[] = $count;
-        }
-
-        return $distribution;
     }
 }

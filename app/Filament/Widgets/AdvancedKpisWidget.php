@@ -39,8 +39,7 @@ class AdvancedKpisWidget extends BaseWidget
             Stat::make('CA Mensuel', number_format($kpis['chiffre_affaires']['value'], 0, ',', ' ').' FCFA')
                 ->description(($kpis['chiffre_affaires']['growth'] >= 0 ? '+' : '').$kpis['chiffre_affaires']['growth'].'% vs mois précédent')
                 ->descriptionIcon($caIcon)
-                ->color($caColor)
-                ->chart($this->getChartData('ca')),
+                ->color($caColor),
 
             Stat::make('Transactions', $kpis['transactions']['count'] ?? 0)
                 ->description('Moy: '.number_format($kpis['transactions']['avg_amount'] ?? 0, 0, ',', ' ').' FCFA')
@@ -57,16 +56,5 @@ class AdvancedKpisWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-chart-bar')
                 ->color('info'),
         ];
-    }
-
-    protected function getChartData(string $type): array
-    {
-        // Récupérer les vraies données des 7 derniers jours
-        $analytics = app(AnalyticsService::class);
-
-        return match ($type) {
-            'ca' => $analytics->getDailyRevenueChart(7),
-            default => [0, 0, 0, 0, 0, 0, 0],
-        };
     }
 }

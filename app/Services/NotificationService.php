@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Tenancy\TenantContext;
 use App\Models\Agent;
 use App\Models\User;
 use App\Notifications\DebtAlertNotification;
@@ -9,6 +10,7 @@ use App\Notifications\DebtReminderNotification;
 use App\Notifications\PaymentReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -224,6 +226,32 @@ class NotificationService
     }
 
     /**
+     * Filet de sécurité pour les hébergements où le cron Laravel n'est pas
+     * actif : le premier accès admin de chaque cycle lance les rappels.
+     * Le scheduler reste la voie principale et la déduplication en base
+     * garantit qu'un agent ne reçoit jamais deux rappels dans le même cycle.
+     */
+    public function checkAndSendDebtRemindersOncePerCycle(?Carbon $at = null): ?array
+    {
+        $at ??= now();
+        $cycleKey = $this->getDebtReminderCycleKey($at);
+        $cacheKey = TenantContext::cacheKey("debt-reminders-admin-fallback:{$cycleKey}");
+        $expiresAt = $at->copy()->startOfHour()->addHours($at->hour % 2 === 0 ? 2 : 1)->addMinutes(5);
+
+        if (! Cache::add($cacheKey, true, $expiresAt)) {
+            return null;
+        }
+
+        try {
+            return $this->checkAndSendDebtReminders($at);
+        } catch (\Throwable $exception) {
+            Cache::forget($cacheKey);
+
+            throw $exception;
+        }
+    }
+
+    /**
      * Clé du cycle de 2h en cours (ex: "2026-08-25-14" pour la tranche
      * 14h-16h), alignée sur les horaires de Schedule::everyTwoHours().
      */
@@ -287,7 +315,7 @@ class NotificationService
      */
     protected function getAdminUsers()
     {
-        return User::all(); // Pour l'instant, tous les users sont admins
+        return User::whereHas('roles', fn ($query) => $query->whereIn('name', ['master', 'admin']))->get();
     }
 
     /**

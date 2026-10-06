@@ -3,7 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\UvTransaction;
+use App\Support\DailyBarChart;
 use Carbon\Carbon;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 
 class MonthlyChartWidget extends ChartWidget
@@ -34,22 +36,24 @@ class MonthlyChartWidget extends ChartWidget
 
         for ($date = $debutMois->copy(); $date->lte($aujourdhui); $date->addDay()) {
             $key = $date->toDateString();
-            $labels[] = $date->format('d/m');
+            $labels[] = $date->format('d/m/Y');
             $data[] = (float) ($rows[$key] ?? 0);
         }
+
+        $colors = DailyBarChart::colors($data, 'rgba(59, 130, 246, 0.68)', 'rgb(37, 99, 235)');
 
         return [
             'datasets' => [
                 [
                     'label' => 'CA Journalier (FCFA)',
                     'data' => $data,
-                    'backgroundColor' => 'rgba(34, 197, 94, 0.15)',
-                    'borderColor' => 'rgb(34, 197, 94)',
-                    'borderWidth' => 2,
-                    'fill' => true,
-                    'tension' => 0.35,
-                    'pointRadius' => 3,
-                    'pointBackgroundColor' => 'rgb(34, 197, 94)',
+                    'backgroundColor' => $colors['background'],
+                    'borderColor' => $colors['border'],
+                    'borderWidth' => 1,
+                    'borderRadius' => 4,
+                    'borderSkipped' => false,
+                    'barPercentage' => 0.72,
+                    'categoryPercentage' => 0.82,
                 ],
             ],
             'labels' => $labels,
@@ -58,38 +62,18 @@ class MonthlyChartWidget extends ChartWidget
 
     protected function getType(): string
     {
-        return 'line';
+        return 'bar';
     }
 
-    protected function getOptions(): array
+    public function getDescription(): ?string
     {
-        return [
-            'maintainAspectRatio' => false,
-            // mode 'index' + intersect:false : le tooltip apparaît dès que le
-            // curseur/le doigt est proche d'un point sur l'axe X, sans viser
-            // le pixel exact — essentiel pour un tap fiable sur mobile.
-            'interaction' => [
-                'mode' => 'index',
-                'intersect' => false,
-            ],
-            'plugins' => [
-                'legend' => [
-                    'display' => false,
-                ],
-                'tooltip' => [
-                    'callbacks' => [
-                        'label' => "function(context) { return context.dataset.label + ': ' + new Intl.NumberFormat('fr-FR').format(context.raw) + ' FCFA'; }",
-                    ],
-                ],
-            ],
-            'scales' => [
-                'y' => [
-                    'beginAtZero' => true,
-                    'ticks' => [
-                        'callback' => "function(value) { return new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value) + ' F'; }",
-                    ],
-                ],
-            ],
-        ];
+        $data = $this->getData();
+
+        return DailyBarChart::indicators($data['labels'], $data['datasets'][0]['data']);
+    }
+
+    protected function getOptions(): RawJs
+    {
+        return DailyBarChart::options();
     }
 }

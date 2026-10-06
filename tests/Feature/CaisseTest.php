@@ -53,22 +53,21 @@ function cat(string $name): CaisseCategorie
 
 afterEach(fn () => Carbon::setTestNow());
 
-describe('Journée de caisse 08h30 → 08h29:59', function () {
-    it('bascule exactement à 08:30:00 (08:29:59 appartient à la veille)', function () {
+describe('Journée de caisse minuit à minuit', function () {
+    it('bascule exactement à 00:00:00 (23:59:59 appartient à la veille)', function () {
         $r = app(CaissePeriodResolver::class);
 
-        expect($r->businessDateFor(Carbon::parse('2026-09-26 08:29:59', CAISSE_TZ))->toDateString())->toBe('2026-09-25')
-            ->and($r->businessDateFor(Carbon::parse('2026-09-26 08:30:00', CAISSE_TZ))->toDateString())->toBe('2026-09-26')
-            ->and($r->businessDateFor(Carbon::parse('2026-09-25 08:30:00', CAISSE_TZ))->toDateString())->toBe('2026-09-25')
-            ->and($r->businessDateFor(Carbon::parse('2026-09-25 00:10:00', CAISSE_TZ))->toDateString())->toBe('2026-09-24');
+        expect($r->businessDateFor(Carbon::parse('2026-09-25 23:59:59', CAISSE_TZ))->toDateString())->toBe('2026-09-25')
+            ->and($r->businessDateFor(Carbon::parse('2026-09-26 00:00:00', CAISSE_TZ))->toDateString())->toBe('2026-09-26')
+            ->and($r->businessDateFor(Carbon::parse('2026-09-26 00:01:00', CAISSE_TZ))->toDateString())->toBe('2026-09-26');
     });
 
-    it('range les mouvements de part et d\'autre de la limite dans la bonne journée', function () {
+    it('range les mouvements avant et après minuit dans la bonne journée', function () {
         $admin = caisseAdmin();
         $this->actingAs($admin);
 
-        caisseAt('2026-09-26 08:29:59', 'entree', 1000);
-        caisseAt('2026-09-26 08:30:00', 'entree', 500);
+        caisseAt('2026-09-25 23:59:59', 'entree', 1000);
+        caisseAt('2026-09-26 00:00:00', 'entree', 500);
 
         $service = app(CaisseService::class);
         $veille = Carbon::parse('2026-09-25', CAISSE_TZ);
@@ -78,32 +77,38 @@ describe('Journée de caisse 08h30 → 08h29:59', function () {
             ->and($service->dayTotals($jour)['solde'])->toBe('500.00');
     });
 
-    it('les widgets affichent 0 FCFA à 08:30 puis le solde de la veille dans "Solde hier"', function () {
+    it('la caisse repart à zéro à minuit et conserve le solde de la veille dans l\'historique', function () {
         $admin = caisseAdmin();
         $this->actingAs($admin);
         caisseAt('2026-09-25 12:00:00', 'entree', 13545550);
 
-        Carbon::setTestNow(Carbon::parse('2026-09-26 08:29:59', CAISSE_TZ));
+        Carbon::setTestNow(Carbon::parse('2026-09-25 23:59:59', CAISSE_TZ));
         Livewire::test(CaisseStatsWidget::class)
             ->assertSee("Solde aujourd'hui")->assertSee('Solde hier')
             ->assertSee('13 545 550 FCFA')
-            ->assertSee('Journée de caisse : 08h30 à 08h29');
+            ->assertSee('Journée civile : 00h00 à 23h59');
 
-        Carbon::setTestNow(Carbon::parse('2026-09-26 08:30:00', CAISSE_TZ));
+        Carbon::setTestNow(Carbon::parse('2026-09-26 00:00:00', CAISSE_TZ));
         $service = app(CaisseService::class);
         expect($service->soldeAujourdhui())->toBe('0.00')
-            ->and($service->soldeHier())->toBe('13545550.00');
+            ->and($service->soldeHier())->toBe('13545550.00')
+            ->and($service->soldeActuel())->toBe(0.0);
 
         Livewire::test(CaisseStatsWidget::class)
             ->assertSee('0 FCFA')->assertSee('13 545 550 FCFA')->assertSee('25 septembre 2026')
             ->assertDontSee('Total entrées');
+
+        Carbon::setTestNow(Carbon::parse('2026-09-26 00:01:00', CAISSE_TZ));
+        expect($service->soldeActuel())->toBe(0.0);
+        $service->enregistrer('entree', 2500, 'Premier mouvement du jour');
+        expect($service->soldeActuel())->toBe(2500.0);
     });
 
     it('ne supprime ni ne modifie les anciens mouvements au changement de journée', function () {
         caisseAdmin();
         $m = caisseAt('2026-09-25 12:00:00', 'entree', 1000);
 
-        Carbon::setTestNow(Carbon::parse('2026-09-26 09:00:00', CAISSE_TZ));
+        Carbon::setTestNow(Carbon::parse('2026-09-26 00:01:00', CAISSE_TZ));
         app(CaisseService::class)->soldeAujourdhui();
 
         expect($m->fresh()->amount)->toBe('1000.00')->and(CaisseMouvement::count())->toBe(1);
@@ -185,13 +190,15 @@ describe('Catégories de caisse', function () {
 describe('Enregistrement de plusieurs mouvements', function () {
     it('enregistre toutes les lignes ensemble', function () {
         $this->actingAs(caisseAdmin());
+        $operationAt = now()->subMinute()->startOfMinute();
 
         $created = app(CaisseService::class)->enregistrerLot([
             ['type' => 'entree', 'caisse_categorie_id' => cat('Espèce')->id, 'libelle' => 'Recette', 'amount' => 4020000],
             ['type' => 'sortie', 'caisse_categorie_id' => cat('Wave')->id, 'libelle' => 'Transfert', 'amount' => 20000],
-        ]);
+        ], $operationAt->toDateTimeString());
 
         expect($created)->toHaveCount(2)->and(CaisseMouvement::count())->toBe(2)
+            ->and($created->first()->date_mouvement->equalTo($operationAt))->toBeTrue()
             ->and(app(CaisseService::class)->soldeAujourdhui())->toBe('4000000.00');
     });
 
@@ -238,6 +245,16 @@ describe('Enregistrement de plusieurs mouvements', function () {
         ]);
 
         expect(CaisseMouvement::count())->toBe(2);
+    });
+
+    it('ne permet pas de dépenser le solde d\'une journée précédente', function () {
+        $this->actingAs(caisseAdmin());
+        caisseAt('2026-09-25 23:30:00', 'entree', 10000);
+        Carbon::setTestNow(Carbon::parse('2026-09-26 00:01:00', CAISSE_TZ));
+
+        expect(app(CaisseService::class)->soldeActuel())->toBe(0.0)
+            ->and(fn () => app(CaisseService::class)->enregistrer('sortie', 1, 'Sortie sans entrée du jour'))
+            ->toThrow(ValidationException::class);
     });
 
     it('via la modale "Ajouter un mouvement" de la page', function () {

@@ -131,4 +131,13 @@ describe('ListUvTransactions — footer widget placement and cleaned-up history 
             ->toContain('Date et heure')
             ->toContain('Solde Après');
     });
+
+    it('uses 25 rows by default in the compact transaction history', function () {
+        $admin = ventesUvAdmin();
+        $this->actingAs($admin);
+
+        $component = Livewire::test(ListUvTransactions::class);
+
+        expect($component->instance()->getTableRecordsPerPage())->toBe(25);
+    });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Tenancy\TenantContext;
 use App\Exports\ChargesExport;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
@@ -117,7 +118,7 @@ class ChargesPage extends Page implements HasTable
                     Forms\Components\FileUpload::make('justificatif_path')
                         ->label('Justificatif (facultatif)')
                         ->disk('local')
-                        ->directory('charges')
+                        ->directory(fn () => TenantContext::storagePath('charges'))
                         ->visibility('private')
                         ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
                         ->maxSize(5120)

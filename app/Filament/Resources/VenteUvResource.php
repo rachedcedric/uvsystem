@@ -58,10 +58,12 @@ class VenteUvResource extends Resource
                             ])
                             ->columnSpan(2),
 
-                        Forms\Components\DatePicker::make('date_vente')
-                            ->label('Date de vente')
+                        Forms\Components\DateTimePicker::make('date_vente')
+                            ->label('Date et heure de vente')
                             ->default(now())
                             ->required()
+                            ->maxDate(now())
+                            ->seconds(false)
                             ->native(false),
                     ])
                     ->columns(3),
@@ -127,8 +129,8 @@ class VenteUvResource extends Resource
                     ->icon('heroicon-o-hashtag'),
 
                 Tables\Columns\TextColumn::make('date_vente')
-                    ->label('Date')
-                    ->date('d/m/Y')
+                    ->label('Date et heure')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->icon('heroicon-o-calendar'),
 

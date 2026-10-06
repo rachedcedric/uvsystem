@@ -3,6 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Models\Agent;
+use App\Models\Remboursement;
+use App\Models\UvTransaction;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -75,17 +77,26 @@ class DettesPage extends Page implements HasTable
      * Statique (au lieu d'une méthode d'instance) pour être réutilisable
      * telle quelle par DettesGlobalStatsWidget, sans dupliquer le calcul.
      *
-     * @return array{count: int, totalInitial: float, totalRembourse: float, totalReste: float}
+     * @return array{count: int, debtToday: float, repaidToday: float, outstanding: float}
      */
     public static function getSummary(): array
     {
-        $agents = static::agentsEndettesQuery()->with('solde')->get();
+        $today = today();
+        $now = now();
 
         return [
-            'count' => $agents->count(),
-            'totalInitial' => (float) $agents->sum(fn (Agent $a) => (float) ($a->solde?->total_uv_distribues ?? $a->current_debt)),
-            'totalRembourse' => (float) $agents->sum(fn (Agent $a) => (float) ($a->solde?->total_rembourse ?? 0)),
-            'totalReste' => (float) $agents->sum('current_debt'),
+            'count' => static::agentsEndettesQuery()->count(),
+            'debtToday' => (float) UvTransaction::query()
+                ->where('transaction_type', 'distribution')
+                ->where('status', '!=', 'cancelled')
+                ->whereBetween('transaction_date', [$today, $now])
+                ->whereHas('agent', fn (Builder $query) => $query->active())
+                ->sum('amount'),
+            'repaidToday' => (float) Remboursement::query()
+                ->whereBetween('payment_date', [$today, $now])
+                ->whereHas('agent', fn (Builder $query) => $query->active())
+                ->sum('amount'),
+            'outstanding' => (float) static::agentsEndettesQuery()->sum('current_debt'),
         ];
     }
 
@@ -93,14 +104,27 @@ class DettesPage extends Page implements HasTable
     {
         return $table
             ->query(
-                // Base large (tout agent actif ayant déjà eu une dette un
-                // jour), le filtre "Statut" ci-dessous restreint par défaut
-                // aux dettes actives — cf. exigence "par défaut, privilégier
-                // les dettes actives" sans empêcher de consulter le reste.
-                Agent::query()
-                    ->active()
-                    ->whereHas('transactions', fn (Builder $q) => $q->where('transaction_type', 'distribution'))
-                    ->withMax(['transactions as last_debt_at' => fn (Builder $q) => $q->where('transaction_type', 'distribution')], 'transaction_date')
+                static::agentsEndettesQuery()
+                    ->withSum([
+                        'transactions as debt_today' => fn (Builder $query) => $query
+                            ->where('transaction_type', 'distribution')
+                            ->where('status', '!=', 'cancelled')
+                            ->whereBetween('transaction_date', [today(), now()]),
+                    ], 'amount')
+                    ->withSum([
+                        'remboursements as repaid_today' => fn (Builder $query) => $query
+                            ->whereBetween('payment_date', [today(), now()]),
+                    ], 'amount')
+                    ->withMax([
+                        'transactions as last_debt_today_at' => fn (Builder $query) => $query
+                            ->where('transaction_type', 'distribution')
+                            ->where('status', '!=', 'cancelled')
+                            ->whereBetween('transaction_date', [today(), now()]),
+                    ], 'transaction_date')
+                    ->withMax([
+                        'remboursements as last_repayment_today_at' => fn (Builder $query) => $query
+                            ->whereBetween('payment_date', [today(), now()]),
+                    ], 'payment_date')
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
@@ -114,30 +138,33 @@ class DettesPage extends Page implements HasTable
                     ->weight('bold')
                     ->description(fn (Agent $record) => $record->phone ?? ''),
 
-                Tables\Columns\TextColumn::make('solde.total_uv_distribues')
-                    ->label('Dette')
-                    ->formatStateUsing(fn ($state, Agent $record) => number_format((float) ($state ?? $record->current_debt), 0, ',', ' ').' FCFA')
+                Tables\Columns\TextColumn::make('debt_today')
+                    ->label('Dette du jour')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 0, ',', ' ').' FCFA')
                     ->alignEnd(),
 
-                Tables\Columns\TextColumn::make('solde.total_rembourse')
-                    ->label('Remboursé')
+                Tables\Columns\TextColumn::make('repaid_today')
+                    ->label('Remboursement du jour')
                     ->formatStateUsing(fn ($state) => number_format((float) $state, 0, ',', ' ').' FCFA')
                     ->color('success')
                     ->alignEnd(),
 
                 Tables\Columns\TextColumn::make('current_debt')
-                    ->label('Reste à payer')
+                    ->label('Dette non remboursée')
                     ->formatStateUsing(fn ($state) => number_format((float) $state, 0, ',', ' ').' FCFA')
                     ->weight('bold')
                     ->color(fn ($state) => $state > 0 ? 'danger' : 'success')
                     ->alignEnd(),
 
-                Tables\Columns\TextColumn::make('last_debt_at')
-                    ->label('Date et heure')
+                Tables\Columns\TextColumn::make('last_activity_today_at')
+                    ->label('Dernière activité du jour')
+                    ->getStateUsing(fn (Agent $record) => collect([
+                        $record->last_debt_today_at,
+                        $record->last_repayment_today_at,
+                    ])->filter()->max())
                     ->formatStateUsing(fn ($state) => $state
                         ? \Illuminate\Support\Carbon::parse($state)->translatedFormat('d/m/Y').' '.\Illuminate\Support\Carbon::parse($state)->format('H:i')
-                        : '—')
-                    ->sortable(),
+                        : '—'),
 
                 Tables\Columns\TextColumn::make('debt_status')
                     ->label('Statut')
@@ -145,52 +172,11 @@ class DettesPage extends Page implements HasTable
                     ->getStateUsing(fn (Agent $record) => static::statusLabel($record))
                     ->color(fn (Agent $record) => match (static::statusLabel($record)) {
                         'Soldée' => 'success',
-                        'Partiellement remboursée' => 'warning',
+                        'En cours' => 'warning',
                         default => 'danger',
                     }),
             ])
-            ->defaultSort('last_debt_at', 'desc')
-            ->filters([
-                Tables\Filters\SelectFilter::make('debt_status')
-                    ->label('Statut')
-                    ->default('active')
-                    ->options([
-                        'active' => 'Actives (en cours + partielles)',
-                        'en_cours' => 'En cours',
-                        'partiel' => 'Partiellement remboursées',
-                        'soldee' => 'Soldées',
-                        'all' => 'Toutes',
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return match ($data['value'] ?? 'active') {
-                            'en_cours' => $query->where('current_debt', '>', 0)
-                                ->whereHas('solde', fn (Builder $q) => $q->where('total_rembourse', '<=', 0)),
-                            'partiel' => $query->where('current_debt', '>', 0)
-                                ->whereHas('solde', fn (Builder $q) => $q->where('total_rembourse', '>', 0)),
-                            'soldee' => $query->where('current_debt', '<=', 0),
-                            'all' => $query,
-                            default => $query->where('current_debt', '>', 0),
-                        };
-                    }),
-
-                Tables\Filters\Filter::make('last_debt_at')
-                    ->label('Date')
-                    ->form([
-                        \Filament\Forms\Components\DatePicker::make('from')->label('Du'),
-                        \Filament\Forms\Components\DatePicker::make('until')->label('Au'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['from'] ?? null,
-                                fn (Builder $q, $date) => $q->whereHas('transactions', fn (Builder $t) => $t->where('transaction_type', 'distribution')->whereDate('transaction_date', '>=', $date))
-                            )
-                            ->when(
-                                $data['until'] ?? null,
-                                fn (Builder $q, $date) => $q->whereHas('transactions', fn (Builder $t) => $t->where('transaction_type', 'distribution')->whereDate('transaction_date', '<=', $date))
-                            );
-                    }),
-            ])
+            ->defaultSort('current_debt', 'desc')
             ->actions([
                 Tables\Actions\Action::make('encaisser')
                     ->label('Encaisser')
@@ -220,8 +206,6 @@ class DettesPage extends Page implements HasTable
             return 'Soldée';
         }
 
-        return (float) ($agent->solde?->total_rembourse ?? 0) > 0
-            ? 'Partiellement remboursée'
-            : 'En cours';
+        return 'En cours';
     }
 }

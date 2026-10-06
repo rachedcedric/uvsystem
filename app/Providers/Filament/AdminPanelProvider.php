@@ -102,6 +102,12 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn (): string => view('filament.hooks.notification-sound')->render(),
             )
+            // Pont Capacitor (APK Android) : inactif dans un navigateur classique.
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): string => '<script src="'.e(asset('js/capacitor-bridge.js')).'?v='
+                    .(@filemtime(public_path('js/capacitor-bridge.js')) ?: 1).'"></script>',
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

@@ -2,6 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Agent;
+use App\Notifications\DebtReminderNotification;
+use App\Services\NotificationService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -10,7 +13,6 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationsPage extends Page implements HasTable
@@ -21,7 +23,9 @@ class NotificationsPage extends Page implements HasTable
 
     protected static ?string $navigationLabel = 'Notifications';
 
-    protected static ?string $title = 'Centre de notifications';
+    protected static ?string $slug = 'notifications';
+
+    protected static ?string $title = 'Rappels des dettes';
 
     protected static ?string $navigationGroup = 'Système';
 
@@ -31,10 +35,10 @@ class NotificationsPage extends Page implements HasTable
 
     public function getTableQuery(): Builder
     {
-        return DatabaseNotification::query()
-            ->where('notifiable_id', Auth::id())
-            ->where('notifiable_type', get_class(Auth::user()))
-            ->latest();
+        return Agent::query()
+            ->active()
+            ->withDebt()
+            ->with('solde');
     }
 
     public function table(Table $table): Table
@@ -42,124 +46,64 @@ class NotificationsPage extends Page implements HasTable
         return $table
             ->query($this->getTableQuery())
             ->columns([
-                Tables\Columns\IconColumn::make('read_at')
-                    ->label('')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->falseIcon('heroicon-o-bell')
-                    ->trueColor('success')
-                    ->falseColor('primary')
-                    ->getStateUsing(fn ($record) => $record->read_at !== null),
-
-                Tables\Columns\TextColumn::make('icon')
-                    ->label('')
-                    ->getStateUsing(fn ($record) => $this->getNotificationIcon($record))
-                    ->html(),
-
-                Tables\Columns\TextColumn::make('data.title')
-                    ->label('Titre')
-                    ->searchable()
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Agent')
+                    ->searchable(['name', 'phone'])
                     ->weight('bold')
-                    ->wrap(),
+                    ->description(fn (Agent $record) => $record->phone ?: 'Téléphone non renseigné'),
 
-                Tables\Columns\TextColumn::make('data.body')
-                    ->label('Message')
-                    ->searchable()
-                    ->wrap()
-                    ->limit(100)
+                Tables\Columns\TextColumn::make('solde.total_uv_distribues')
+                    ->label('Dette initiale')
+                    ->formatStateUsing(fn ($state, Agent $record) => $this->formatMoney((float) ($state ?? $record->current_debt)))
+                    ->alignEnd(),
+
+                Tables\Columns\TextColumn::make('solde.total_rembourse')
+                    ->label('Remboursé')
+                    ->formatStateUsing(fn ($state) => $this->formatMoney((float) $state))
+                    ->color('success')
+                    ->alignEnd(),
+
+                Tables\Columns\TextColumn::make('current_debt')
+                    ->label('Reste à payer')
+                    ->formatStateUsing(fn ($state) => $this->formatMoney((float) $state))
+                    ->weight('bold')
+                    ->color('danger')
+                    ->sortable()
+                    ->alignEnd(),
+
+                Tables\Columns\TextColumn::make('debt_status')
+                    ->label('Statut')
+                    ->getStateUsing(fn (Agent $record) => DettesPage::statusLabel($record))
+                    ->badge()
+                    ->color('warning'),
+
+                Tables\Columns\TextColumn::make('last_reminder')
+                    ->label('Dernier rappel')
+                    ->getStateUsing(fn (Agent $record) => $this->lastReminderAt($record))
+                    ->formatStateUsing(fn ($state) => $state?->translatedFormat('d/m/Y à H:i') ?? 'Pas encore envoyé')
                     ->color('gray'),
 
-                Tables\Columns\TextColumn::make('type')
-                    ->label('Type')
-                    ->getStateUsing(fn ($record) => $this->getNotificationType($record))
-                    ->badge()
-                    ->color(fn ($record) => $this->getTypeColor($record)),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Date')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->since()
-                    ->description(fn ($record) => $record->created_at->format('d/m/Y H:i')),
-            ])
-            ->filters([
-                Tables\Filters\TernaryFilter::make('read')
-                    ->label('Statut')
-                    ->placeholder('Toutes')
-                    ->trueLabel('Lues')
-                    ->falseLabel('Non lues')
-                    ->queries(
-                        true: fn (Builder $query) => $query->whereNotNull('read_at'),
-                        false: fn (Builder $query) => $query->whereNull('read_at'),
-                    ),
-
-                Tables\Filters\Filter::make('today')
-                    ->label('Aujourd\'hui')
-                    ->query(fn (Builder $query): Builder => $query->whereDate('created_at', today())),
-
-                Tables\Filters\Filter::make('this_week')
-                    ->label('Cette semaine')
-                    ->query(fn (Builder $query): Builder => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])),
+                Tables\Columns\TextColumn::make('next_reminder')
+                    ->label('Prochain rappel')
+                    ->getStateUsing(fn () => $this->nextReminderAt())
+                    ->formatStateUsing(fn ($state) => $state->translatedFormat('d/m/Y à H:i'))
+                    ->icon('heroicon-o-clock')
+                    ->color('primary'),
             ])
             ->actions([
-                Tables\Actions\Action::make('markAsRead')
-                    ->label('Marquer lu')
-                    ->icon('heroicon-o-check')
+                Tables\Actions\Action::make('encaisser')
+                    ->label('Encaisser')
+                    ->icon('heroicon-o-banknotes')
                     ->color('success')
-                    ->visible(fn ($record) => ! $record->read_at)
-                    ->action(function ($record) {
-                        $record->markAsRead();
-
-                        Notification::make()
-                            ->title('Notification marquée comme lue')
-                            ->success()
-                            ->send();
-                    }),
-
-                Tables\Actions\Action::make('markAsUnread')
-                    ->label('Marquer non lu')
-                    ->icon('heroicon-o-bell')
-                    ->color('warning')
-                    ->visible(fn ($record) => $record->read_at)
-                    ->action(function ($record) {
-                        $record->update(['read_at' => null]);
-
-                        Notification::make()
-                            ->title('Notification marquée comme non lue')
-                            ->info()
-                            ->send();
-                    }),
-
-                Tables\Actions\Action::make('goto')
-                    ->label('Voir')
-                    ->icon('heroicon-o-arrow-right')
-                    ->color('primary')
-                    ->url(fn ($record) => $record->data['url'] ?? null)
-                    ->visible(fn ($record) => isset($record->data['url'])),
-
-                Tables\Actions\DeleteAction::make()
-                    ->label('Supprimer'),
+                    ->url(fn (Agent $record) => "/admin/remboursements/create?agent_id={$record->id}")
+                    ->visible(fn () => Auth::user()?->can('create_remboursements')),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkAction::make('markAllAsRead')
-                    ->label('Marquer comme lues')
-                    ->icon('heroicon-o-check-circle')
-                    ->action(function ($records) {
-                        $records->each->markAsRead();
-
-                        Notification::make()
-                            ->title(count($records).' notifications marquées comme lues')
-                            ->success()
-                            ->send();
-                    }),
-
-                Tables\Actions\DeleteBulkAction::make()
-                    ->label('Supprimer'),
-            ])
-            ->emptyStateHeading('Aucune notification')
-            ->emptyStateDescription('Vous n\'avez pas encore de notifications.')
-            ->emptyStateIcon('heroicon-o-bell-slash')
-            ->defaultSort('created_at', 'desc')
+            ->emptyStateHeading('Aucune dette active')
+            ->emptyStateDescription('Tous les agents sont à jour. Aucun rappel ne sera envoyé.')
+            ->emptyStateIcon('heroicon-o-check-circle')
+            ->defaultSort('current_debt', 'desc')
+            ->paginated([10, 25, 50])
+            ->defaultPaginationPageOption(10)
             ->striped()
             ->poll('30s');
     }
@@ -167,35 +111,19 @@ class NotificationsPage extends Page implements HasTable
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('markAllRead')
-                ->label('Tout marquer comme lu')
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
-                ->action(function () {
-                    Auth::user()->unreadNotifications->markAsRead();
-
-                    Notification::make()
-                        ->title('Toutes les notifications marquées comme lues')
-                        ->success()
-                        ->send();
-                })
-                ->visible(fn () => Auth::user()->unreadNotifications->count() > 0),
-
-            Actions\Action::make('deleteOld')
-                ->label('Supprimer anciennes')
-                ->icon('heroicon-o-trash')
-                ->color('danger')
+            Actions\Action::make('sendNow')
+                ->label('Envoyer les rappels maintenant')
+                ->icon('heroicon-o-bell-alert')
+                ->color('primary')
                 ->requiresConfirmation()
-                ->modalHeading('Supprimer les anciennes notifications')
-                ->modalDescription('Supprimer toutes les notifications de plus de 30 jours ?')
+                ->modalHeading('Envoyer les rappels de dettes')
+                ->modalDescription('Un rappel sera créé pour chaque agent endetté qui n\'a pas encore été notifié pendant le cycle de 2 heures en cours.')
                 ->action(function () {
-                    $count = DatabaseNotification::query()
-                        ->where('notifiable_id', Auth::id())
-                        ->where('created_at', '<', now()->subDays(30))
-                        ->delete();
+                    $result = app(NotificationService::class)->checkAndSendDebtReminders();
 
                     Notification::make()
-                        ->title("{$count} notifications supprimées")
+                        ->title("{$result['sent']} rappel(s) envoyé(s)")
+                        ->body("{$result['skipped_duplicate']} agent(s) déjà notifié(s) pendant ce cycle.")
                         ->success()
                         ->send();
                 }),
@@ -208,54 +136,28 @@ class NotificationsPage extends Page implements HasTable
         ];
     }
 
-    private function getNotificationIcon($record): string
+    private function lastReminderAt(Agent $agent): ?\Illuminate\Support\Carbon
     {
-        $type = $record->data['type'] ?? 'info';
+        $createdAt = \Illuminate\Notifications\DatabaseNotification::query()
+            ->where('type', DebtReminderNotification::class)
+            ->where('data->agent_id', $agent->id)
+            ->latest()
+            ->value('created_at');
 
-        return match ($type) {
-            'debt_alert', 'critical' => '🚨',
-            'warning' => '⚠️',
-            'payment_reminder' => '📢',
-            'transaction' => '💳',
-            'remboursement' => '💰',
-            'success' => '✅',
-            'error' => '❌',
-            'report' => '📊',
-            'backup' => '💾',
-            default => '🔔',
-        };
+        return $createdAt ? \Illuminate\Support\Carbon::parse($createdAt) : null;
     }
 
-    private function getNotificationType($record): string
+    private function nextReminderAt(): \Illuminate\Support\Carbon
     {
-        $type = $record->data['type'] ?? 'info';
+        $next = now()->copy()->startOfHour();
+        $next->hour += $next->hour % 2 === 0 ? 2 : 1;
 
-        return match ($type) {
-            'debt_alert' => 'Alerte dette',
-            'critical' => 'Critique',
-            'warning' => 'Avertissement',
-            'payment_reminder' => 'Rappel paiement',
-            'transaction' => 'Transaction',
-            'remboursement' => 'Remboursement',
-            'success' => 'Succès',
-            'error' => 'Erreur',
-            'report' => 'Rapport',
-            'backup' => 'Sauvegarde',
-            default => 'Information',
-        };
+        return $next;
     }
 
-    private function getTypeColor($record): string
+    private function formatMoney(float $amount): string
     {
-        $type = $record->data['type'] ?? 'info';
-
-        return match ($type) {
-            'debt_alert', 'critical', 'error' => 'danger',
-            'warning', 'payment_reminder' => 'warning',
-            'success', 'remboursement' => 'success',
-            'transaction' => 'primary',
-            default => 'gray',
-        };
+        return number_format($amount, 0, ',', ' ').' FCFA';
     }
 
     public static function getNavigationBadge(): ?string

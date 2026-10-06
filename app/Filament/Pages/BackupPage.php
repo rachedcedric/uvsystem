@@ -192,6 +192,6 @@ class BackupPage extends Page
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
-        return $user && $user->hasAnyRole(['master', 'admin']);
+        return $user && $user->isSuperAdmin(); // Les sauvegardes contiennent les données de TOUS les tenants : réservées au super admin de plateforme.
     }
 }

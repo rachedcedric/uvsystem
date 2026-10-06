@@ -2,13 +2,15 @@
 
 namespace App\Notifications;
 
+use App\Contracts\PushNotification as PushNotificationContract;
 use App\Models\Agent;
+use App\Notifications\Channels\FirebasePushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class DebtAlertNotification extends Notification implements ShouldQueue
+class DebtAlertNotification extends Notification implements PushNotificationContract, ShouldQueue
 {
     use Queueable;
 
@@ -24,7 +26,7 @@ class DebtAlertNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail', 'database', FirebasePushChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -57,6 +59,9 @@ class DebtAlertNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
+            'title' => $this->pushPayload()['title'],
+            'body' => $this->getAlertMessage(),
+            'url' => $this->pushPayload()['url'],
             'agent_id' => $this->agent->id,
             'agent_name' => $this->agent->name,
             'agent_phone' => $this->agent->phone,
@@ -65,6 +70,18 @@ class DebtAlertNotification extends Notification implements ShouldQueue
             'debt_ratio' => $this->debtRatio,
             'alert_type' => $this->alertType,
             'message' => $this->getAlertMessage(),
+        ];
+    }
+
+    public function pushPayload(): array
+    {
+        $severity = $this->alertType === 'critical' ? 'Dette critique' : 'Alerte dette';
+
+        return [
+            'title' => "{$severity} — {$this->agent->name}",
+            'body' => 'Dette : '.number_format((float) $this->agent->current_debt, 0, ',', ' ')." FCFA ({$this->debtRatio}% du plafond)",
+            'url' => "/m/dettes/agent/{$this->agent->id}",
+            'type' => 'agent_debt_alert',
         ];
     }
 

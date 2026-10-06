@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AgentResource\Pages;
 
+use App\Tenancy\TenantContext;
 use App\Exports\AgentsExport;
 use App\Filament\Resources\AgentResource;
 use App\Models\Agent;
@@ -53,9 +54,9 @@ class ListAgents extends ListRecords
                         $type = $data['type'] ?: null;
 
                         $filename = 'agents_'.now()->format('Y-m-d_His').'.xlsx';
-                        $path = 'exports/'.$filename;
+                        $path = TenantContext::storagePath('exports/'.$filename);
 
-                        Excel::store(new AgentsExport($status, $type), $path, 'public');
+                        Excel::store(new AgentsExport($status, $type), $path, 'local');
 
                         return redirect()->route('exports.download', ['filename' => $filename]);
                     }),

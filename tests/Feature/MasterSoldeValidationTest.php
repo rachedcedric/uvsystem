@@ -167,7 +167,7 @@ class MasterSoldeValidationTest extends TestCase
         echo "✅ Fournisseur modifié\n";
 
         // Vérifier les logs
-        $logs = \Spatie\Activitylog\Models\Activity::where('subject_type', Fournisseur::class)
+        $logs = \App\Models\Activity::where('subject_type', Fournisseur::class)
             ->where('subject_id', $fournisseur->id)
             ->get();
 

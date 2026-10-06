@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Models\UvTransaction;
 use Illuminate\Console\Command;
 
 class RecalculateCommissionsCommand extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'commissions:recalculate
                             {--agent= : ID de l\'agent spécifique à recalculer}
                             {--dry-run : Afficher ce qui serait fait sans modifier}';

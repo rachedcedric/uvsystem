@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Tenancy\TenantContext;
 use App\Filament\Resources\SousDistributeurResource\Pages;
 use App\Filament\Resources\SousDistributeurResource\RelationManagers;
 use App\Models\SousDistributeur;
@@ -52,7 +53,7 @@ class SousDistributeurResource extends Resource
                             ->label('Telephone')
                             ->tel()
                             ->required()
-                            ->unique(ignoreRecord: true)
+                            ->unique(ignoreRecord: true, modifyRuleUsing: TenantContext::scopeUnique())
                             ->maxLength(20),
 
                         Forms\Components\TextInput::make('email')

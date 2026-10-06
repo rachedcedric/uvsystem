@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\User;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 
 class GenerateDailyReport extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'uv:daily-report
                             {--date= : Date du rapport (YYYY-MM-DD), défaut: hier}
                             {--email : Envoyer le rapport par email}

@@ -6,7 +6,6 @@ use App\Models\Commission;
 use App\Services\BusinessPeriodResolver;
 use App\Services\CommissionService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
  * 8 widgets de la page Commissions : Aujourd'hui / Cette semaine / Ce mois /
@@ -52,40 +51,40 @@ class CommissionKpisWidget extends BaseWidget
         $prochainCalcul = $resolver->nextCutoff();
 
         return [
-            Stat::make("Aujourd'hui", $this->formatMoney($commissionAujourdhui))
+            CompactStat::make("Aujourd'hui", $this->formatMoney($commissionAujourdhui))
                 ->description('Journée métier en cours')
                 ->icon('heroicon-o-star')
                 ->color('primary'),
 
-            Stat::make('Cette semaine', $this->formatMoney($commissionSemaine))
+            CompactStat::make('Cette semaine', $this->formatMoney($commissionSemaine))
                 ->icon('heroicon-o-calendar-days')
                 ->color('info'),
 
-            Stat::make('Ce mois', $this->formatMoney($commissionMois))
+            CompactStat::make('Ce mois', $this->formatMoney($commissionMois))
                 ->icon('heroicon-o-calendar-days')
                 ->color('warning'),
 
-            Stat::make('Total cumulé', $this->formatMoney($commissionCumulee))
+            CompactStat::make('Total cumulé', $this->formatMoney($commissionCumulee))
                 ->description('Depuis le début')
                 ->icon('heroicon-o-archive-box')
                 ->color('success'),
 
-            Stat::make("Commission d'hier", $this->formatMoney($commissionHier))
+            CompactStat::make("Commission d'hier", $this->formatMoney($commissionHier))
                 ->description('Dernière journée métier clôturée')
                 ->icon('heroicon-o-check-circle')
                 ->color('gray'),
 
-            Stat::make('Commission prévisionnelle', $this->formatMoney($commissionAujourdhui))
+            CompactStat::make('Commission prévisionnelle', $this->formatMoney($commissionAujourdhui))
                 ->description('Estimation sur le volume en cours, évolue jusqu\'à la clôture')
                 ->icon('heroicon-o-chart-bar')
                 ->color('primary'),
 
-            Stat::make('Volume du jour (en cours)', $this->formatMoney($volumeJour))
+            CompactStat::make('Volume du jour (en cours)', $this->formatMoney($volumeJour))
                 ->description('Ventes accumulées pour la prochaine clôture')
                 ->icon('heroicon-o-shopping-cart')
                 ->color('info'),
 
-            Stat::make('Prochain calcul', $this->formatCutoffLabel($prochainCalcul))
+            CompactStat::make('Prochain calcul', $this->formatCutoffLabel($prochainCalcul))
                 ->description($prochainCalcul->format('d/m/Y \\à H:i'))
                 ->icon('heroicon-o-clock')
                 ->color('gray'),

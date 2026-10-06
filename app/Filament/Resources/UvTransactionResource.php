@@ -95,6 +95,7 @@ class UvTransactionResource extends Resource
                         Forms\Components\TextInput::make('amount')
                             ->label('Montant (FCFA)')
                             ->required()
+                            ->autocomplete(false)
                             ->money(min: 1)
                             ->live(debounce: 500)
                             ->afterStateUpdated(function (Get $get, Set $set, ?string $state) {
@@ -279,8 +280,7 @@ class UvTransactionResource extends Resource
                     ->label('Agent')
                     ->searchable()
                     ->sortable()
-                    ->icon('heroicon-m-user')
-                    ->description(fn (UvTransaction $record) => $record->agent?->phone ?? ''),
+                    ->icon('heroicon-m-user'),
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
@@ -333,8 +333,7 @@ class UvTransactionResource extends Resource
                     ->label('Date et heure')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
-                    ->icon('heroicon-m-calendar')
-                    ->description(fn (UvTransaction $record) => $record->transaction_date?->diffForHumans() ?? ''),
+                    ->icon('heroicon-m-calendar'),
 
                 Tables\Columns\TextColumn::make('notes')
                     ->label('Notes')
@@ -350,6 +349,8 @@ class UvTransactionResource extends Resource
             ])
             ->striped()
             ->defaultSort('transaction_date', 'desc')
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(25)
             ->filters([
                 Tables\Filters\SelectFilter::make('agent_id')
                     ->relationship('agent', 'name')

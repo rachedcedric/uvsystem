@@ -69,6 +69,10 @@ class AppServiceProvider extends ServiceProvider
         // journée déjà clôturée, il ne crée jamais de commission par vente)
         // VenteUv::observe(CommissionObserver::class);
 
+        // Les actions Livewire (/livewire/update) ne repassent pas par les middlewares de route :
+        // sans ceci, un tenant suspendu garderait la main sur une page /m déjà ouverte.
+        \Livewire\Livewire::addPersistentMiddleware([\App\Http\Middleware\MobileAccess::class]);
+
         $this->configureRateLimiting();
         $this->registerMoneyInputMacro();
     }

@@ -2,7 +2,9 @@
 
 namespace App\Notifications;
 
+use App\Contracts\PushNotification as PushNotificationContract;
 use App\Models\Agent;
+use App\Notifications\Channels\FirebasePushChannel;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -17,7 +19,7 @@ use Illuminate\Notifications\Notification;
  * niveau) : c'est ce que lisent NotificationsRecentesWidget et
  * NotificationsPage pour l'affichage et le clic.
  */
-class DebtReminderNotification extends Notification
+class DebtReminderNotification extends Notification implements PushNotificationContract
 {
     public function __construct(
         protected Agent $agent,
@@ -30,7 +32,7 @@ class DebtReminderNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', FirebasePushChannel::class];
     }
 
     public function toArray(object $notifiable): array
@@ -71,6 +73,16 @@ class DebtReminderNotification extends Notification
             'total_rembourse' => $this->totalRembourse,
             'reste_du' => $this->resteDu,
             'debt_status_label' => $this->debtStatusLabel,
+        ];
+    }
+
+    public function pushPayload(): array
+    {
+        return [
+            'title' => "Dette agent — {$this->agent->name}",
+            'body' => number_format($this->resteDu, 0, ',', ' ')." FCFA restant dû",
+            'url' => "/m/dettes/agent/{$this->agent->id}",
+            'type' => 'agent_debt_reminder',
         ];
     }
 }

@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 
 /**
- * Journée de caisse : de 08h30 au lendemain 08h29:59 (Africa/Abidjan).
+ * Journée de caisse : minuit à minuit (Africa/Abidjan).
  * Purement calculée à partir de l'horodatage des mouvements : aucune tâche
  * planifiée n'est nécessaire au basculement de journée.
  */
@@ -14,17 +14,15 @@ class CaissePeriodResolver
 {
     public const TIMEZONE = 'Africa/Abidjan';
 
-    public const CUTOFF_HOUR = 8;
+    public const CUTOFF_HOUR = 0;
 
-    public const CUTOFF_MINUTE = 30;
+    public const CUTOFF_MINUTE = 0;
 
     /** Date (00:00) de la journée de caisse à laquelle appartient $moment. */
     public function businessDateFor(CarbonInterface $moment): Carbon
     {
         return Carbon::instance($moment)
             ->setTimezone(self::TIMEZONE)
-            ->subHours(self::CUTOFF_HOUR)
-            ->subMinutes(self::CUTOFF_MINUTE)
             ->startOfDay();
     }
 

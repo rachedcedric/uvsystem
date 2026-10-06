@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DetteAgent extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'dettes_agents';
 
     protected $fillable = [

@@ -38,8 +38,7 @@ class RecoveryStatsWidget extends BaseWidget
             Stat::make('Taux de recouvrement', $tauxRecouvrement.'%')
                 ->description($totalRembourse > 0 ? 'Sur '.number_format($totalDistribue, 0, ',', ' ').' FCFA distribués' : 'Aucune distribution')
                 ->descriptionIcon('heroicon-m-chart-pie')
-                ->color($tauxRecouvrement >= 70 ? 'success' : ($tauxRecouvrement >= 50 ? 'warning' : 'danger'))
-                ->chart([65, 70, 72, 68, 75, $tauxRecouvrement]),
+                ->color($tauxRecouvrement >= 70 ? 'success' : ($tauxRecouvrement >= 50 ? 'warning' : 'danger')),
 
             Stat::make('Agents soldés', $agentsSansDette.' / '.$totalAgents)
                 ->description('Sans dette en cours')

@@ -74,7 +74,7 @@ class MaCaisseJourPage extends Page implements HasTable
     {
         $b = app(CaissePeriodResolver::class);
 
-        return $this->businessDate()->format('d/m/Y').' 08h30 → '.$b->endLabelMoment($this->businessDate())->format('d/m/Y').' 08h29';
+        return $this->businessDate()->format('d/m/Y').' 00h00 → '.$b->endLabelMoment($this->businessDate())->format('d/m/Y').' 23h59';
     }
 
     public function table(Table $table): Table
@@ -116,6 +116,8 @@ class MaCaisseJourPage extends Page implements HasTable
                             ->options(fn () => MaCaissePage::activeCategoryOptions()),
                         Forms\Components\TextInput::make('libelle')->label('Libellé')->required()->maxLength(255),
                         Forms\Components\TextInput::make('amount')->label('Montant')->money(min: 1)->required(),
+                        Forms\Components\DateTimePicker::make('date_mouvement')->label('Date et heure')
+                            ->required()->maxDate(now())->seconds(false)->native(false),
                     ])
                     ->using(function (CaisseMouvement $record, array $data) {
                         try {

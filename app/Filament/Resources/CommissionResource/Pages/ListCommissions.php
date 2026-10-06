@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CommissionResource\Pages;
 
+use App\Tenancy\TenantContext;
 use App\Exports\CommissionsExport;
 use App\Filament\Resources\CommissionResource;
 use App\Filament\Widgets\CommissionKpisWidget;
@@ -188,7 +189,7 @@ class ListCommissions extends ListRecords
                     ])
                     ->action(function (array $data) {
                         $filename = 'commissions_'.now()->format('Y-m-d_His').'.xlsx';
-                        $path = 'exports/'.$filename;
+                        $path = TenantContext::storagePath('exports/'.$filename);
 
                         Excel::store(
                             new CommissionsExport(
@@ -197,7 +198,7 @@ class ListCommissions extends ListRecords
                                 $data['end_date'] ?? null
                             ),
                             $path,
-                            'public'
+                            'local'
                         );
 
                         return redirect()->route('exports.download', ['filename' => $filename]);

@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             AgentSeeder::class,
             ApprovisionnementSeeder::class,
             ChargeCategorieSeeder::class,
+            PaymentMethodSeeder::class,
         ]);
     }
 }

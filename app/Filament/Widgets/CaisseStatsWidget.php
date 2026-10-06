@@ -8,7 +8,7 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
- * "Solde aujourd'hui" / "Solde hier" : journées de caisse 08h30 → 08h29:59.
+ * "Solde aujourd'hui" / "Solde hier" : journées civiles en Africa/Abidjan.
  * Aucun calcul propre : tout vient de CaisseService.
  */
 class CaisseStatsWidget extends BaseWidget
@@ -30,7 +30,7 @@ class CaisseStatsWidget extends BaseWidget
 
         return [
             Stat::make("Solde aujourd'hui", CaisseService::fcfa($today))
-                ->description('Journée de caisse : 08h30 à 08h29')
+                ->description('Journée civile : 00h00 à 23h59')
                 ->icon('heroicon-o-wallet')
                 ->color(bccomp($today, '0', 2) >= 0 ? 'success' : 'danger'),
 

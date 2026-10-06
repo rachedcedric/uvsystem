@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\NotificationService;
 use Illuminate\Console\Command;
 
 class CheckDebtAlerts extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'uv:check-debt-alerts 
                             {--warning=70 : Seuil d\'alerte warning (%)}
                             {--critical=90 : Seuil d\'alerte critique (%)}';

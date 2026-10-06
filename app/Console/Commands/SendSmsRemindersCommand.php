@@ -2,12 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Models\Agent;
 use App\Services\SmsService;
 use Illuminate\Console\Command;
 
 class SendSmsRemindersCommand extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'sms:reminders 
                             {--min-ratio=70 : Ratio de dette minimum pour envoyer un rappel}
                             {--dry-run : Simulation sans envoi réel}

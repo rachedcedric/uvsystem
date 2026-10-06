@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Tenancy\TenantContext;
 use App\Exports\DettesExport;
 use App\Models\Agent;
 use App\Services\BusinessPeriodResolver;
@@ -116,7 +117,7 @@ class AgentDebtDetailPage extends Page
      */
     private function buildHistoryUnionQuery(): \Illuminate\Database\Query\Builder
     {
-        $ventes = DB::table('uv_transactions')
+        $ventes = TenantContext::table('uv_transactions')
             ->where('agent_id', $this->agent->id)
             ->where('status', '!=', 'cancelled')
             ->whereNull('deleted_at')
@@ -131,7 +132,7 @@ class AgentDebtDetailPage extends Page
                 'transaction_date as date_operation',
             ]);
 
-        $remboursements = DB::table('remboursements')
+        $remboursements = TenantContext::table('remboursements')
             ->where('agent_id', $this->agent->id)
             ->whereNull('deleted_at')
             ->select([
@@ -220,12 +221,12 @@ class AgentDebtDetailPage extends Page
                     ->color('success')
                     ->action(function () {
                         $filename = 'dette_'.Str::slug($this->agent->name).'_'.now()->format('Y-m-d_His').'.xlsx';
-                        $path = 'exports/'.$filename;
+                        $path = TenantContext::storagePath('exports/'.$filename);
 
                         Excel::store(
                             new DettesExport($this->agent, $this->getSummary(), $this->getFullHistory()),
                             $path,
-                            'public'
+                            'local'
                         );
 
                         return redirect()->route('exports.download', ['filename' => $filename]);

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,6 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Remboursement extends Model
 {
+    use BelongsToTenant;
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
@@ -34,6 +36,12 @@ class Remboursement extends Model
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class);
+    }
+
+    /** Moyen de paiement (la colonne payment_method stocke le code du moyen). */
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class, 'payment_method', 'code');
     }
 
     /**

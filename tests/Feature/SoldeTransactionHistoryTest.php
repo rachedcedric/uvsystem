@@ -115,6 +115,7 @@ describe('master-solde:backfill', function () {
         $agent = Agent::factory()->create(['status' => 'active']);
 
         DB::table('approvisionnements')->insert([
+            'tenant_id' => 1,
             'user_id' => $user->id,
             'fournisseur_id' => $fournisseur->id,
             'amount' => 5000000,
@@ -127,6 +128,7 @@ describe('master-solde:backfill', function () {
         ]);
 
         DB::table('uv_transactions')->insert([
+            'tenant_id' => 1,
             'agent_id' => $agent->id,
             'amount' => 2000000,
             'transaction_type' => 'distribution',
@@ -155,6 +157,7 @@ describe('master-solde:backfill', function () {
         $user = User::factory()->create();
 
         DB::table('approvisionnements')->insert([
+            'tenant_id' => 1,
             'user_id' => $user->id,
             'fournisseur_id' => $fournisseur->id,
             'amount' => 1000000,
@@ -176,6 +179,7 @@ describe('master-solde:backfill', function () {
 
     it('never writes a possibly-wrong balance when the reconciliation check fails', function () {
         DB::table('approvisionnements')->insert([
+            'tenant_id' => 1,
             'user_id' => User::factory()->create()->id,
             'fournisseur_id' => Fournisseur::factory()->create()->id,
             'amount' => 1000000,

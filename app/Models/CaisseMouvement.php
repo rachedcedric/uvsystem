@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -17,6 +18,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  */
 class CaisseMouvement extends Model
 {
+    use BelongsToTenant;
     use LogsActivity, SoftDeletes;
 
     public const TYPE_ENTREE = 'entree';

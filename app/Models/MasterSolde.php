@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\LogOptions;
@@ -9,6 +10,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class MasterSolde extends Model
 {
+    use BelongsToTenant;
     use LogsActivity;
 
     protected $fillable = [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Fournisseur extends Model
 {
+    use BelongsToTenant;
     use HasFactory, LogsActivity, SoftDeletes;
+
+    public const TYPE_CREDIT = 'AGENT_PREMIUM';
 
     protected $fillable = [
         'name',
@@ -49,7 +53,12 @@ class Fournisseur extends Model
      */
     public function scopeCreditFournisseurs($query)
     {
-        return $query->where('type', 'AGENT_PREMIUM');
+        return $query->whereRaw('UPPER(type) = ?', [self::TYPE_CREDIT]);
+    }
+
+    public function isCreditFournisseur(): bool
+    {
+        return strtoupper((string) $this->type) === self::TYPE_CREDIT;
     }
 
     // Activity Log

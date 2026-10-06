@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UvTransactionResource\Pages;
 
+use App\Tenancy\TenantContext;
 use App\Exports\UvTransactionsExport;
 use App\Filament\Resources\UvTransactionResource;
 use App\Filament\Widgets\Top5AgentsTodayWidget;
@@ -79,7 +80,7 @@ class ListUvTransactions extends ListRecords
                     ])
                     ->action(function (array $data) {
                         $filename = 'ventes_uv_'.now()->format('Y-m-d_His').'.xlsx';
-                        $path = 'exports/'.$filename;
+                        $path = TenantContext::storagePath('exports/'.$filename);
 
                         Excel::store(
                             new UvTransactionsExport(
@@ -89,7 +90,7 @@ class ListUvTransactions extends ListRecords
                                 $data['transaction_type'] ?: null
                             ),
                             $path,
-                            'public'
+                            'local'
                         );
 
                         return redirect()->route('exports.download', ['filename' => $filename]);

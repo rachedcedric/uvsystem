@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PaymentMethod extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
         'code',
         'name',

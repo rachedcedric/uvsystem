@@ -4,7 +4,7 @@ use App\Models\Charge;
 use App\Models\ChargeCategorie;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 
 uses(RefreshDatabase::class);
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,6 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class UvTransaction extends Model
 {
+    use BelongsToTenant;
     use HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [

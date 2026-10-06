@@ -90,9 +90,9 @@ class DettesPageTest extends TestCase
 
         $summary = $component->instance()->getSummary();
         $this->assertSame(1, $summary['count']);
-        $this->assertEqualsWithDelta(250_000, $summary['totalInitial'], 0.01);
-        $this->assertEqualsWithDelta(0, $summary['totalRembourse'], 0.01);
-        $this->assertEqualsWithDelta(250_000, $summary['totalReste'], 0.01);
+        $this->assertEqualsWithDelta(250_000, $summary['debtToday'], 0.01);
+        $this->assertEqualsWithDelta(0, $summary['repaidToday'], 0.01);
+        $this->assertEqualsWithDelta(250_000, $summary['outstanding'], 0.01);
     }
 
     /** Plusieurs agents avec dette : tous comptés */
@@ -105,7 +105,7 @@ class DettesPageTest extends TestCase
         $summary = Livewire::test(DettesPage::class)->instance()->getSummary();
 
         $this->assertSame(3, $summary['count']);
-        $this->assertEqualsWithDelta(600_000, $summary['totalInitial'], 0.01);
+        $this->assertEqualsWithDelta(600_000, $summary['debtToday'], 0.01);
     }
 
     /** Un agent avec plusieurs dettes (ventes) : une seule ligne (pool global) */
@@ -120,21 +120,21 @@ class DettesPageTest extends TestCase
         $summary = Livewire::test(DettesPage::class)->instance()->getSummary();
 
         $this->assertSame(1, $summary['count']);
-        $this->assertEqualsWithDelta(250_000, $summary['totalReste'], 0.01);
+        $this->assertEqualsWithDelta(250_000, $summary['outstanding'], 0.01);
     }
 
-    /** Dette partiellement remboursée : statut adapté, toujours listée */
+    /** Toute dette non soldée conserve le statut simple "En cours" */
     public function test_partially_repaid_debt_shows_correct_status(): void
     {
         $agent = $this->creerAgentAvecDette(200_000);
         app(RemboursementService::class)->process($agent, 50_000);
         $agent->recalculateDebt();
 
-        $this->assertSame('Partiellement remboursée', DettesPage::statusLabel($agent->fresh()->load('solde')));
+        $this->assertSame('En cours', DettesPage::statusLabel($agent->fresh()->load('solde')));
 
         $summary = Livewire::test(DettesPage::class)->instance()->getSummary();
         $this->assertSame(1, $summary['count']);
-        $this->assertEqualsWithDelta(150_000, $summary['totalReste'], 0.01);
+        $this->assertEqualsWithDelta(150_000, $summary['outstanding'], 0.01);
     }
 
     /** Dette totalement soldée : disparaît de la liste active et du badge */
@@ -188,14 +188,14 @@ class DettesPageTest extends TestCase
         );
     }
 
-    /** Colonne Date/Heure fusionnée : une seule colonne "Date et heure", pas deux */
+    /** Une seule colonne affiche la dernière activité du jour */
     public function test_date_and_time_are_merged_into_a_single_column(): void
     {
         $this->creerAgentAvecDette(75_000);
 
         $html = Livewire::test(DettesPage::class)->html();
 
-        $this->assertStringContainsString('Date et heure', $html);
+        $this->assertStringContainsString('Dernière activité du jour', $html);
         $this->assertStringNotContainsString('>Heure<', $html);
     }
 
@@ -210,18 +210,63 @@ class DettesPageTest extends TestCase
         $component->assertSee('KOFFI Jean')->assertDontSee('YAO Fernand');
     }
 
-    /** Filtre par statut */
-    public function test_status_filter(): void
+    /** Les dettes actives, même déjà remboursées en partie, ont le même statut */
+    public function test_all_outstanding_debts_use_the_in_progress_status(): void
     {
         $agentEnCours = $this->creerAgentAvecDette(100_000, 'Agent En Cours');
         $agentPartiel = $this->creerAgentAvecDette(200_000, 'Agent Partiel');
         app(RemboursementService::class)->process($agentPartiel, 50_000);
         $agentPartiel->recalculateDebt();
 
-        $component = Livewire::test(DettesPage::class)
-            ->filterTable('debt_status', 'en_cours');
+        $component = Livewire::test(DettesPage::class);
 
-        $component->assertSee('Agent En Cours')->assertDontSee('Agent Partiel');
+        $component
+            ->assertSee('Agent En Cours')
+            ->assertSee('Agent Partiel')
+            ->assertSee('En cours')
+            ->assertDontSee('Partiellement remboursée');
+    }
+
+    /** Les colonnes journalières excluent hier, le reste dû reste cumulatif */
+    public function test_daily_columns_exclude_previous_days_while_outstanding_debt_remains_cumulative(): void
+    {
+        $agent = Agent::factory()->create(['name' => 'Agent Journalier', 'status' => 'active', 'debt_limit' => 0]);
+        $distributionService = app(UvDistributionService::class);
+        $remboursementService = app(RemboursementService::class);
+
+        $distributionService->distribute(
+            $agent,
+            400_000,
+            $this->fournisseur,
+            now()->subDay()->setTime(10, 0)->toDateTimeString(),
+        );
+        $remboursementService->process(
+            $agent->fresh(),
+            50_000,
+            paymentDate: now()->subDay()->setTime(12, 0)->toDateTimeString(),
+        );
+        $distributionService->distribute(
+            $agent->fresh(),
+            100_000,
+            $this->fournisseur,
+            now()->setTime(9, 0)->toDateTimeString(),
+        );
+        $remboursementService->process(
+            $agent->fresh(),
+            20_000,
+            paymentDate: now()->setTime(9, 30)->toDateTimeString(),
+        );
+
+        $component = Livewire::test(DettesPage::class);
+        $record = $component->instance()->getTableRecords()->firstWhere('id', $agent->id);
+        $summary = $component->instance()->getSummary();
+
+        $this->assertEqualsWithDelta(100_000, (float) $record->debt_today, 0.01);
+        $this->assertEqualsWithDelta(20_000, (float) $record->repaid_today, 0.01);
+        $this->assertEqualsWithDelta(430_000, (float) $record->current_debt, 0.01);
+        $this->assertEqualsWithDelta(100_000, $summary['debtToday'], 0.01);
+        $this->assertEqualsWithDelta(20_000, $summary['repaidToday'], 0.01);
+        $this->assertEqualsWithDelta(430_000, $summary['outstanding'], 0.01);
     }
 
     /** Pagination (backend) */

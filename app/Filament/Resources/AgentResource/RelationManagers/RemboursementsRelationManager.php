@@ -35,11 +35,13 @@ class RemboursementsRelationManager extends RelationManager
                     ])
                     ->required()
                     ->default('cash'),
-                Forms\Components\DatePicker::make('payment_date')
-                    ->label('Date de paiement')
+                Forms\Components\DateTimePicker::make('payment_date')
+                    ->label('Date et heure de paiement')
                     ->required()
                     ->default(now())
-                    ->maxDate(now()),
+                    ->maxDate(now())
+                    ->seconds(false)
+                    ->native(false),
                 Forms\Components\Textarea::make('notes')
                     ->label('Notes')
                     ->rows(2),

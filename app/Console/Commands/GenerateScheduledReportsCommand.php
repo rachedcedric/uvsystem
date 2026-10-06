@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Exports\UvTransactionsExport;
 use App\Models\Agent;
 use App\Models\Remboursement;
@@ -14,6 +15,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class GenerateScheduledReportsCommand extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'reports:generate
                             {type=daily : Type de rapport (daily, weekly, monthly)}
                             {--email= : Email du destinataire (optionnel)}

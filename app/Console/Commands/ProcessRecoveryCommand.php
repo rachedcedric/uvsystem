@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\RecoveryService;
 use Illuminate\Console\Command;
 
 class ProcessRecoveryCommand extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'recovery:process
                             {--dry-run : Simulation sans actions réelles}
                             {--stats : Afficher uniquement les statistiques}';

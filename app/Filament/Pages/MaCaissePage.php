@@ -22,7 +22,7 @@ use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
 /**
- * "Ma Caisse" : historique regroupé par journée de caisse (08h30 → 08h29:59,
+ * "Ma Caisse" : historique regroupé par journée civile (00h00 → 23h59,
  * Africa/Abidjan). Tout calcul passe par CaisseService (source unique).
  */
 class MaCaissePage extends Page
@@ -189,11 +189,12 @@ class MaCaissePage extends Page
                 ->live()
                 ->reorderable(false),
 
-            Forms\Components\DatePicker::make('caisse_date')
-                ->label('Date de caisse')
-                ->default(fn () => app(CaissePeriodResolver::class)->currentDate()->toDateString())
-                ->maxDate(fn () => app(CaissePeriodResolver::class)->currentDate()->toDateString())
-                ->required()->native(false)->displayFormat('d/m/Y'),
+            Forms\Components\DateTimePicker::make('caisse_date')
+                ->label('Date et heure de caisse')
+                ->default(now())
+                ->maxDate(now())
+                ->seconds(false)
+                ->required()->native(false)->displayFormat('d/m/Y H:i'),
 
             Forms\Components\Grid::make(3)->schema([
                 Forms\Components\Placeholder::make('total_entrees')->label('Total entrées')

@@ -2,11 +2,14 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\NotificationService;
 use Illuminate\Console\Command;
 
 class SendPaymentReminders extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'uv:send-reminders 
                             {--min-ratio=50 : Ratio minimum de dette pour envoyer un rappel (%)}
                             {--dry-run : Simule l\'envoi sans envoyer réellement}';

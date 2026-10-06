@@ -9,7 +9,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 
 class ActivityLogResource extends Resource
 {

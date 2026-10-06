@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Charge extends Model
 {
+    use BelongsToTenant;
     use LogsActivity, SoftDeletes;
 
     protected $fillable = [

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,6 +11,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Approvisionnement extends Model
 {
+    use BelongsToTenant;
     use LogsActivity, SoftDeletes;
 
     protected $fillable = [
@@ -27,7 +29,7 @@ class Approvisionnement extends Model
         'amount' => 'decimal:2',
         'solde_uv_avant' => 'decimal:2',
         'solde_uv_apres' => 'decimal:2',
-        'date_approvisionnement' => 'date',
+        'date_approvisionnement' => 'datetime',
     ];
 
     // Relations

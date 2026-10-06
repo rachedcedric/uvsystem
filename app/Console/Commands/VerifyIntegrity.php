@@ -2,12 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\SecurityService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class VerifyIntegrity extends Command
 {
+    use RunsPerTenant;
+
     /**
      * The name and signature of the console command.
      */

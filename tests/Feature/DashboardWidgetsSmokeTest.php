@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Widgets\NotificationsRecentesWidget;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
@@ -26,7 +27,8 @@ class DashboardWidgetsSmokeTest extends TestCase
 
         $response = $this->actingAs($user)->get('/admin');
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertSee('css/filament-compact.css', false);
     }
 
     /**
@@ -47,6 +49,35 @@ class DashboardWidgetsSmokeTest extends TestCase
         // actif sur le panel en plus de la liste curée du Dashboard.
         Livewire::test(\App\Filament\Widgets\RemboursementsStatsWidget::class)->assertOk();
         Livewire::test(\App\Filament\Widgets\VentesUvStatsWidget::class)->assertOk();
+    }
+
+    public function test_transaction_widgets_use_the_compact_layout(): void
+    {
+        Livewire::test(\App\Filament\Widgets\VentesUvStatsWidget::class)
+            ->assertSeeHtml('compact-stat-card');
+        Livewire::test(\App\Filament\Widgets\RemboursementsStatsWidget::class)
+            ->assertSeeHtml('compact-stat-card');
+        Livewire::test(\App\Filament\Widgets\CommissionKpisWidget::class)
+            ->assertSeeHtml('compact-stat-card');
+        Livewire::test(\App\Filament\Widgets\CommissionMonthlyChartWidget::class)
+            ->assertSeeHtml('max-height: 200px');
+    }
+
+    public function test_notification_widgets_use_the_project_alignment(): void
+    {
+        Role::firstOrCreate(['name' => 'master', 'guard_name' => 'web']);
+        $user = User::factory()->create();
+        $user->assignRole('master');
+
+        $columnSpan = (fn () => $this->columnSpan)->call(new NotificationsRecentesWidget);
+
+        $this->assertSame('full', $columnSpan);
+
+        $this->actingAs($user)
+            ->get('/admin/notifications')
+            ->assertOk()
+            ->assertSee('md:grid-cols-2', false)
+            ->assertSee('xl:grid-cols-4', false);
     }
 
     public function test_dashboard_loads_with_seeded_data(): void

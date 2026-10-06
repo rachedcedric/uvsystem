@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Models\Commission;
 use App\Models\UvTransaction;
 use App\Services\CommissionBusinessDateResolver;
@@ -11,6 +12,8 @@ use Illuminate\Console\Command;
 
 class VerifierCommissionsHistoriqueCommand extends Command
 {
+    use RunsPerTenant;
+
     /**
      * The name and signature of the console command.
      *

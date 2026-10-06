@@ -56,10 +56,12 @@ class RemboursementAgentResource extends Resource
                             })
                             ->columnSpan(2),
 
-                        Forms\Components\DatePicker::make('date_remboursement')
-                            ->label('Date de remboursement')
+                        Forms\Components\DateTimePicker::make('date_remboursement')
+                            ->label('Date et heure de remboursement')
                             ->default(now())
                             ->required()
+                            ->maxDate(now())
+                            ->seconds(false)
                             ->native(false),
 
                         Forms\Components\Placeholder::make('_dette_actuelle')
@@ -136,8 +138,8 @@ class RemboursementAgentResource extends Resource
                     ->icon('heroicon-o-hashtag'),
 
                 Tables\Columns\TextColumn::make('date_remboursement')
-                    ->label('Date')
-                    ->date('d/m/Y')
+                    ->label('Date et heure')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->icon('heroicon-o-calendar'),
 

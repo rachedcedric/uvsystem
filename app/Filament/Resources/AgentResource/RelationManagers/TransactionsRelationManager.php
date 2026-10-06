@@ -35,11 +35,13 @@ class TransactionsRelationManager extends RelationManager
                     ])
                     ->default('distribution')
                     ->required(),
-                Forms\Components\DatePicker::make('transaction_date')
-                    ->label('Date')
+                Forms\Components\DateTimePicker::make('transaction_date')
+                    ->label('Date et heure')
                     ->required()
                     ->default(now())
-                    ->maxDate(now()),
+                    ->maxDate(now())
+                    ->seconds(false)
+                    ->native(false),
             ]);
     }
 

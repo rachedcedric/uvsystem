@@ -50,6 +50,7 @@ describe('ShortReferenceGenerator::generate', function () {
             $generated[] = $reference;
 
             DB::table('uv_transactions')->insert([
+                'tenant_id' => 1,
                 'agent_id' => $agentId,
                 'amount' => 0,
                 'transaction_type' => 'distribution',
@@ -66,6 +67,7 @@ describe('ShortReferenceGenerator::generate', function () {
 
     it('coexists with an old-format reference without colliding or breaking search', function () {
         DB::table('uv_transactions')->insert([
+            'tenant_id' => 1,
             'agent_id' => Agent::factory()->create()->id,
             'amount' => 0,
             'transaction_type' => 'distribution',

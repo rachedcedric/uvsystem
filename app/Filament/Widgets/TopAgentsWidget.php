@@ -3,6 +3,8 @@
 namespace App\Filament\Widgets;
 
 use App\Models\UvTransaction;
+use App\Support\DailyBarChart;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 
@@ -27,19 +29,18 @@ class TopAgentsWidget extends ChartWidget
 
         $labels = $topAgents->map(fn ($t) => $t->agent?->name ?? 'Inconnu')->toArray();
         $data = $topAgents->pluck('total_ca')->map(fn ($v) => (float) $v)->toArray();
+        $colors = DailyBarChart::colors($data, 'rgba(59, 130, 246, 0.68)', 'rgb(37, 99, 235)');
 
         return [
             'datasets' => [
                 [
                     'label' => 'CA Mensuel (FCFA)',
                     'data' => $data,
-                    'backgroundColor' => [
-                        'rgba(34, 197, 94, 0.7)',
-                        'rgba(59, 130, 246, 0.7)',
-                        'rgba(249, 115, 22, 0.7)',
-                        'rgba(168, 85, 247, 0.7)',
-                        'rgba(236, 72, 153, 0.7)',
-                    ],
+                    'backgroundColor' => $colors['background'],
+                    'borderColor' => $colors['border'],
+                    'borderWidth' => 1,
+                    'borderRadius' => 4,
+                    'borderSkipped' => false,
                 ],
             ],
             'labels' => $labels,
@@ -51,15 +52,15 @@ class TopAgentsWidget extends ChartWidget
         return 'bar';
     }
 
-    protected function getOptions(): array
+    protected function getOptions(): RawJs
     {
-        return [
-            'indexAxis' => 'y', // Horizontal bars
-            'plugins' => [
-                'legend' => [
-                    'display' => false,
-                ],
-            ],
-        ];
+        return DailyBarChart::options(title: 'Agent', horizontal: true);
+    }
+
+    public function getDescription(): ?string
+    {
+        $data = $this->getData();
+
+        return DailyBarChart::indicators($data['labels'], $data['datasets'][0]['data']);
     }
 }

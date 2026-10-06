@@ -12,10 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Source unique de vérité pour "Ma caisse" : solde de liquidité manuel,
- * jamais mis en cache, toujours recalculé en direct depuis la somme des
- * mouvements (entrées - sorties). Une sortie ne peut jamais dépasser le
- * solde actuellement disponible (la caisse ne peut pas devenir négative).
+ * Source unique de vérité pour "Ma caisse" : solde journalier de liquidité,
+ * jamais mis en cache, toujours recalculé en direct depuis les mouvements
+ * (entrées - sorties). Chaque journée repart à zéro à minuit.
  */
 class CaisseService
 {
@@ -46,7 +45,7 @@ class CaisseService
 
     public function soldeActuel(): float
     {
-        return $this->totals()['solde'];
+        return (float) $this->dayTotals($this->periods->currentDate())['solde'];
     }
 
     /**
@@ -114,7 +113,7 @@ class CaisseService
      * (si une ligne échoue, aucune n'est enregistrée). Un verrou court par
      * utilisateur écarte les doubles soumissions concurrentes.
      *
-     * @param  array<int, array{type: string, caisse_categorie_id: int|string|null, libelle: string, amount: float|int|string}>  $lignes
+     * @param  array<int, array{type: string, caisse_categorie_id: int|string|null, libelle: string, amount: float|int|string, notes?: string|null}>  $lignes
      * @return Collection<int, CaisseMouvement>
      *
      * @throws ValidationException
@@ -175,27 +174,28 @@ class CaisseService
                 }
             }
 
-            $date = $caisseDate ? Carbon::parse($caisseDate, CaissePeriodResolver::TIMEZONE)->startOfDay() : $this->periods->currentDate();
+            $operationAt = $caisseDate
+                ? Carbon::parse($caisseDate, CaissePeriodResolver::TIMEZONE)
+                : now(CaissePeriodResolver::TIMEZONE);
+            $date = $this->periods->businessDateFor($operationAt);
 
-            if ($date->greaterThan($this->periods->currentDate())) {
-                $errors['caisse_date'] = 'La date de caisse ne peut pas être dans le futur.';
+            if ($operationAt->greaterThan(now(CaissePeriodResolver::TIMEZONE)->endOfMinute())) {
+                $errors['caisse_date'] = 'La date et l’heure de caisse ne peuvent pas être dans le futur.';
             }
 
             if ($errors !== []) {
                 throw ValidationException::withMessages($errors);
             }
 
-            $isCurrent = $date->equalTo($this->periods->currentDate());
-            $base = $this->periods->bounds($date)['start']->copy()->addHours(3);
-
-            return DB::transaction(function () use ($lignes, $isCurrent, $base) {
+            return DB::transaction(function () use ($lignes, $operationAt) {
                 return collect($lignes)->map(fn (array $ligne, int $i) => CaisseMouvement::create([
                     'user_id' => Auth::id(),
                     'type' => $ligne['type'],
                     'caisse_categorie_id' => (int) $ligne['caisse_categorie_id'],
                     'amount' => $ligne['amount'],
                     'libelle' => trim($ligne['libelle']),
-                    'date_mouvement' => $isCurrent ? now() : $base->copy()->addSeconds($i),
+                    'notes' => filled($ligne['notes'] ?? null) ? trim($ligne['notes']) : null,
+                    'date_mouvement' => $operationAt->copy()->addSeconds($i),
                 ]));
             });
         } finally {
@@ -218,10 +218,7 @@ class CaisseService
 
     private function soldeExact(): string
     {
-        $entrees = (string) CaisseMouvement::where('type', CaisseMouvement::TYPE_ENTREE)->sum('amount');
-        $sorties = (string) CaisseMouvement::where('type', CaisseMouvement::TYPE_SORTIE)->sum('amount');
-
-        return bcsub($entrees, $sorties, 2);
+        return $this->dayTotals($this->periods->currentDate())['solde'];
     }
 
     /**

@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Models\UvTransaction;
 use App\Services\BusinessPeriodResolver;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
  * 4 widgets de la page Ventes UV : Aujourd'hui / Cette semaine / Ce mois /
@@ -37,23 +36,23 @@ class VentesUvStatsWidget extends BaseWidget
             ->sum('amount');
 
         return [
-            Stat::make('Ventes Aujourd\'hui', $this->formatMoney($ventesAujourdhui))
+            CompactStat::make('Ventes Aujourd\'hui', $this->formatMoney($ventesAujourdhui))
                 ->description('Journée métier en cours')
                 ->descriptionIcon('heroicon-m-calendar')
                 ->icon('heroicon-o-shopping-cart')
                 ->color('primary'),
 
-            Stat::make('Cette semaine', $this->formatMoney($ventesSemaine))
+            CompactStat::make('Cette semaine', $this->formatMoney($ventesSemaine))
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->icon('heroicon-o-shopping-cart')
                 ->color('info'),
 
-            Stat::make('Ce mois', $this->formatMoney($ventesMois))
+            CompactStat::make('Ce mois', $this->formatMoney($ventesMois))
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->icon('heroicon-o-shopping-cart')
                 ->color('warning'),
 
-            Stat::make('Total cumulé', $this->formatMoney($ventesCumulees))
+            CompactStat::make('Total cumulé', $this->formatMoney($ventesCumulees))
                 ->description('Depuis le début')
                 ->descriptionIcon('heroicon-m-archive-box')
                 ->icon('heroicon-o-banknotes')

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\MasterSoldeService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class BackfillMasterSoldeHistoriqueCommand extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'master-solde:backfill
                             {--force : Recalculer même les lignes qui ont déjà un solde enregistré}
                             {--dry-run : Vérifier et afficher le résultat sans rien écrire en base}';
@@ -95,7 +98,7 @@ class BackfillMasterSoldeHistoriqueCommand extends Command
             return self::SUCCESS;
         }
 
-        $this->info('📝 '.count($uvTransactionsAEcrire)." vente(s)/retour(s) UV et ".count($approvisionnementsAEcrire).' approvisionnement(s) à mettre à jour.');
+        $this->info('📝 '.count($uvTransactionsAEcrire).' vente(s)/retour(s) UV et '.count($approvisionnementsAEcrire).' approvisionnement(s) à mettre à jour.');
 
         if ($this->option('dry-run')) {
             $this->warn('[DRY-RUN] Aucune écriture effectuée.');

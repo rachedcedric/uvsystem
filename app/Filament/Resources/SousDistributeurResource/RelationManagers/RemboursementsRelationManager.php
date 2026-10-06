@@ -38,10 +38,13 @@ class RemboursementsRelationManager extends RelationManager
                     ->default('especes')
                     ->required(),
 
-                Forms\Components\DatePicker::make('payment_date')
-                    ->label('Date de paiement')
+                Forms\Components\DateTimePicker::make('payment_date')
+                    ->label('Date et heure de paiement')
                     ->default(now())
-                    ->required(),
+                    ->required()
+                    ->maxDate(now())
+                    ->seconds(false)
+                    ->native(false),
 
                 Forms\Components\Hidden::make('reference')
                     ->default(fn () => SousDistributeurRemboursement::generateReference()),
@@ -69,8 +72,8 @@ class RemboursementsRelationManager extends RelationManager
                     ->badge(),
 
                 Tables\Columns\TextColumn::make('payment_date')
-                    ->label('Date')
-                    ->date('d/m/Y')
+                    ->label('Date et heure')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->filters([

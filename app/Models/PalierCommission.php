@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class PalierCommission extends Model
 {
+    use BelongsToTenant;
+
     protected $table = 'paliers_commission';
 
     protected $fillable = [

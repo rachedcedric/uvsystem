@@ -77,6 +77,7 @@ class MyTransactions extends Page implements HasTable
                     ->relationship('fournisseur', 'name')
                     ->label('Fournisseur'),
             ])
-            ->paginated([10, 25, 50]);
+            ->paginated([10, 25, 50, 100])
+            ->defaultPaginationPageOption(25);
     }
 }

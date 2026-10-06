@@ -24,16 +24,29 @@ class UvTransactionsExport implements FromQuery, ShouldAutoSize, WithHeadings, W
 
     protected ?string $transactionType = null;
 
+    /** Bornes horodatées exactes (jour métier) : prioritaires sur les dates calendaires. */
+    protected ?\Carbon\Carbon $rangeStart = null;
+
+    protected ?\Carbon\Carbon $rangeEnd = null;
+
+    protected bool $excludeCancelled = false;
+
     public function __construct(
         ?string $agentId = null,
         ?string $startDate = null,
         ?string $endDate = null,
-        ?string $transactionType = null
+        ?string $transactionType = null,
+        ?\Carbon\Carbon $rangeStart = null,
+        ?\Carbon\Carbon $rangeEnd = null,
+        bool $excludeCancelled = false,
     ) {
         $this->agentId = $agentId;
         $this->startDate = $startDate;
         $this->endDate = $endDate;
         $this->transactionType = $transactionType;
+        $this->rangeStart = $rangeStart;
+        $this->rangeEnd = $rangeEnd;
+        $this->excludeCancelled = $excludeCancelled;
     }
 
     public function query(): Builder
@@ -44,6 +57,8 @@ class UvTransactionsExport implements FromQuery, ShouldAutoSize, WithHeadings, W
             ->when($this->startDate, fn ($q) => $q->whereDate('transaction_date', '>=', $this->startDate))
             ->when($this->endDate, fn ($q) => $q->whereDate('transaction_date', '<=', $this->endDate))
             ->when($this->transactionType, fn ($q) => $q->where('transaction_type', $this->transactionType))
+            ->when($this->rangeStart && $this->rangeEnd, fn ($q) => $q->whereBetween('transaction_date', [$this->rangeStart, $this->rangeEnd]))
+            ->when($this->excludeCancelled, fn ($q) => $q->where('status', '!=', 'cancelled'))
             ->orderBy('transaction_date', 'desc');
     }
 

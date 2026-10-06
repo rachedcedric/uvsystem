@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Models\PalierCommission;
 use App\Services\CommissionService;
 use Carbon\Carbon;
@@ -9,6 +10,8 @@ use Illuminate\Console\Command;
 
 class CalculerCommissionsCommand extends Command
 {
+    use RunsPerTenant;
+
     /**
      * The name and signature of the console command.
      *
