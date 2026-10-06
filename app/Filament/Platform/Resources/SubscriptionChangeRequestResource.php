@@ -27,6 +27,8 @@ class SubscriptionChangeRequestResource extends Resource
 
     protected static ?string $pluralModelLabel = 'demandes de changement';
 
+    protected static ?string $navigationLabel = 'Demandes de changement';
+
     protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
