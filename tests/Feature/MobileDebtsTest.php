@@ -63,9 +63,11 @@ class MobileDebtsTest extends TestCase
     {
         $f = Fournisseur::factory()->create(['type' => 'AGENT_PREMIUM', 'is_active' => true, 'name' => 'Premium Dealer']);
 
-        DB::statement('PRAGMA ignore_check_constraints = ON');
+        // SQLite matérialise l'enum en CHECK sensible à la casse ; MySQL/MariaDB l'acceptent tel quel.
+        $sqlite = DB::connection()->getDriverName() === 'sqlite';
+        $sqlite && DB::statement('PRAGMA ignore_check_constraints = ON');
         DB::table('fournisseurs')->where('id', $f->id)->update(['type' => 'agent_premium']);
-        DB::statement('PRAGMA ignore_check_constraints = OFF');
+        $sqlite && DB::statement('PRAGMA ignore_check_constraints = OFF');
         $f->refresh();
 
         Approvisionnement::create([

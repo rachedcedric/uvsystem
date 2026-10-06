@@ -96,6 +96,14 @@ return new class extends Migration
 
     public function down(): void
     {
+        $tables = array_filter([...self::TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES], fn ($name) => Schema::hasTable($name) && Schema::hasColumn($name, 'tenant_id'));
+
+        // MySQL/MariaDB : un index composite (tenant_id, …) sert d'appui à la clé étrangère, il ne peut
+        // pas être supprimé tant que la clé existe (erreur 1553) → clés d'abord, puis index, puis colonne.
+        foreach ($tables as $name) {
+            Schema::table($name, fn (Blueprint $table) => $table->dropForeign(['tenant_id']));
+        }
+
         foreach (self::PERF_INDEXES as $name => $columns) {
             foreach ($columns as $column) {
                 if (Schema::hasTable($name) && Schema::hasColumn($name, $column)) {
@@ -104,12 +112,8 @@ return new class extends Migration
             }
         }
 
-        foreach ([...self::TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES] as $name) {
-            if (Schema::hasTable($name) && Schema::hasColumn($name, 'tenant_id')) {
-                Schema::table($name, function (Blueprint $table) {
-                    $table->dropConstrainedForeignId('tenant_id');
-                });
-            }
+        foreach ($tables as $name) {
+            Schema::table($name, fn (Blueprint $table) => $table->dropColumn('tenant_id'));
         }
 
         Schema::dropIfExists('tenants');

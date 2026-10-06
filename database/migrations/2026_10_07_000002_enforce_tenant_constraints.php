@@ -33,6 +33,11 @@ return new class extends Migration
                 $table->dropUnique($oldIndex);
                 $table->unique(['tenant_id', $column], "{$name}_tenant_{$column}_unique");
             });
+
+            // Index d'appui laissé par un retour arrière précédent : devenu redondant avec l'index composite.
+            if (Schema::hasIndex($name, "{$name}_tenant_id_index")) {
+                Schema::table($name, fn (Blueprint $table) => $table->dropIndex("{$name}_tenant_id_index"));
+            }
         }
 
         foreach ($this->tenantTables() as $name) {
@@ -51,6 +56,12 @@ return new class extends Migration
         }
 
         foreach (self::UNIQUES as $name => [$column, $oldIndex]) {
+            // MySQL/MariaDB : l'index composite (tenant_id, …) sert d'appui à la clé étrangère tenant_id ;
+            // on le retire seulement après avoir posé un index simple, sinon erreur 1553.
+            if (! Schema::hasIndex($name, "{$name}_tenant_id_index")) {
+                Schema::table($name, fn (Blueprint $table) => $table->index('tenant_id', "{$name}_tenant_id_index"));
+            }
+
             Schema::table($name, function (Blueprint $table) use ($column, $oldIndex, $name) {
                 $table->dropUnique("{$name}_tenant_{$column}_unique");
                 // Échoue volontairement s'il existe déjà des doublons entre tenants : rien n'est écrasé.
