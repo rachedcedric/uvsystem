@@ -87,6 +87,24 @@ class User extends Authenticatable implements FilamentUser
         return $this->tenant_id === null && $this->hasRole(self::ROLE_SUPER_ADMIN);
     }
 
+    /**
+     * Coupe tous les accès du compte : sessions web/mobile (driver « database »), tokens API et
+     * cookies « rester connecté ». À appeler après un changement de mot de passe, une suspension
+     * ou une demande de déconnexion partout. $exceptSessionId conserve la session courante.
+     */
+    public function revokeAllAccess(?string $exceptSessionId = null): void
+    {
+        $this->tokens()->delete();
+        $this->forceFill(['remember_token' => \Illuminate\Support\Str::random(60)])->saveQuietly();
+
+        if (config('session.driver') === 'database') {
+            \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
+                ->where('user_id', $this->getKey())
+                ->when($exceptSessionId, fn ($query) => $query->where('id', '!=', $exceptSessionId))
+                ->delete();
+        }
+    }
+
     /** Le tenant de cet utilisateur est-il actif (non suspendu, essai non expiré) ? */
     public function hasActiveTenant(): bool
     {

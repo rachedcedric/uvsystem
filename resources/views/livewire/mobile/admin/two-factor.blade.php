@@ -7,6 +7,18 @@
                  :sub="$enabled ? 'Votre compte est protégé par un code à usage unique.' : 'Ajoutez une protection avec une application d\'authentification.'" />
     </div>
 
+    <div class="m-group" style="margin-top:12px">
+        {{-- Page autonome (hors Livewire) : lien classique, sans wire:navigate --}}
+        <a href="{{ route('security.sessions') }}" class="m-row">
+            <span class="m-row__lead"><x-m.icon name="device-phone-mobile" class="m-ico-sm" /></span>
+            <span class="m-row__body">
+                <span class="m-row__title" style="display:block">Appareils connectés et mot de passe</span>
+                <span class="m-row__sub" style="display:block">Déconnecter un appareil, changer le mot de passe</span>
+            </span>
+            <x-m.icon name="chevron-right" class="m-row__chev" />
+        </a>
+    </div>
+
     @if (! $enabled && ! $showSetup)
         <div style="padding:16px 12px 0"><button type="button" class="m-btn" wire:click="startSetup">Activer la protection</button></div>
     @endif

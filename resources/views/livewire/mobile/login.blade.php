@@ -34,6 +34,8 @@
             <span>Rester connecté</span>
         </label>
 
+        <a href="{{ route('password.request') }}" class="m-section__link" style="display:block;text-align:center;padding:12px 0;min-height:44px">Mot de passe oublié ?</a>
+
         <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="login">
             <span wire:loading.remove wire:target="login">Se connecter</span>
             <span wire:loading wire:target="login" class="m-spin" aria-label="Connexion en cours"></span>

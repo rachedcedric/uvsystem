@@ -32,6 +32,10 @@ class PlatformPanelProvider extends PanelProvider
             ->login()
             ->colors(['primary' => Color::Indigo])
             ->brandName('Plateforme — Administration des tenants')
+            ->renderHook(
+                'panels::auth.login.form.after',
+                fn () => '<p style="text-align:center;margin-top:12px"><a href="'.route('password.request').'" class="text-sm text-primary-600 hover:underline">Mot de passe oublié ?</a></p>',
+            )
             ->discoverResources(in: app_path('Filament/Platform/Resources'), for: 'App\\Filament\\Platform\\Resources')
             ->discoverPages(in: app_path('Filament/Platform/Pages'), for: 'App\\Filament\\Platform\\Pages')
             ->pages([Pages\Dashboard::class])

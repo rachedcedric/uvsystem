@@ -99,6 +99,10 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->renderHook(
+                'panels::auth.login.form.after',
+                fn () => '<p style="text-align:center;margin-top:12px"><a href="'.route('password.request').'" class="text-sm text-primary-600 hover:underline">Mot de passe oublié ?</a></p>',
+            )
+            ->renderHook(
                 PanelsRenderHook::BODY_START,
                 fn () => view('components.two-factor-reminder'),
             )

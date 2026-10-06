@@ -48,6 +48,13 @@ class UsersRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->after(fn (User $record, array $data) => $record->syncRoles([$data['role']])),
+                Tables\Actions\Action::make('signOutEverywhere')->label('Déconnecter partout')->icon('heroicon-o-arrow-right-start-on-rectangle')->color('gray')
+                    ->requiresConfirmation()
+                    ->modalDescription('Ferme toutes les sessions et révoque tous les tokens de cet utilisateur.')
+                    ->action(function (User $record) {
+                        $record->revokeAllAccess();
+                        \Filament\Notifications\Notification::make()->title('Utilisateur déconnecté partout')->success()->send();
+                    }),
                 Tables\Actions\Action::make('reset2fa')->label('Réinitialiser la 2FA')->icon('heroicon-o-key')->color('warning')
                     ->requiresConfirmation()
                     ->modalDescription('À utiliser si l\'utilisateur a perdu son téléphone et ses codes de récupération.')

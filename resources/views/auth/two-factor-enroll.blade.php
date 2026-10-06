@@ -58,6 +58,7 @@
         </form>
     @endif
 
+    <p><a href="{{ route('security.sessions') }}">Appareils connectés et mot de passe</a></p>
     <form method="POST" action="{{ route('filament.admin.auth.logout') }}" style="margin-top:14px">@csrf<button type="submit" style="background:#6b7280">Se déconnecter</button></form>
 </div>
 </body>

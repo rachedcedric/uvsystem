@@ -65,6 +65,12 @@ class Tenant extends Model
     public function suspend(): void
     {
         $this->forceFill(['status' => self::STATUS_SUSPENDED, 'suspended_at' => now()])->save();
+
+        // canAccessPanel() bloque déjà les requêtes ; on supprime aussi sessions et tokens pour que
+        // rien ne subsiste (cookies « rester connecté », jetons API).
+        \App\Tenancy\TenantContext::withoutTenancy(
+            fn () => $this->users()->get()->each->revokeAllAccess()
+        );
     }
 
     public function activate(): void

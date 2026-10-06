@@ -23,6 +23,23 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('2fa.verify.recovery');
 });
 
+// Mot de passe oublié (invités) : 5 demandes par minute
+Route::middleware(['web', 'guest', 'throttle:5,1'])->group(function () {
+    Route::get('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'request'])->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\PasswordResetController::class, 'reset'])->name('password.reset');
+    Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'update'])->name('password.update');
+});
+
+// Appareils connectés et mot de passe du compte
+Route::middleware(['web', 'auth'])->prefix('security')->group(function () {
+    Route::get('/sessions', [\App\Http\Controllers\AccountSecurityController::class, 'show'])->name('security.sessions');
+    Route::post('/sessions/revoke', [\App\Http\Controllers\AccountSecurityController::class, 'revokeSession'])->name('security.sessions.revoke');
+    Route::post('/sessions/revoke-others', [\App\Http\Controllers\AccountSecurityController::class, 'revokeOthers'])->middleware('throttle:5,1')->name('security.sessions.revoke-others');
+    Route::post('/tokens/{token}/revoke', [\App\Http\Controllers\AccountSecurityController::class, 'revokeToken'])->whereNumber('token')->name('security.tokens.revoke');
+    Route::post('/password', [\App\Http\Controllers\AccountSecurityController::class, 'changePassword'])->middleware('throttle:5,1')->name('security.password');
+});
+
 // Activation / désactivation de la 2FA (page autonome, accessible même quand la 2FA est obligatoire)
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/security/2fa', [\App\Http\Controllers\TwoFactorEnrollmentController::class, 'show'])->name('security.2fa');
