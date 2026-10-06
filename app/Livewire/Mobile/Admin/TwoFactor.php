@@ -22,6 +22,8 @@ class TwoFactor extends Component
 
     public string $code = '';
 
+    public string $password = '';
+
     public bool $showSetup = false;
 
     public function startSetup(): void
@@ -54,6 +56,17 @@ class TwoFactor extends Component
 
     public function disable(): void
     {
+        // Désactiver est refusé si le rôle impose la 2FA ; sinon on exige le mot de passe (une session
+        // volée ne doit pas pouvoir retirer le second facteur).
+        abort_unless(app(\App\Security\TwoFactorGate::class)->mayDisable(auth()->user()), 403);
+
+        if (! \Illuminate\Support\Facades\Hash::check($this->password, auth()->user()->password)) {
+            $this->addError('password', 'Mot de passe incorrect.');
+
+            return;
+        }
+
+        $this->reset('password');
         app(TwoFactorAuthService::class)->disable(auth()->user());
         $this->dispatch('m-toast', message: 'Double authentification désactivée.');
     }

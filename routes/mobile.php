@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('m')->name('m.')->group(function () {
     Route::get('login', Login::class)->name('login');
 
-    Route::middleware('mobile.access')->group(function () {
+    Route::middleware(['mobile.access', '2fa'])->group(function () {
         Route::post('push-token', [PushTokenController::class, 'store'])->name('push-token.store');
         Route::delete('push-token', [PushTokenController::class, 'destroy'])->name('push-token.destroy');
         Route::get('/', Home::class)->name('home');

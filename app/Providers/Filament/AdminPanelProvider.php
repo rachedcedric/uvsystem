@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Http\Middleware\Require2FA;
+use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\TriggerDebtReminderCycle;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -99,6 +99,10 @@ class AdminPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
             ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn () => view('components.two-factor-reminder'),
+            )
+            ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => view('filament.hooks.notification-sound')->render(),
             )
@@ -122,7 +126,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 TriggerDebtReminderCycle::class,
-                // Require2FA::class, // 2FA désactivé temporairement
+                EnforceTwoFactor::class,
             ]);
     }
 }

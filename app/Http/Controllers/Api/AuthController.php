@@ -21,6 +21,7 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
             'device_name' => 'nullable|string|max:255',
+            'otp' => 'nullable|string|max:20',
         ]);
 
         $user = User::where('email', $validated['email'])->first();
@@ -32,6 +33,29 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['Les informations d\'identification fournies sont incorrectes.'],
             ]);
+        }
+
+        // 2FA : un compte qui l'a activée ne reçoit de token qu'avec un code valide (ou un code de récupération).
+        if ($user->hasTwoFactorEnabled()) {
+            $otp = (string) ($validated['otp'] ?? '');
+            $service = app(\App\Services\TwoFactorAuthService::class);
+
+            if ($otp === '') {
+                return response()->json(['success' => false, 'message' => 'Code de double authentification requis.', 'otp_required' => true], 422);
+            }
+
+            $rateKey = '2fa-api|'.$user->getKey().'|'.$request->ip();
+            if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateKey, 5)) {
+                throw ValidationException::withMessages(['otp' => ['Trop d\'essais. Réessayez plus tard.']]);
+            }
+
+            if (! $service->validateOtp($user, $otp) && ! $service->verifyRecoveryCode($user, $otp)) {
+                \Illuminate\Support\Facades\RateLimiter::hit($rateKey, 300);
+
+                throw ValidationException::withMessages(['otp' => ['Code de double authentification invalide.']]);
+            }
+
+            \Illuminate\Support\Facades\RateLimiter::clear($rateKey);
         }
 
         // Utiliser device_name fourni ou générer un nom par défaut

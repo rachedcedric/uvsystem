@@ -48,6 +48,14 @@ class UsersRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->after(fn (User $record, array $data) => $record->syncRoles([$data['role']])),
+                Tables\Actions\Action::make('reset2fa')->label('Réinitialiser la 2FA')->icon('heroicon-o-key')->color('warning')
+                    ->requiresConfirmation()
+                    ->modalDescription('À utiliser si l\'utilisateur a perdu son téléphone et ses codes de récupération.')
+                    ->visible(fn (User $record) => $record->hasTwoFactorEnabled())
+                    ->action(function (User $record) {
+                        app(\App\Services\TwoFactorAuthService::class)->disable($record);
+                        \Filament\Notifications\Notification::make()->title('2FA réinitialisée')->success()->send();
+                    }),
             ]);
     }
 }

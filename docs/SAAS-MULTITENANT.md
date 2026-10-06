@@ -72,8 +72,22 @@ L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
 ## Limites connues / à faire
 
 - Sauvegardes : elles couvrent **toute** la plateforme, d'où l'accès super admin seul ; pas encore d'écran de sauvegarde dans `/platform` (téléchargement via `/backup/download/…` ou cPanel). Une sauvegarde/export par tenant reste à construire.
-- `Require2FA` toujours désactivé (risque de verrouillage) : à décider.
 - Les 15 commandes planifiées/maintenance utilisent `RunsPerTenant` ; les commandes de démo (`SetupDemoData`, `ClearDemoData`…) restent hors tenant et sont à ne pas lancer en production.
 - Un `insert()` de masse via le query builder ne passe par aucun modèle : la colonne NOT NULL le fait échouer (fail closed), mais le code doit créer ses lignes via les modèles.
 - Contraintes composites `(tenant_id, parent_id)` entre tables non posées : la cohérence parent/enfant repose sur le scope et sur les règles `exists` tenant-aware.
 - Pas d'impersonation (super admin → tenant) volontairement.
+
+## Double authentification (2FA)
+
+| Population | Règle |
+|---|---|
+| Tout utilisateur qui a activé la 2FA | Code exigé à chaque nouvelle session sur `/admin`, `/agent`, `/platform`, `/m` (y compris actions Livewire) et à la connexion API (`otp`). Option « faire confiance à cet appareil » 30 jours (liée au secret : réinitialiser la 2FA invalide les appareils) |
+| `master`, `admin` | Bandeau de rappel tant que `SECURITY_2FA_ENFORCE_FROM` est vide ou dans le futur ; **obligatoire** (redirection vers l'activation) à partir de cette date |
+| `super_admin` | Toujours obligatoire, sans délai |
+| `comptable`, `commercial` | Facultative |
+
+Garde-fous : codes jamais rejouables, 5 essais / 5 min par compte et IP, codes de récupération à usage unique, désactivation = mot de passe requis et refusée si le rôle impose la 2FA, page d'activation autonome `/security/2fa` toujours accessible (aucun verrouillage sans issue), `SECURITY_2FA_ENABLED=false` coupe tout en urgence.
+
+**Déploiement progressif recommandé** : 1) déployer sans `SECURITY_2FA_ENFORCE_FROM` (rappel seulement) ; 2) quand les `master`/`admin` ont activé leur 2FA, fixer par exemple `SECURITY_2FA_ENFORCE_FROM=2026-11-15` dans `.env` puis `php artisan config:clear` ; 3) en cas de téléphone perdu : le super admin utilise « Réinitialiser la 2FA » sur l'utilisateur dans `/platform`, ou `php artisan platform:2fa-reset email@…` (le seul moyen pour le super admin lui-même).
+
+Le premier super admin doit activer sa 2FA dès sa première connexion à `/platform` (redirection automatique).

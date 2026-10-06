@@ -295,9 +295,12 @@ class TenantIsolationTest extends TestCase
     public function test_super_admin_reaches_the_platform_but_not_tenant_surfaces(): void
     {
         $super = $this->superAdmin();
+        // La 2FA est obligatoire pour le super admin : on la considère activée et prouvée.
+        $super->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_enabled' => true])->save();
+        $verified = [\App\Security\TwoFactorGate::SESSION_KEY => $super->id];
 
-        $this->actingAs($super)->get('/platform')->assertOk();
-        $this->actingAs($super)->get('/platform/tenants')->assertOk();
+        $this->withSession($verified)->actingAs($super)->get('/platform')->assertOk();
+        $this->withSession($verified)->actingAs($super)->get('/platform/tenants')->assertOk();
 
         Sanctum::actingAs($super);
         $this->getJson('/api/agents')->assertForbidden();

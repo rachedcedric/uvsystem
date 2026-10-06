@@ -169,7 +169,11 @@ class MobileAdminTest extends TestCase
         $this->assertNotEquals($old, $this->master->fresh()->two_factor_recovery_codes);
         $this->assertCount(8, $this->master->fresh()->two_factor_recovery_codes);
 
-        Livewire::test(Admin\TwoFactor::class)->call('disable');
+        // Désactiver exige le mot de passe : une session volée ne peut pas retirer le second facteur.
+        Livewire::test(Admin\TwoFactor::class)->set('password', 'mauvais')->call('disable')->assertHasErrors('password');
+        $this->assertTrue((bool) $this->master->fresh()->two_factor_enabled);
+
+        Livewire::test(Admin\TwoFactor::class)->set('password', 'password')->call('disable')->assertHasNoErrors();
         $this->assertFalse((bool) $this->master->fresh()->two_factor_enabled);
     }
 

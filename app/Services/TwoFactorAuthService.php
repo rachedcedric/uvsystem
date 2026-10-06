@@ -7,6 +7,7 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -166,10 +167,18 @@ class TwoFactorAuthService
             return false;
         }
 
-        // Decrypt the secret if it's encrypted
-        $secret = $user->two_factor_secret;
+        // Refuse un code déjà utilisé (rejeu) : on retient le dernier pas de temps accepté par utilisateur.
+        $cacheKey = '2fa_last_timestamp:'.$user->getKey();
+        $timestamp = $this->google2fa->verifyKeyNewer($user->two_factor_secret, trim($code), Cache::get($cacheKey), 1);
 
-        return $this->verify($secret, $code);
+        if ($timestamp === false) {
+            return false;
+        }
+
+        // Sans horodatage précédent la bibliothèque renvoie `true` : on retient alors le pas de temps courant.
+        Cache::put($cacheKey, $timestamp === true ? $this->google2fa->getTimestamp() : $timestamp, now()->addMinutes(5));
+
+        return true;
     }
 
     /**

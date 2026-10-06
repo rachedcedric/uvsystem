@@ -26,6 +26,7 @@
         </div>
     @endpersist
 
+    @auth<x-two-factor-reminder />@endauth
     <div id="m-offline" class="m-offline" role="status">Hors connexion — les données peuvent être périmées</div>
     <div id="m-ptr" class="m-ptr" aria-hidden="true"><x-m.icon name="arrow-path" class="m-ico-sm" /></div>
 

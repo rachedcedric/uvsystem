@@ -71,7 +71,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Les actions Livewire (/livewire/update) ne repassent pas par les middlewares de route :
         // sans ceci, un tenant suspendu garderait la main sur une page /m déjà ouverte.
-        \Livewire\Livewire::addPersistentMiddleware([\App\Http\Middleware\MobileAccess::class]);
+        \Livewire\Livewire::addPersistentMiddleware([\App\Http\Middleware\MobileAccess::class, \App\Http\Middleware\EnforceTwoFactor::class]);
 
         $this->configureRateLimiting();
         $this->registerMoneyInputMacro();

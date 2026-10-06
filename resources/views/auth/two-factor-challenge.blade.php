@@ -56,6 +56,10 @@
                         autofocus
                     >
                 </div>
+                <label class="flex items-center gap-2 mb-4 text-sm text-gray-700">
+                    <input type="checkbox" name="trust_device" value="1" checked>
+                    Faire confiance à cet appareil pendant {{ (int) config('security.authentication.2fa_trusted_device_days', 30) }} jours
+                </label>
                 <button 
                     type="submit" 
                     class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"

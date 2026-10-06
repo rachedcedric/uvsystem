@@ -26,6 +26,14 @@ return [
         '2fa_enabled' => env('SECURITY_2FA_ENABLED', true),
         '2fa_required_for_roles' => ['master', 'admin'],
 
+        // Date (AAAA-MM-JJ) à partir de laquelle les rôles ci-dessus DOIVENT avoir activé la 2FA pour
+        // continuer. Avant cette date (ou si vide) : simple bandeau de rappel, personne n'est bloqué.
+        // Le super admin de plateforme est toujours soumis à la 2FA, sans délai.
+        '2fa_enforce_from' => env('SECURITY_2FA_ENFORCE_FROM'),
+
+        // Durée pendant laquelle un appareil « de confiance » ne redemande pas le code (jours).
+        '2fa_trusted_device_days' => (int) env('SECURITY_2FA_TRUSTED_DEVICE_DAYS', 30),
+
         // Rotation des tokens
         'token_rotation_enabled' => true,
         'token_lifetime' => 60, // minutes

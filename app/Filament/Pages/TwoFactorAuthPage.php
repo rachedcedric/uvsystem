@@ -110,6 +110,8 @@ class TwoFactorAuthPage extends Page implements HasForms
 
     public function disable2FA(): void
     {
+        abort_unless(app(\App\Security\TwoFactorGate::class)->mayDisable($this->getUser()), 403);
+
         $service = app(TwoFactorAuthService::class);
         $service->disable($this->getUser());
 
@@ -127,12 +129,9 @@ class TwoFactorAuthPage extends Page implements HasForms
 
     public function regenerateRecoveryCodes(): void
     {
-        $service = app(TwoFactorAuthService::class);
-        $newCodes = $service->generateRecoveryCodes();
-
-        $this->getUser()->update([
-            'two_factor_recovery_codes' => encrypt(json_encode($newCodes)),
-        ]);
+        // Même format que le service (tableau de codes) : l'ancien encrypt(json_encode()) rendait les
+        // codes illisibles pour la vérification de récupération.
+        $newCodes = app(TwoFactorAuthService::class)->regenerateRecoveryCodes($this->getUser());
 
         $this->recoveryCodes = $newCodes;
 

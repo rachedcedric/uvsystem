@@ -23,6 +23,13 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('2fa.verify.recovery');
 });
 
+// Activation / désactivation de la 2FA (page autonome, accessible même quand la 2FA est obligatoire)
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/security/2fa', [\App\Http\Controllers\TwoFactorEnrollmentController::class, 'show'])->name('security.2fa');
+    Route::post('/security/2fa/confirm', [\App\Http\Controllers\TwoFactorEnrollmentController::class, 'confirm'])->name('security.2fa.confirm');
+    Route::post('/security/2fa/disable', [\App\Http\Controllers\TwoFactorEnrollmentController::class, 'disable'])->name('security.2fa.disable');
+});
+
 // Export Download Route (protected)
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/exports/download/{filename}', [ExportDownloadController::class, 'download'])

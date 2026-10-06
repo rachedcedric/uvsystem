@@ -40,7 +40,13 @@
             </div>
             <div style="padding:12px 12px 0;display:grid;gap:10px">
                 <button type="button" class="m-btn m-btn--ghost" x-data @click="if (confirm('Générer de nouveaux codes ? Les anciens ne fonctionneront plus.')) $wire.regenerate()">Générer de nouveaux codes</button>
-                <button type="button" class="m-btn" style="background:var(--danger)" x-data @click="if (confirm('Désactiver la double authentification ?')) $wire.disable()">Désactiver la protection</button>
+                @if (app(\App\Security\TwoFactorGate::class)->mayDisable(auth()->user()))
+                    <input type="password" wire:model="password" placeholder="Mot de passe pour confirmer" autocomplete="current-password" class="m-input">
+                    @error('password')<div class="m-error">{{ $message }}</div>@enderror
+                    <button type="button" class="m-btn" style="background:var(--danger)" x-data @click="if (confirm('Désactiver la double authentification ?')) $wire.disable()">Désactiver la protection</button>
+                @else
+                    <div class="m-row__sub">Votre rôle impose la double authentification : elle ne peut pas être désactivée.</div>
+                @endif
             </div>
         </x-m.section>
     @endif
