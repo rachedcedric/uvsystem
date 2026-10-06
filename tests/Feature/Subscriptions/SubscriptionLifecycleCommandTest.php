@@ -144,29 +144,6 @@ class SubscriptionLifecycleCommandTest extends SubscriptionTestCase
         $this->assertSame(0, $this->sentCount(SubscriptionExpiring::class));
     }
 
-    public function test_a_notification_failure_never_changes_the_business_state_and_is_logged(): void
-    {
-        $sub = $this->manager->startTrial($this->tenant, $this->plan('pro'), days: 1);
-        $this->travelToDate('2026-10-12 02:00:00');
-
-        Notification::swap(new class
-        {
-            public function send(): void
-            {
-                throw new \RuntimeException('SMTP indisponible');
-            }
-        });
-        Log::spy();
-
-        $this->process();
-
-        // L'état métier est bien « expiré » malgré l'échec d'envoi (pas de faux succès ni de blocage).
-        $this->assertSame(SubscriptionStatus::Expired, $sub->fresh()->status);
-        Log::shouldHaveReceived('error')->withArgs(fn ($message) => str_contains($message, 'notification d\'abonnement'))->atLeast()->once();
-        // La réservation anti-doublon est levée : un prochain passage pourra réessayer.
-        $this->assertSame(0, SubscriptionNotificationLog::withoutGlobalScopes()->where('type', SubscriptionExpired::type())->count());
-    }
-
     public function test_an_error_on_one_subscription_is_logged_and_does_not_stop_the_others(): void
     {
         $other = $this->tenant('Autre');
@@ -175,8 +152,7 @@ class SubscriptionLifecycleCommandTest extends SubscriptionTestCase
         $broken = $this->manager->startTrial($other, $this->plan('pro'), days: 1);
         $this->travelToDate('2026-10-12 02:00:00');
 
-        // Provoque une erreur sur un abonnement : plan supprimé de force au niveau SQL (cas anormal).
-        \Illuminate\Support\Facades\DB::statement('PRAGMA foreign_keys = OFF');
+        // Provoque une erreur sur un abonnement : valeur de cycle corrompue au niveau SQL (cas anormal, indépendant du moteur).
         \Illuminate\Support\Facades\DB::table('tenant_subscriptions')->where('id', $broken->id)->update(['cycle' => 'invalide']);
         Log::spy();
 

@@ -24,9 +24,16 @@ class DebtAlertNotification extends Notification implements PushNotificationCont
             : 0);
     }
 
+    use \App\Notifications\Concerns\RequiresPlanFeature;
+
+    protected function requiredFeature(): string
+    {
+        return 'notifications_dettes';
+    }
+
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', FirebasePushChannel::class];
+        return $this->planAllows($notifiable) ? ['mail', 'database', FirebasePushChannel::class] : [];
     }
 
     public function toMail(object $notifiable): MailMessage

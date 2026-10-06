@@ -6,6 +6,7 @@ use App\Enums\SubscriptionStatus;
 use App\Models\Tenant;
 use App\Models\TenantSubscription;
 use App\Notifications\Subscriptions\SubscriptionExpiring;
+use App\Notifications\Subscriptions\SubscriptionRenewalDue;
 use App\Notifications\Subscriptions\TrialExpiring;
 use App\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Log;
@@ -19,12 +20,18 @@ use Throwable;
  */
 class SubscriptionLifecycleProcessor
 {
-    public function __construct(private readonly SubscriptionManager $manager, private readonly SubscriptionNotifier $notifier) {}
+    public function __construct(
+        private readonly SubscriptionManager $manager,
+        private readonly SubscriptionNotifier $notifier,
+        private readonly SubscriptionBilling $billing,
+    ) {}
 
-    /** @return array{expired: int, warned: int, errors: int} */
+    /** @return array{expired: int, warned: int, errors: int, retried: int, notification_failures: int, invoiced: int} */
     public function run(): array
     {
-        $report = ['expired' => 0, 'warned' => 0, 'errors' => 0];
+        $report = ['expired' => 0, 'warned' => 0, 'errors' => 0, 'retried' => 0, 'notification_failures' => 0, 'invoiced' => 0];
+        $this->notifier->failures = 0;
+        $startedAt = now();
 
         $subscriptions = TenantContext::withoutTenancy(
             fn () => TenantSubscription::query()->with('plan')->whereNotNull('current_marker')->orderBy('id')->get()
@@ -38,8 +45,12 @@ class SubscriptionLifecycleProcessor
             }
 
             try {
+                $wasPaidPeriod = $subscription->status === SubscriptionStatus::Active && $subscription->auto_renew;
+
                 if ($this->manager->expire($subscription)) {
                     $report['expired']++;
+                    // Renouvellement automatique : facture de renouvellement (paiement en attente + notification).
+                    $report['invoiced'] += $wasPaidPeriod && $this->invoiceRenewal($subscription) ? 1 : 0;
 
                     continue;
                 }
@@ -57,7 +68,20 @@ class SubscriptionLifecycleProcessor
             }
         }
 
+        // Reprise des notifications restées en échec lors des passages précédents.
+        $report['retried'] = $this->notifier->retryPending($startedAt);
+        $report['notification_failures'] = $this->notifier->failures;
+
         return $report;
+    }
+
+    private function invoiceRenewal(TenantSubscription $subscription): bool
+    {
+        $tenant = Tenant::query()->findOrFail($subscription->tenant_id);
+        $payment = $this->billing->request($tenant);
+
+        return $this->notifier->send($subscription, SubscriptionRenewalDue::class, "renewal_due:{$subscription->id}:{$subscription->current_period_ends_at->timestamp}",
+            SubscriptionNotifier::contextFor($subscription, ['amount' => $payment->amount]));
     }
 
     private function warn(TenantSubscription $subscription): bool

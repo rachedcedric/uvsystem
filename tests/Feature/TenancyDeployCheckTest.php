@@ -7,6 +7,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class TenancyDeployCheckTest extends TestCase
@@ -62,5 +63,17 @@ class TenancyDeployCheckTest extends TestCase
         Artisan::call('tenancy:deploy-check');
 
         $this->assertSame($before, [Storage::disk('public')->allFiles(), Storage::disk('local')->allFiles(), Agent::withoutGlobalScopes()->count()]);
+    }
+
+    public function test_missing_tenant_roles_are_reported_before_platform_provisioning(): void
+    {
+        Role::query()->where('name', 'master')->delete();
+
+        $this->assertSame(1, Artisan::call('tenancy:deploy-check'));
+        $output = Artisan::output();
+
+        $this->assertStringContainsString('Rôles tenant', $output);
+        $this->assertStringContainsString('master', $output);
+        $this->assertStringContainsString('RolesAndPermissionsSeeder', $output);
     }
 }

@@ -22,7 +22,7 @@ class ManualSubscriptionPaymentGateway implements SubscriptionPaymentGateway
         return self::NAME;
     }
 
-    public function initiate(TenantSubscription $subscription, int $amount): SubscriptionPayment
+    public function initiate(TenantSubscription $subscription, int $amount, array $metadata = []): SubscriptionPayment
     {
         return TenantContext::runAs((int) $subscription->tenant_id, fn () => SubscriptionPayment::create([
             'tenant_subscription_id' => $subscription->getKey(),
@@ -30,6 +30,7 @@ class ManualSubscriptionPaymentGateway implements SubscriptionPaymentGateway
             'currency' => 'XOF',
             'status' => SubscriptionPayment::PENDING,
             'gateway' => self::NAME,
+            'metadata' => $metadata ?: null,
         ]));
     }
 

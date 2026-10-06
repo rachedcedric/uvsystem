@@ -7,6 +7,7 @@ use App\Services\Subscriptions\SubscriptionAccessPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
 use ReflectionClass;
@@ -67,6 +68,25 @@ trait BelongsToTenant
         }
     }
 
+    /** true pour les modèles soumis à une limite de nombre (User, Agent) : leur création est sérialisée par tenant. */
+    protected static function enforcesEntitlements(): bool
+    {
+        return false;
+    }
+
+    /** true quand cette mise à jour recompte une limite (ex. restauration d'un agent supprimé). */
+    protected function updateNeedsEntitlementCheck(): bool
+    {
+        return false;
+    }
+
+    protected function lockTenantForEntitlements(): void
+    {
+        if ($this->getAttribute('tenant_id') !== null) {
+            Tenant::query()->whereKey($this->getAttribute('tenant_id'))->lockForUpdate()->first();
+        }
+    }
+
     /** Limites d'abonnement à la création (User, Agent) : surchargé par les modèles concernés. */
     protected function enforceEntitlementsOnInsert(): void {}
 
@@ -89,7 +109,18 @@ trait BelongsToTenant
 
         $this->assertParentsBelongToTenant(onlyDirty: false);
         $this->assertSubscriptionAllowsWrite();
-        $this->enforceEntitlementsOnInsert();
+
+        if (static::enforcesEntitlements()) {
+            // ATOMICITÉ DES LIMITES : « compter puis insérer » se fait dans UNE transaction qui verrouille la ligne du
+            // tenant (SELECT … FOR UPDATE). Deux créations simultanées passent l'une après l'autre : la seconde
+            // voit la première dans son comptage.
+            return DB::transaction(function () use ($query) {
+                $this->lockTenantForEntitlements();
+                $this->enforceEntitlementsOnInsert();
+
+                return parent::performInsert($query);
+            });
+        }
 
         return parent::performInsert($query);
     }
@@ -102,7 +133,15 @@ trait BelongsToTenant
 
         $this->assertParentsBelongToTenant(onlyDirty: true);
         $this->assertSubscriptionAllowsWrite();
-        $this->enforceEntitlementsOnUpdate();
+
+        if ($this->updateNeedsEntitlementCheck()) {
+            return DB::transaction(function () use ($query) {
+                $this->lockTenantForEntitlements();
+                $this->enforceEntitlementsOnUpdate();
+
+                return parent::performUpdate($query);
+            });
+        }
 
         return parent::performUpdate($query);
     }

@@ -26,6 +26,7 @@ class Statistics extends Component
     public function mount(): void
     {
         abort_unless(auth()->user()->can('view_statistics') || auth()->user()->can('view_dashboard'), 403);
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('statistiques_essentielles');
 
         $this->from = now()->startOfMonth()->toDateString();
         $this->to = now()->toDateString();

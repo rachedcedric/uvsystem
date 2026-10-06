@@ -10,11 +10,11 @@ class SubscriptionNotificationLog extends Model
 {
     use BelongsToTenant;
 
-    protected $fillable = ['tenant_subscription_id', 'type', 'dedup_key', 'sent_at'];
+    protected $fillable = ['tenant_subscription_id', 'type', 'dedup_key', 'notification', 'payload', 'attempts', 'claimed_at', 'failed_at', 'last_error', 'sent_at'];
 
     protected function casts(): array
     {
-        return ['sent_at' => 'datetime'];
+        return ['sent_at' => 'datetime', 'claimed_at' => 'datetime', 'failed_at' => 'datetime', 'payload' => 'array', 'attempts' => 'integer'];
     }
 
     protected static function tenantWritesAlwaysAllowed(): bool

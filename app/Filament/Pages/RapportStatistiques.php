@@ -36,6 +36,8 @@ class RapportStatistiques extends Page implements HasForms
 
     public function mount(): void
     {
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('statistiques_avancees');
+
         $this->dateFrom = now()->startOfMonth();
         $this->dateTo = now();
         $this->form->fill([

@@ -276,10 +276,14 @@ class RolesAndPermissionsSeeder extends Seeder
         $this->command->info('✅ COMMERCIAL : '.count($commercialPermissions).' permissions (agents/transactions)');
 
         // ============================================
-        // ASSIGNER MASTER AU PREMIER UTILISATEUR
+        // ASSIGNER MASTER AU PREMIER UTILISATEUR D'UN TENANT
         // ============================================
 
-        $firstUser = User::first();
+        $firstUser = User::withoutGlobalScopes()
+            ->whereNotNull('tenant_id')
+            ->oldest('id')
+            ->first();
+
         if ($firstUser && ! $firstUser->hasRole('master')) {
             $firstUser->assignRole('master');
             $this->command->info('✅ Rôle MASTER assigné à : '.$firstUser->email);

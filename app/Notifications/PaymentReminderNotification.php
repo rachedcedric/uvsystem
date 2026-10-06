@@ -17,9 +17,16 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
         protected ?string $customMessage = null,
     ) {}
 
+    use \App\Notifications\Concerns\RequiresPlanFeature;
+
+    protected function requiredFeature(): string
+    {
+        return 'notifications_dettes';
+    }
+
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return $this->planAllows($notifiable) ? ['mail', 'database'] : [];
     }
 
     public function toMail(object $notifiable): MailMessage

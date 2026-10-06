@@ -30,9 +30,16 @@ class DebtReminderNotification extends Notification implements PushNotificationC
         protected string $debtStatusLabel,
     ) {}
 
+    use \App\Notifications\Concerns\RequiresPlanFeature;
+
+    protected function requiredFeature(): string
+    {
+        return 'notifications_dettes';
+    }
+
     public function via(object $notifiable): array
     {
-        return ['database', FirebasePushChannel::class];
+        return $this->planAllows($notifiable) ? ['database', FirebasePushChannel::class] : [];
     }
 
     public function toArray(object $notifiable): array
@@ -80,7 +87,7 @@ class DebtReminderNotification extends Notification implements PushNotificationC
     {
         return [
             'title' => "Dette agent — {$this->agent->name}",
-            'body' => number_format($this->resteDu, 0, ',', ' ')." FCFA restant dû",
+            'body' => number_format($this->resteDu, 0, ',', ' ').' FCFA restant dû',
             'url' => "/m/dettes/agent/{$this->agent->id}",
             'type' => 'agent_debt_reminder',
         ];

@@ -9,7 +9,6 @@ use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantProvisioner;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class CreateTenant extends CreateRecord
 {
@@ -28,13 +27,10 @@ class CreateTenant extends CreateRecord
         $mode = $data['subscription_mode'];
         unset($data['admin_name'], $data['admin_email'], $data['admin_password'], $data['subscription_plan_id'], $data['subscription_cycle'], $data['subscription_mode']);
 
-        return DB::transaction(function () use ($data, $admin, $plan, $cycle, $mode) {
-            $tenant = app(TenantProvisioner::class)->provision($data, $admin);
+        return app(TenantProvisioner::class)->provision($data, $admin, function ($tenant) use ($plan, $cycle, $mode) {
             $manager = app(SubscriptionManager::class);
 
             $mode === 'trial' ? $manager->startTrial($tenant, $plan, $cycle) : $manager->activate($tenant, $plan, $cycle);
-
-            return $tenant;
         });
     }
 }

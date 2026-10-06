@@ -20,6 +20,11 @@ class FirebasePushChannel
             return;
         }
 
+        // Notifications push = fonctionnalité de l'offre (Pro et au-dessus).
+        if ($notifiable->tenant_id !== null && ! app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->hasFeature((int) $notifiable->tenant_id, 'notifications_push')) {
+            return;
+        }
+
         $tokens = PushToken::query()->where('user_id', $notifiable->id)->get();
 
         foreach ($tokens as $token) {

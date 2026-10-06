@@ -19,8 +19,19 @@ class SmsNotification extends Notification
     /**
      * Get the notification's delivery channels.
      */
+    use \App\Notifications\Concerns\RequiresPlanFeature;
+
+    protected function requiredFeature(): string
+    {
+        return 'notifications_dettes';
+    }
+
     public function via(object $notifiable): array
     {
+        if (! $this->planAllows($notifiable)) {
+            return [];
+        }
+
         // Only send SMS if enabled
         if (! config('services.sms.enabled', false)) {
             return [];

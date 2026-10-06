@@ -31,6 +31,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Un seul notifieur par processus : il cumule les échecs d'envoi rapportés par subscriptions:process.
+        $this->app->singleton(\App\Services\Subscriptions\SubscriptionNotifier::class);
+
+        // Toute génération de PDF / Excel passe par les fonctionnalités d'export de l'offre (voir ExportGate).
+        $this->app->extend('dompdf.wrapper', fn ($pdf, $app) => new \App\Support\Subscriptions\GatedPdf($app['dompdf'], $app['config'], $app['files'], $app['view']));
+        $this->app->extend('excel', fn ($excel, $app) => new \App\Support\Subscriptions\GatedExcel(
+            $app->make(\Maatwebsite\Excel\Writer::class),
+            $app->make(\Maatwebsite\Excel\QueuedWriter::class),
+            $app->make(\Maatwebsite\Excel\Reader::class),
+            $app->make(\Maatwebsite\Excel\Files\Filesystem::class),
+        ));
+
         //
     }
 

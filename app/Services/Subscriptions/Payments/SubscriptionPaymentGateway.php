@@ -19,8 +19,12 @@ interface SubscriptionPaymentGateway
     /** Identifiant stable stocké dans subscription_payments.gateway (ex. « manual »). */
     public function name(): string;
 
-    /** Crée un paiement EN ATTENTE (jamais confirmé). */
-    public function initiate(TenantSubscription $subscription, int $amount): SubscriptionPayment;
+    /**
+     * Crée un paiement EN ATTENTE (jamais confirmé).
+     *
+     * @param  array<string, mixed>  $metadata  ex. ['purpose' => 'renewal'|'plan_change', 'change_request_id' => 12]
+     */
+    public function initiate(TenantSubscription $subscription, int $amount, array $metadata = []): SubscriptionPayment;
 
     /**
      * Confirme un paiement en attente d'après une preuve vérifiable.

@@ -17,6 +17,11 @@ class GenerateDailyReport extends Command
 {
     use RunsPerTenant;
 
+    protected function requiredFeature(): ?string
+    {
+        return 'rapports_avances';
+    }
+
     protected $signature = 'uv:daily-report
                             {--date= : Date du rapport (YYYY-MM-DD), défaut: hier}
                             {--email : Envoyer le rapport par email}
@@ -99,7 +104,9 @@ class GenerateDailyReport extends Command
         // Dossier du tenant : un tenant ne peut jamais écraser le rapport d'un autre.
         $path = TenantContext::storagePath("reports/{$filename}");
         // Disque PRIVÉ explicite : le disque par défaut peut être « public » (FILESYSTEM_DISK), donc lisible par URL.
-        Storage::disk('local')->put($path, $pdf->output());
+        $content = $pdf->output();
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanStore(strlen($content));
+        Storage::disk('local')->put($path, $content);
 
         return $path;
     }

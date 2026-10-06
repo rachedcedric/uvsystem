@@ -78,6 +78,11 @@ class User extends Authenticatable implements FilamentUser
         return true;
     }
 
+    protected static function enforcesEntitlements(): bool
+    {
+        return true;
+    }
+
     /** Limite d'utilisateurs de l'offre : refus réel côté serveur, quel que soit le point d'entrée. */
     protected function enforceEntitlementsOnInsert(): void
     {

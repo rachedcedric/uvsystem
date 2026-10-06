@@ -156,6 +156,7 @@ class ExportController extends Controller
      */
     public function period(string $module, string $period, string $format)
     {
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('exports_avances');
         abort_unless(in_array($module, PeriodStats::MODULES, true) && array_key_exists($period, PeriodStats::PERIODS) && in_array($format, ['pdf', 'xlsx'], true), 404);
 
         $user = request()->user();

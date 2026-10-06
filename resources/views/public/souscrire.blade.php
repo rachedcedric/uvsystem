@@ -12,6 +12,11 @@
             <input type="hidden" name="plan" value="{{ $plan->slug }}">
             <input type="hidden" name="cycle" value="{{ $cycle->value }}">
             <input type="hidden" name="token" value="{{ $token }}">
+            {{-- Leurre anti-robot : masqué pour les humains, ignoré par les lecteurs d'écran --}}
+            <div style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+                <label for="website">Ne pas remplir</label>
+                <input type="text" id="website" name="website" value="" tabindex="-1" autocomplete="off">
+            </div>
 
             <label for="company_name">Nom de l'entreprise</label>
             <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" required autocomplete="organization">
@@ -34,7 +39,7 @@
             <label class="check"><input type="checkbox" name="accept_terms" value="1" {{ old('accept_terms') ? 'checked' : '' }}>
                 <span>J'accepte les @if (config('subscriptions.terms_url'))<a href="{{ config('subscriptions.terms_url') }}" target="_blank" rel="noopener">conditions d'utilisation</a>@else conditions d'utilisation @endif.</span></label>
 
-            <div style="margin-top:20px"><button type="submit" onclick="this.disabled=true;this.form.submit()">Démarrer mon essai</button></div>
+            <div style="margin-top:20px"><button type="submit" onclick="this.disabled=true;this.form.submit()">Recevoir mon lien de confirmation</button></div>
         </form>
     </div>
 @endsection

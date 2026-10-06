@@ -27,6 +27,27 @@ class FeatureCatalog
         ];
     }
 
+    /**
+     * Fonctionnalités SERVICE : promesses commerciales sans équivalent technique à verrouiller dans l'application
+     * (assistance humaine, développements sur mesure). Elles s'affichent et se testent via hasFeature(), mais aucun
+     * écran n'est bloqué. Toutes les autres sont appliquées côté serveur (voir docs/SUBSCRIPTIONS.md, tableau d'application).
+     *
+     * @return list<string>
+     */
+    public static function serviceFeatures(): array
+    {
+        return ['assistance_prioritaire', 'options_personnalisees'];
+    }
+
+    /** @return list<string> fonctionnalités techniques appliquées côté serveur */
+    public static function enforcedFeatures(): array
+    {
+        return array_values(array_filter(
+            array_keys(self::labels()),
+            fn (string $f) => ! in_array($f, self::serviceFeatures(), true) && ! str_starts_with($f, 'toutes_les_fonctions_')
+        ));
+    }
+
     public static function label(string $feature): string
     {
         return self::labels()[$feature] ?? ucfirst(str_replace('_', ' ', $feature));

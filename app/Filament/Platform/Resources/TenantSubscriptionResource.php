@@ -245,6 +245,12 @@ class TenantSubscriptionResource extends Resource
                 ->visible(fn (TenantSubscription $r) => $current($r) && ($r->status === SubscriptionStatus::Trialing || ($r->status === SubscriptionStatus::Expired && $r->trial_ends_at !== null)))
                 ->form([Forms\Components\TextInput::make('days')->label('Jours à ajouter')->numeric()->integer()->minValue(1)->maxValue(365)->required()])
                 ->action(fn (TenantSubscription $r, array $data) => self::guarded(fn () => $manager()->extendTrial($tenant($r), (int) $data['days']), 'Essai prolongé')),
+            Tables\Actions\Action::make('auto_renew')
+                ->label(fn (TenantSubscription $r) => $r->auto_renew ? 'Désactiver la facture auto' : 'Activer la facture auto')->icon('heroicon-o-arrow-path')
+                ->visible($current)
+                ->modalDescription('À l\'échéance, une facture de renouvellement est émise (paiement en attente + notification). Aucun prélèvement : la passerelle manuelle n\'en effectue pas.')
+                ->requiresConfirmation()
+                ->action(fn (TenantSubscription $r) => self::guarded(fn () => $manager()->setAutoRenew($tenant($r), ! $r->auto_renew), 'Option mise à jour')),
             Tables\Actions\Action::make('suspend')->label('Suspendre')->icon('heroicon-o-pause-circle')->color('warning')
                 ->visible(fn (TenantSubscription $r) => $current($r) && ! in_array($r->status, [SubscriptionStatus::Suspended, SubscriptionStatus::Cancelled], true))
                 ->form([Forms\Components\TextInput::make('reason')->label('Motif')->maxLength(255)])

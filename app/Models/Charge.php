@@ -14,6 +14,34 @@ use Spatie\Activitylog\Traits\LogsActivity;
 class Charge extends Model
 {
     use BelongsToTenant;
+
+    /** Création sérialisée par tenant : le contrôle d'espace de stockage (justificatif) ne peut pas être doublé. */
+    protected static function enforcesEntitlements(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Espace de stockage de l'offre : le justificatif vient d'être enregistré dans le dossier du tenant ; s'il fait
+     * dépasser l'espace autorisé, la charge est refusée ET ce fichier (et lui seul) est retiré. Les fichiers
+     * déjà présents ne sont jamais supprimés.
+     */
+    protected function enforceEntitlementsOnInsert(): void
+    {
+        if (! filled($this->justificatif_path)) {
+            return;
+        }
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+
+        if ($disk->exists($this->justificatif_path)
+            && ($message = app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->storageRefusal(0, (int) $this->tenant_id)) !== null) {
+            $disk->delete($this->justificatif_path);
+
+            throw \App\Exceptions\SubscriptionLimitReached::because($message, 'justificatif');
+        }
+    }
+
     use LogsActivity, SoftDeletes;
 
     protected $fillable = [

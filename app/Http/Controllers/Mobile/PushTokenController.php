@@ -12,6 +12,7 @@ class PushTokenController extends Controller
     public function store(Request $request): Response
     {
         abort_unless($request->user()->hasAnyRole(['master', 'admin']), 403);
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('notifications_push');
 
         $validated = $request->validate([
             'token' => ['required', 'string', 'max:512'],

@@ -29,9 +29,33 @@ class SubscriptionAccessPolicy
     /** @var array<int, SubscriptionAccessLevel> mémo par requête, vidé à chaque opération d'abonnement */
     private static array $levels = [];
 
+    /** Profondeur de dérogation « amorçage » (voir withoutRestrictions). */
+    private static int $bootstrapping = 0;
+
     public static function flush(): void
     {
         self::$levels = [];
+    }
+
+    /**
+     * AMORÇAGE d'un tenant : crée son premier compte (master) alors qu'il n'a pas encore d'abonnement. Réservé au code
+     * serveur de confiance (TenantProvisioner) ; ne lève que le refus « accès restreint » sur la création d'utilisateur —
+     * les limites de l'offre, elles, continuent de s'appliquer.
+     */
+    public static function withoutRestrictions(\Closure $callback): mixed
+    {
+        self::$bootstrapping++;
+
+        try {
+            return $callback();
+        } finally {
+            self::$bootstrapping--;
+        }
+    }
+
+    public static function isBootstrapping(): bool
+    {
+        return self::$bootstrapping > 0;
     }
 
     public static function levelFor(Tenant|int $tenant): SubscriptionAccessLevel

@@ -50,8 +50,14 @@ class SubscriptionEntitlements
     {
         $plan = $this->plan($tenant);
 
-        // Tenant hérité (sans abonnement) : rien n'est retiré.
-        return $plan === null ? ! config('subscriptions.require_subscription') : $plan->hasFeature($feature);
+        if ($plan === null) {
+            // Sans abonnement : mode hérité (tout permis) uniquement si la politique le dit explicitement ; sinon fail
+            // closed, sauf la récupération des données (exports), qui reste toujours possible.
+            return ! config('subscriptions.require_subscription')
+                || in_array($feature, (array) config('subscriptions.recovery_features', []), true);
+        }
+
+        return $plan->hasFeature($feature);
     }
 
     public function assertFeature(Tenant|int|null $tenant, string $feature): void
@@ -90,6 +96,54 @@ class SubscriptionEntitlements
         $id = $this->tenantId($tenant);
 
         return Agent::withoutGlobalScope(TenantScope::class)->where('tenant_id', $id)->count();
+    }
+
+    // ------------------------------------------------------------------ stockage
+
+    /** Espace maximal (Mo) de l'offre ; null = illimité. */
+    public function getStorageLimitMb(Tenant|int|null $tenant = null): ?int
+    {
+        return $this->plan($tenant)?->storage_limit_mb;
+    }
+
+    /** Octets occupés par les fichiers du tenant (justificatifs, exports, rapports : tenants/{id}/…). */
+    public function getStorageUsageBytes(Tenant|int|null $tenant = null): int
+    {
+        $id = $this->tenantId($tenant);
+        $disk = \Illuminate\Support\Facades\Storage::disk(config('subscriptions.storage_disk', 'local'));
+
+        return (int) collect($disk->allFiles("tenants/{$id}"))->sum(fn (string $file) => $disk->size($file));
+    }
+
+    public function canStore(int $bytes, Tenant|int|null $tenant = null): bool
+    {
+        return $this->storageRefusal($bytes, $tenant) === null;
+    }
+
+    /** Refus si l'ajout de $bytes dépasse l'espace de l'offre (les fichiers existants ne sont jamais supprimés). */
+    public function storageRefusal(int $bytes, Tenant|int|null $tenant = null): ?string
+    {
+        $limit = $this->getStorageLimitMb($tenant);
+
+        if (self::isUnlimited($limit)) {
+            return null;
+        }
+
+        $used = $this->getStorageUsageBytes($tenant);
+
+        if ($used + $bytes > $limit * 1024 * 1024) {
+            return sprintf('Espace de stockage de l\'offre atteint (%s Mo sur %d Mo). Vos fichiers existants sont conservés ; supprimez des fichiers ou passez à une offre supérieure.',
+                number_format($used / 1048576, 1, ',', ' '), $limit);
+        }
+
+        return null;
+    }
+
+    public function assertCanStore(int $bytes, Tenant|int|null $tenant = null): void
+    {
+        if (($message = $this->storageRefusal($bytes, $tenant)) !== null) {
+            throw SubscriptionLimitReached::because($message, 'file');
+        }
     }
 
     public function remainingUsers(Tenant|int|null $tenant = null): ?int
@@ -142,7 +196,7 @@ class SubscriptionEntitlements
     {
         $id = $this->tenantId($tenant);
 
-        if (SubscriptionAccessPolicy::levelFor($id) !== SubscriptionAccessLevel::Full) {
+        if (! SubscriptionAccessPolicy::isBootstrapping() && SubscriptionAccessPolicy::levelFor($id) !== SubscriptionAccessLevel::Full) {
             return SubscriptionAccessPolicy::restrictedMessage();
         }
 

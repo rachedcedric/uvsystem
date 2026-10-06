@@ -127,6 +127,7 @@ class SubscriptionManager
             }
 
             return $this->replaceCurrent($tenant, $plan, $cycle, $status, $attributes, 'plan_changed', [
+                'quote' => app(SubscriptionProration::class)->quote($current, $plan, $cycle),
                 'from_plan_id' => $current->subscription_plan_id,
                 'from_cycle' => $current->cycle->value,
                 'previous_subscription_id' => $current->id,
@@ -304,6 +305,21 @@ class SubscriptionManager
             $current->forceFill(['status' => SubscriptionStatus::Trialing, 'trial_ends_at' => $from->copy()->addDays($days)]);
 
             return $this->saveWithEvent($current, 'trial_extended', ['days' => $days]);
+        });
+    }
+
+    /**
+     * Renouvellement automatique : avec la passerelle manuelle, aucun prélèvement n'est possible ; l'option fait émettre
+     * une facture de renouvellement (paiement en attente + notification) à l'échéance, par subscriptions:process.
+     * Une passerelle qui sait prélever pourra s'en servir sans changer ce service.
+     */
+    public function setAutoRenew(Tenant $tenant, bool $enabled): TenantSubscription
+    {
+        return $this->atomically($tenant, function () use ($tenant, $enabled) {
+            $current = $this->requireCurrent($tenant);
+            $current->forceFill(['auto_renew' => $enabled]);
+
+            return $this->saveWithEvent($current, $enabled ? 'auto_renew_on' : 'auto_renew_off');
         });
     }
 

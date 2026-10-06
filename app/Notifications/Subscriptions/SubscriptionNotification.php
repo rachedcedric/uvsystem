@@ -2,20 +2,16 @@
 
 namespace App\Notifications\Subscriptions;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
  * Base des notifications d'abonnement : canaux mail + base (déjà utilisés par le projet). Ne contient que des
- * valeurs simples (pas de modèle) : elles se sérialisent sans dépendre du tenant courant du worker.
- * L'envoi est piloté par SubscriptionNotifier (anti-doublon + journalisation des échecs).
+ * valeurs simples (pas de modèle). Volontairement NON mises en file : l'envoi est synchrone et piloté par
+ * SubscriptionNotifier (anti-doublon, échec conservé et repris), pour qu'un échec ne soit jamais invisible.
  */
-abstract class SubscriptionNotification extends Notification implements ShouldQueue
+abstract class SubscriptionNotification extends Notification
 {
-    use Queueable;
-
     /** @param  array<string, scalar|null>  $context  tenant, offre, échéance, jours… */
     public function __construct(public array $context = []) {}
 

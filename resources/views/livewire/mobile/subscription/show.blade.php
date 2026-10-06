@@ -61,13 +61,70 @@
         </x-m.section>
     @endif
 
+    @if ($message)<div class="m-group" style="margin-top:6px"><x-m.row icon="check-circle" tone="ok" :chevron="false" :title="$message" /></div>@endif
+    @if ($error)<div class="m-group" style="margin-top:6px"><x-m.row icon="exclamation-triangle" tone="danger" :chevron="false" :title="$error" /></div>@endif
+
+    @if ($subscription)
+        <x-m.section title="Renouvellement">
+            <div class="m-group">
+                <x-m.row icon="arrow-path" :chevron="false" title="Facture de renouvellement automatique"
+                         :sub="$subscription->auto_renew ? 'Activée : une facture est émise à l\'échéance.' : 'Désactivée.'">
+                    <x-slot:end><button type="button" class="m-btn m-btn--ghost" style="min-height:44px;min-width:44px" wire:click="toggleAutoRenew">{{ $subscription->auto_renew ? 'Désactiver' : 'Activer' }}</button></x-slot:end>
+                </x-m.row>
+            </div>
+        </x-m.section>
+    @endif
+
+    @if ($pendingPayments->isNotEmpty())
+        <x-m.section title="Paiements en attente">
+            <div class="m-group">
+                @foreach ($pendingPayments as $payment)
+                    <x-m.row icon="banknotes" tone="warn" :chevron="false" :title="number_format($payment->amount, 0, ',', ' ').' FCFA'"
+                             :sub="($payment->metadata['purpose'] ?? 'renewal') === 'plan_change' ? 'Changement d\'offre — communiquez votre règlement à la plateforme.' : 'Renouvellement — communiquez votre règlement à la plateforme.'" />
+                @endforeach
+            </div>
+        </x-m.section>
+    @endif
+
     <x-m.section title="Changer d'offre">
+        <nav class="m-chips" aria-label="Cycle" style="padding:0 14px 8px">
+            @foreach (\App\Enums\SubscriptionCycle::cases() as $option)
+                <button type="button" class="m-chip {{ $viewCycle === $option ? 'is-on' : '' }}" style="min-height:44px;min-width:44px" wire:click="$set('cycle', '{{ $option->value }}')">{{ $option->label() }}</button>
+            @endforeach
+        </nav>
+        @if ($pendingRequest)
+            <div class="m-group" style="margin-bottom:8px">
+                <x-m.row icon="clock" tone="warn" :chevron="false" :title="'Demande en cours : '.$pendingRequest->plan->name"
+                         sub="En attente de votre paiement ; elle s'applique dès sa confirmation.">
+                    <x-slot:end><button type="button" class="m-btn m-btn--ghost" style="min-height:44px" wire:click="cancelRequest">Annuler</button></x-slot:end>
+                </x-m.row>
+            </div>
+        @endif
         <div class="m-group">
             @foreach ($catalog as $offer)
-                <x-m.row :icon="$plan && $offer->id === $plan->id ? 'check-circle' : 'rectangle-stack'" :chevron="false" :title="$offer->name"
-                         :sub="number_format($offer->monthly_price, 0, ',', ' ').' FCFA / mois — '.number_format($offer->yearly_price, 0, ',', ' ').' FCFA / an — '.($offer->max_users ?? 'utilisateurs illimités').($offer->max_users ? ' utilisateurs' : '').', '.($offer->max_agents ?? 'agents illimités').($offer->max_agents ? ' agents' : '')" />
+                @php($isCurrent = $plan && $offer->id === $plan->id && $subscription->cycle === $viewCycle)
+                @php($quote = $quotes[$offer->id] ?? null)
+                <x-m.row :icon="$isCurrent ? 'check-circle' : 'rectangle-stack'" :chevron="false" :title="$offer->name"
+                         :sub="number_format($offer->priceFor($viewCycle), 0, ',', ' ').' FCFA / '.($viewCycle === \App\Enums\SubscriptionCycle::Yearly ? 'an' : 'mois').' — '.($offer->max_users ?? 'utilisateurs illimités').($offer->max_users ? ' utilisateurs' : '').', '.($offer->max_agents ?? 'agents illimités').($offer->max_agents ? ' agents' : '').($quote && ! $isCurrent && $subscription && $subscription->current_period_ends_at ? ' — à régler : '.number_format($quote['amount_due'], 0, ',', ' ').' FCFA (prorata déduit)' : '')">
+                    @unless ($isCurrent || ! $subscription)
+                        <x-slot:end><button type="button" class="m-btn" style="min-height:44px;min-width:44px" wire:click="requestChange({{ $offer->id }}, '{{ $viewCycle->value }}')">Choisir</button></x-slot:end>
+                    @endunless
+                </x-m.row>
             @endforeach
         </div>
-        <p class="m-row__sub" style="padding:8px 14px;white-space:normal">Le changement d'offre est effectué par l'administrateur de la plateforme : contactez-le pour passer à une autre offre. Vos données existantes sont toujours conservées.</p>
+        <p class="m-row__sub" style="padding:8px 14px;white-space:normal">Le montant à régler tient compte de la part non consommée de votre période en cours. Si rien n'est à payer, le changement est appliqué immédiatement ; sinon il s'applique à la confirmation de votre paiement. Vos données existantes sont toujours conservées.</p>
     </x-m.section>
+
+    @if (count($backups))
+        <x-m.section title="Sauvegardes dédiées">
+            <div class="m-group">
+                @foreach ($backups as $file)
+                    <a href="{{ route('exports.tenant-backup', $file) }}" class="m-row">
+                        <span class="m-row__lead"><x-m.icon name="cloud-arrow-down" class="m-ico-sm" /></span>
+                        <span class="m-row__body"><span class="m-row__title" style="display:block">{{ $file }}</span></span>
+                    </a>
+                @endforeach
+            </div>
+        </x-m.section>
+    @endif
 </div>

@@ -32,6 +32,9 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <!-- Les tests historiques créent des tenants sans abonnement : ils gardent l'ancien mode « hérité ».
+             La politique réelle (fail closed, défaut de config/subscriptions.php) est testée explicitement. -->
+        <env name="SUBSCRIPTION_REQUIRED" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

@@ -47,12 +47,20 @@ class Agent extends Model
         app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
     }
 
+    protected static function enforcesEntitlements(): bool
+    {
+        return true;
+    }
+
     /** Restaurer un agent supprimé logiquement le recompte : la limite s'applique aussi. */
+    protected function updateNeedsEntitlementCheck(): bool
+    {
+        return $this->isDirty('deleted_at') && $this->deleted_at === null;
+    }
+
     protected function enforceEntitlementsOnUpdate(): void
     {
-        if ($this->isDirty('deleted_at') && $this->deleted_at === null) {
-            app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
-        }
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
     }
 
     // ==================== RELATIONS ====================

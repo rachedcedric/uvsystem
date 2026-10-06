@@ -23,15 +23,22 @@ class TenantProvisioner
     /**
      * @param  array{name: string, email: string, password: string}  $admin
      * @param  array<string, mixed>  $tenantAttributes
+     * @param  (\Closure(Tenant): mixed)|null  $subscribe  attribue l'abonnement du tenant AVANT la création de son premier
+     *                                                     compte : un tenant ne naît jamais sans abonnement dans un parcours normal
      */
-    public function provision(array $tenantAttributes, array $admin): Tenant
+    public function provision(array $tenantAttributes, array $admin, ?\Closure $subscribe = null): Tenant
     {
-        return DB::transaction(function () use ($tenantAttributes, $admin) {
+        return DB::transaction(function () use ($tenantAttributes, $admin, $subscribe) {
             $tenant = Tenant::create($tenantAttributes);
+
+            if ($subscribe) {
+                $subscribe($tenant);
+            }
 
             TenantContext::runAs($tenant->id, function () use ($admin) {
                 $this->seedReferenceData();
-                $this->createAdmin($admin);
+                // Sans abonnement (parcours technique), le premier master doit tout de même pouvoir être créé.
+                \App\Services\Subscriptions\SubscriptionAccessPolicy::withoutRestrictions(fn () => $this->createAdmin($admin));
             });
 
             return $tenant;
@@ -50,13 +57,14 @@ class TenantProvisioner
         CaisseCategorie::create(['name' => self::CAISSE_SYSTEM, 'sort_order' => 999, 'is_active' => true, 'is_system' => true]);
     }
 
-    /** @param  array{name: string, email: string, password: string}  $admin */
+    /** @param  array{name: string, email: string, password?: string, password_hash?: string}  $admin */
     public function createAdmin(array $admin): User
     {
         $user = User::create([
             'name' => $admin['name'],
             'email' => $admin['email'],
-            'password' => Hash::make($admin['password']),
+            // Souscription publique : le mot de passe arrive déjà haché (jamais conservé en clair entre les deux étapes).
+            'password' => $admin['password_hash'] ?? Hash::make($admin['password']),
         ]);
         $user->assignRole('master');
 

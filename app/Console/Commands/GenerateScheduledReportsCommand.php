@@ -18,6 +18,11 @@ class GenerateScheduledReportsCommand extends Command
 {
     use RunsPerTenant;
 
+    protected function requiredFeature(): ?string
+    {
+        return 'rapports_avances';
+    }
+
     protected $signature = 'reports:generate
                             {type=daily : Type de rapport (daily, weekly, monthly)}
                             {--email= : Email du destinataire (optionnel)}
@@ -183,7 +188,9 @@ class GenerateScheduledReportsCommand extends Command
             ],
         ])->setPaper('a4', 'portrait');
 
-        Storage::disk('local')->put($path, $pdf->output());
+        $content = $pdf->output();
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanStore(strlen($content));
+        Storage::disk('local')->put($path, $content);
 
         return $path;
     }

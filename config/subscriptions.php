@@ -8,11 +8,34 @@ return [
     'default_legacy_plan' => env('SUBSCRIPTIONS_LEGACY_PLAN', 'entreprise'),
 
     /*
-    | Un tenant sans aucune ligne d'abonnement est « hérité » : aucune limite, aucune restriction
-    | (c'est l'état de toute base non encore migrée). À passer à true quand tous les tenants ont un abonnement :
-    | un tenant sans abonnement sera alors en accès restreint.
+    | POLITIQUE PAR DÉFAUT : FAIL CLOSED. Un tenant sans ligne d'abonnement est en accès RESTREINT (lecture,
+    | exports de récupération, aucune écriture métier, aucune création d'utilisateur/agent) et n'a aucune
+    | fonctionnalité d'offre. La migration crée un abonnement pour chaque tenant existant, et toute création
+    | de tenant (plateforme ou souscription publique) en crée un : « sans abonnement » n'est donc plus un état normal.
+    | false = ancien mode « hérité » (illimité), réservé aux bases de test et à une transition explicite.
     */
-    'require_subscription' => env('SUBSCRIPTIONS_REQUIRED', false),
+    'require_subscription' => (bool) env('SUBSCRIPTION_REQUIRED', env('SUBSCRIPTIONS_REQUIRED', true)),
+
+    // Fonctionnalités de récupération de données : toujours permises en accès restreint ou sans abonnement.
+    'recovery_features' => ['exports_pdf', 'exports_excel'],
+
+    // Reprise des notifications en échec : nombre maximal de tentatives par notification.
+    'notification_max_attempts' => 5,
+
+    // Espace de stockage des justificatifs et rapports (en Mo) : appliqué à l'enregistrement de nouveaux fichiers.
+    'storage_disk' => 'local',
+
+    // Sauvegardes dédiées : nombre de sauvegardes conservées par tenant.
+    'dedicated_backups_keep' => 7,
+
+    // Souscription publique : protections anti-abus.
+    'signup' => [
+        'link_ttl_hours' => 24,
+        'min_seconds_to_submit' => 3,   // un formulaire envoyé plus vite est un robot
+        'max_per_ip_per_day' => 3,      // inscriptions vérifiées par adresse IP et par 24 h
+        'max_mails_per_email_per_hour' => 3,
+        'disposable_domains' => ['mailinator.com', 'yopmail.com', '10minutemail.com', 'guerrillamail.com', 'tempmail.com', 'trashmail.com', 'sharklasers.com', 'getnada.com', 'dispostable.com'],
+    ],
 
     // Jours restants (J-n) auxquels un avertissement d'expiration est envoyé, une seule fois chacun.
     'warning_days' => [7, 3, 1],

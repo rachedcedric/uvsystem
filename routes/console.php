@@ -111,6 +111,14 @@ Schedule::command('subscriptions:process')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/subscriptions.log'));
 
+// Sauvegarde dédiée des tenants dont l'offre l'inclut : chaque dimanche à 03h30 (rotation : 7 dernières).
+Schedule::command('tenancy:backup-dedicated')
+    ->weeklyOn(0, '03:30')
+    ->timezone(config('app.timezone'))
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/tenant-backups.log'));
+
 // Processus de recouvrement automatisé - 2x par jour (9h et 15h)
 Schedule::command('recovery:process')
     ->twiceDaily(9, 15)

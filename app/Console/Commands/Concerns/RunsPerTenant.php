@@ -18,13 +18,19 @@ trait RunsPerTenant
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if (TenantContext::id() !== null) {
-            return parent::execute($input, $output);
+            return $this->tenantHasRequiredFeature() ? parent::execute($input, $output) : self::SUCCESS;
         }
 
         $status = self::SUCCESS;
 
         TenantContext::forEachTenant(function (Tenant $tenant) use ($input, $output, &$status) {
             $output->writeln("<comment>— Tenant #{$tenant->id} : {$tenant->name}</comment>");
+
+            if (! $this->tenantHasRequiredFeature()) {
+                $output->writeln('<comment>  ignoré : fonctionnalité absente de son offre</comment>');
+
+                return;
+            }
 
             try {
                 $status = max($status, (int) parent::execute($input, $output));
@@ -37,5 +43,18 @@ trait RunsPerTenant
         });
 
         return $status;
+    }
+
+    /** Fonctionnalité d'offre exigée pour traiter un tenant (null = aucune) ; surchargée par les commandes concernées. */
+    protected function requiredFeature(): ?string
+    {
+        return null;
+    }
+
+    private function tenantHasRequiredFeature(): bool
+    {
+        $feature = $this->requiredFeature();
+
+        return $feature === null || app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->hasFeature(null, $feature);
     }
 }

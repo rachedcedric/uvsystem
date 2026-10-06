@@ -142,6 +142,14 @@ class TenancyDeployCheckCommand extends Command
             ? $this->add('OK', 'Rôle super_admin', 'présent')
             : $this->add('ERREUR', 'Rôle super_admin', 'absent', 'php artisan db:seed --class=RolesAndPermissionsSeeder --force');
 
+        $tenantRoles = ['master', 'admin', 'comptable', 'commercial'];
+        $missingTenantRoles = collect($tenantRoles)
+            ->diff(Role::query()->whereIn('name', $tenantRoles)->pluck('name'));
+
+        $missingTenantRoles->isEmpty()
+            ? $this->add('OK', 'Rôles tenant', 'tous présents')
+            : $this->add('ERREUR', 'Rôles tenant', 'absents : '.$missingTenantRoles->implode(', '), 'php artisan db:seed --class=RolesAndPermissionsSeeder --force');
+
         $supers = TenantContext::withoutTenancy(fn () => User::query()->whereNull('tenant_id')->role(User::ROLE_SUPER_ADMIN)->count());
         $supers > 0
             ? $this->add('OK', 'Super admin', "{$supers} compte(s)")

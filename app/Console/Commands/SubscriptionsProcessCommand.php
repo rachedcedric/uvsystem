@@ -15,7 +15,7 @@ class SubscriptionsProcessCommand extends Command
     {
         $report = $processor->run();
 
-        $this->info("Expirés : {$report['expired']} — avertissements envoyés : {$report['warned']} — erreurs : {$report['errors']}");
+        $this->info("Expirés : {$report['expired']} — avertissements : {$report['warned']} — factures de renouvellement : {$report['invoiced']} — reprises : {$report['retried']} — échecs d'envoi : {$report['notification_failures']} — erreurs : {$report['errors']}");
 
         // Code de sortie non nul si une erreur a été journalisée : le planificateur la signale.
         return $report['errors'] > 0 ? self::FAILURE : self::SUCCESS;

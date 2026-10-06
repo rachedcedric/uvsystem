@@ -20,6 +20,8 @@ abstract class SubscriptionTestCase extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
         // Ici on teste l'isolation et les droits : aucun tenant de repli pour les requêtes anonymes.
         TenantContext::setFallback(null);
+        // Aucun test n'écrit dans le vrai stockage du projet.
+        \Illuminate\Support\Facades\Storage::fake('local');
     }
 
     protected function plan(string $slug): SubscriptionPlan
