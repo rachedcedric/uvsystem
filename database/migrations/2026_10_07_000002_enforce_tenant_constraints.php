@@ -24,6 +24,8 @@ return new class extends Migration
         'payment_methods' => ['code', 'payment_methods_code_unique'],
         'caisse_categories' => ['normalized_name', 'caisse_categories_normalized_name_unique'],
         'charge_categories' => ['code', 'charge_categories_code_unique'],
+        // Une commission globale par JOUR ET PAR TENANT (dedup_key = date de la commission globale, sinon NULL).
+        'commissions' => ['dedup_key', 'commissions_dedup_key_unique'],
     ];
 
     public function up(): void

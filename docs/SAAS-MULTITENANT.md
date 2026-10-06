@@ -106,3 +106,14 @@ Corrigé :
 - **Zones tactiles** : puces de filtre et de montant rapide 36/34 → 40 px ; le bandeau 2FA est entièrement cliquable (44 px).
 
 Non vérifié ici : clavier virtuel Android, encoche/zones sûres et mode hors ligne sur appareil réel (à contrôler sur l'émulateur ou un téléphone). Les fichiers `public/build` sont ignorés par git : lancer `npm run build` et téléverser `public/build/` avec le code.
+
+## Deuxième passe d'intrusion (`tests/Feature/TenantPenetrationTest.php`)
+
+Un master du tenant A (toutes les permissions, donc un 403 ne masque aucune faille) attaque un tenant B rempli de vraies données. Le balayage parcourt **toutes les routes enregistrées** (API, Filament, mobile) qui prennent un identifiant de ressource et exige 403/404 ; il couvre aussi les filtres (`tenant_id`, `user_id`, `organization_id`, `agent_id`…), le mass-assignment, la falsification des propriétés Livewire (`agentId`), les écrans CRUD génériques et l'élévation vers `super_admin`. Vérifié par mutation : avec le scope désactivé, le test détecte 92 routes qui fuiraient.
+
+Défauts trouvés et corrigés grâce à cette passe :
+- **`commissions.dedup_key` unique globale** : deux sociétés n'auraient pas pu calculer chacune leur commission globale du même jour → unicité par `(tenant_id, dedup_key)` (migration 2, testée sur MariaDB).
+- **`/api/transactions/{id}`** répondait 200 pour n'importe quel identifiant (paramètre de route nommé autrement que l'argument du contrôleur, donc aucune liaison au modèle) → corrigé (404 pour une ressource d'un autre tenant, lecture correcte des siennes).
+- **API fournisseurs** désynchronisée du schéma (recherche sur des colonnes inexistantes → erreur 500 sur MySQL, types `bank/premium_agent/other` refusés par la base) → alignée sur `contact` et `BANQUE|AGENT_PREMIUM` (alias `bank`/`premium_agent` conservés).
+
+Routes volontairement hors balayage : liste/création sans identifiant (`/m/g/{resource}`), téléchargements Filament `exports/imports` (liés à l'utilisateur, non utilisés), et les ressources héritées `vente-uvs` / `remboursement-agents` dont les tables n'existent plus.

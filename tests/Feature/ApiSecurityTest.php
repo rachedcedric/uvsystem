@@ -207,4 +207,16 @@ class ApiSecurityTest extends TestCase
         $this->actingAs($this->userWithRole('admin'))
             ->get('/exports/download/ancien.xlsx')->assertNotFound();
     }
+
+    public function test_fournisseur_api_matches_the_real_schema(): void
+    {
+        Sanctum::actingAs($this->userWithRole('master'));
+
+        $id = $this->postJson('/api/fournisseurs', ['name' => 'Banque Test', 'type' => 'bank', 'contact' => '0102030405'])
+            ->assertCreated()->json('data.id');
+
+        $this->assertSame('BANQUE', Fournisseur::find($id)->type);
+        $this->getJson('/api/fournisseurs?search=0102030405&type=bank')->assertOk()->assertJsonPath('total', 1);
+        $this->postJson('/api/fournisseurs', ['name' => 'X', 'type' => 'other'])->assertStatus(422);
+    }
 }

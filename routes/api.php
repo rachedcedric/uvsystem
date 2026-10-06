@@ -11,7 +11,6 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\UvTransactionController;
 use App\Http\Controllers\Api\WebhookController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -88,7 +87,9 @@ Route::middleware(['auth:sanctum', 'staff', 'throttle:api'])->group(function () 
 
     // UV Transactions (stricter rate limit for financial operations)
     Route::middleware('throttle:transactions')->group(function () {
-        Route::apiResource('transactions', UvTransactionController::class)->except(['destroy']);
+        // Le paramètre doit s'appeler comme l'argument du contrôleur ($uvTransaction), sinon aucune liaison au
+        // modèle n'a lieu : la route répondait 200 pour n'importe quel identifiant.
+        Route::apiResource('transactions', UvTransactionController::class)->parameters(['transactions' => 'uvTransaction'])->except(['destroy']);
     });
 
     // Transaction stats (standard rate)

@@ -11,6 +11,27 @@ use Illuminate\Validation\Rule;
 
 class FournisseurController extends Controller
 {
+    /** Valeurs acceptées pour `type` : celles de la base, plus les anciens alias de l'API. */
+    private const TYPES = ['BANQUE', 'AGENT_PREMIUM', 'bank', 'premium_agent'];
+
+    private function normalizeType(?string $type): ?string
+    {
+        return match ($type) {
+            'bank', 'BANQUE' => 'BANQUE',
+            'premium_agent', 'AGENT_PREMIUM' => 'AGENT_PREMIUM',
+            default => null,
+        };
+    }
+
+    private function withNormalizedType(array $validated): array
+    {
+        if (isset($validated['type'])) {
+            $validated['type'] = $this->normalizeType($validated['type']);
+        }
+
+        return $validated;
+    }
+
     /**
      * Liste paginée des fournisseurs
      */
@@ -24,14 +45,13 @@ class FournisseurController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('contact_name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('contact', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
         // Filter by type
-        if ($type = $request->input('type')) {
+        if ($type = $this->normalizeType($request->input('type'))) {
             $query->where('type', $type);
         }
 
@@ -77,16 +97,15 @@ class FournisseurController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => ['required', Rule::in(['bank', 'premium_agent', 'other'])],
-            'contact_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'type' => ['required', Rule::in(self::TYPES)],
+            'contact' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
             'notes' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
 
-        $fournisseur = Fournisseur::create($validated);
+        $fournisseur = Fournisseur::create($this->withNormalizedType($validated));
 
         activity()
             ->performedOn($fournisseur)
@@ -118,9 +137,8 @@ class FournisseurController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'type' => ['sometimes', 'required', Rule::in(['bank', 'premium_agent', 'other'])],
-            'contact_name' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
+            'type' => ['sometimes', 'required', Rule::in(self::TYPES)],
+            'contact' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:500',
             'notes' => 'nullable|string|max:1000',
@@ -128,7 +146,7 @@ class FournisseurController extends Controller
         ]);
 
         $oldData = $fournisseur->toArray();
-        $fournisseur->update($validated);
+        $fournisseur->update($this->withNormalizedType($validated));
 
         activity()
             ->performedOn($fournisseur)
