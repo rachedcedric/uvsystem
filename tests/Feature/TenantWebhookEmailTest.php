@@ -8,9 +8,7 @@ use App\Models\User;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -34,21 +32,8 @@ class TenantWebhookEmailTest extends TestCase
         TenantContext::setFallback(null);
         config(['services.resend.webhook_secret' => self::SECRET]);
 
-        // Colonne attendue par le code du webhook, absente des migrations du dépôt. Ajoutée seulement sur SQLite
-        // (le DDL y est annulé en fin de test ; sur MySQL il persisterait et validerait la transaction de test).
-        if (DB::connection()->getDriverName() === 'sqlite' && ! Schema::hasColumn('agents', 'email_valid')) {
-            Schema::table('agents', fn ($t) => $t->boolean('email_valid')->default(true));
-        }
-
         $this->a = Tenant::create(['name' => 'Société A']);
         $this->b = Tenant::create(['name' => 'Société B']);
-    }
-
-    private function requireEmailValidColumn(): void
-    {
-        if (! Schema::hasColumn('agents', 'email_valid')) {
-            $this->markTestSkipped('agents.email_valid absente de la base (absente des migrations du dépôt).');
-        }
     }
 
     private function user(Tenant $tenant, string $email): User
@@ -77,7 +62,6 @@ class TenantWebhookEmailTest extends TestCase
 
     public function test_a_bounce_updates_only_the_owner_tenants_records(): void
     {
-        $this->requireEmailValidColumn();
         $userA = $this->user($this->a, 'rebond-a@example.com');
         $userB = $this->user($this->b, 'sain-b@example.com');
         $agentA = $this->agent($this->a, 'agent-a@example.com');
@@ -102,7 +86,6 @@ class TenantWebhookEmailTest extends TestCase
 
     public function test_an_agent_address_shared_by_two_tenants_is_ambiguous_and_modifies_nobody(): void
     {
-        $this->requireEmailValidColumn();
         Log::spy();
         $agentA = $this->agent($this->a, 'partage@example.com');
         $agentB = $this->agent($this->b, 'partage@example.com');

@@ -205,8 +205,8 @@ Sans utilisateur, donc sans tenant : l'adresse est cherchée hors contexte **uni
 | Webhook Resend : `to` est une liste, la méthode attendait une chaîne | erreur de type sur un vrai rebond | liste ou chaîne acceptées |
 | `Schema::getTables()` (MySQL) liste toutes les bases visibles du serveur | un contrôle préalable aurait vu des tables d'autres bases | borné à la base de la connexion |
 
-Non corrigé (décision requise) : `agents.email_valid`, mise à jour par le webhook, n'existe dans aucune migration ; la mise à jour des agents est donc ignorée (journalisée) tant que la colonne n'existe pas.
+`agents.email_valid` (mise à jour par le webhook) n'existait dans aucune migration : créée par `2026_10_08_000000_add_email_valid_to_agents_table` (booléen, `true` par défaut, additive et rejouable ; les adresses existantes restent valides). Tant que la migration n'est pas passée, le webhook ignore la mise à jour des agents au lieu de planter.
 
 ## Tests : portée par moteur
 
-Les suites `MigrationPreflightTest` (8) et deux tests du webhook créent des tables ou colonnes : sur MySQL/MariaDB le DDL valide implicitement la transaction de test et laisserait des tables et données derrière lui ; ils ne s'exécutent donc que sur SQLite (DDL transactionnel) et sont ignorés ailleurs. Le comportement sur MariaDB est validé par la procédure manuelle (copie des données réelles : rapport, blocage, sauvegarde, validation, migration, retour arrière, remontée).
+La suite `MigrationPreflightTest` (8 tests) crée des tables : sur MySQL/MariaDB le DDL valide implicitement la transaction de test et laisserait des tables et données derrière lui ; ils ne s'exécutent donc que sur SQLite (DDL transactionnel) et sont ignorés ailleurs. Le comportement sur MariaDB est validé par la procédure manuelle (copie des données réelles : rapport, blocage, sauvegarde, validation, migration, retour arrière, remontée).

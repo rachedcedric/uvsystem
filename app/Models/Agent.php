@@ -37,6 +37,7 @@ class Agent extends Model
         'debt_limit' => 'decimal:2',
         'current_debt' => 'decimal:2',
         'commission_rate' => 'decimal:2',
+        'email_valid' => 'boolean',
         'created_at' => 'datetime',
     ];
 

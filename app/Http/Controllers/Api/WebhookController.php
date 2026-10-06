@@ -540,7 +540,7 @@ class WebhookController extends Controller
                 Log::warning('Email webhook : adresse d\'agent partagée entre plusieurs tenants, non modifiée', [
                     'tenants' => $agentTenants->count(), 'type' => $type,
                 ]);
-            } elseif ($agentTenants->count() === 1 && Schema::hasColumn('agents', 'email_valid')) {
+            } elseif ($agentTenants->count() === 1 && Schema::hasColumn('agents', 'email_valid')) { // colonne créée par la migration 2026_10_08 ; le test évite une erreur si le code est déployé avant elle
                 TenantContext::runAs((int) $agentTenants->first(), fn () => Agent::query()->where('email', $email)->update(['email_valid' => false]));
             }
 
