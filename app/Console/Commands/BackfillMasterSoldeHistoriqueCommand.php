@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\MasterSoldeService;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -125,7 +126,7 @@ class BackfillMasterSoldeHistoriqueCommand extends Command
      */
     private function chargerEvenements(): \Illuminate\Support\Collection
     {
-        $approvisionnements = DB::table('approvisionnements')
+        $approvisionnements = TenantContext::table('approvisionnements')
             ->whereNull('deleted_at')
             ->get(['id', 'created_at', 'amount', 'solde_uv_avant'])
             ->map(fn ($a) => (object) [
@@ -136,7 +137,7 @@ class BackfillMasterSoldeHistoriqueCommand extends Command
                 'deja_renseigne' => $a->solde_uv_avant !== null,
             ]);
 
-        $transactions = DB::table('uv_transactions')
+        $transactions = TenantContext::table('uv_transactions')
             ->whereNull('deleted_at')
             ->get(['id', 'created_at', 'amount', 'transaction_type', 'status', 'solde_uv_avant'])
             ->map(function ($t) {
@@ -171,7 +172,8 @@ class BackfillMasterSoldeHistoriqueCommand extends Command
     private function ecrire(string $table, array $lignes): void
     {
         foreach ($lignes as $l) {
-            DB::table($table)->where('id', $l['id'])->update([
+            // Écriture bornée au tenant courant : un id d'un autre tenant ne peut jamais être touché.
+            TenantContext::table($table)->where('id', $l['id'])->update([
                 'solde_uv_avant' => $l['solde_uv_avant'],
                 'solde_uv_apres' => $l['solde_uv_apres'],
             ]);

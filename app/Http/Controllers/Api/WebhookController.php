@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agent;
+use App\Models\User;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * WebhookController
@@ -509,20 +513,47 @@ class WebhookController extends Controller
     }
 
     /**
-     * Marquer un email comme invalide dans la base de données
+     * Marquer un email comme invalide dans la base de données.
+     *
+     * Le webhook n'a pas d'utilisateur donc pas de tenant : on cherche l'adresse HORS contexte
+     * UNIQUEMENT pour identifier le(s) tenant(s) propriétaire(s), puis chaque modification est faite
+     * dans le contexte de ce tenant (jamais une mise à jour globale). Une adresse d'agent partagée par
+     * plusieurs tenants est ambiguë : elle n'est pas modifiée (journalisée).
      */
-    private function markEmailAsInvalid(string $email, string $type, string $reason): void
+    private function markEmailAsInvalid(string|array $recipients, string $type, string $reason): void
+    {
+        // Resend envoie `to` sous forme de liste ; on accepte aussi une chaîne seule.
+        foreach (array_filter((array) $recipients, fn ($email) => is_string($email) && $email !== '') as $email) {
+            $this->markOneEmailAsInvalid($email, $type, $reason);
+        }
+    }
+
+    private function markOneEmailAsInvalid(string $email, string $type, string $reason): void
     {
         try {
-            // Marquer dans les agents
-            \App\Models\Agent::where('email', $email)->update([
-                'email_valid' => false,
-            ]);
+            // Agents
+            $agentTenants = TenantContext::withoutTenancy(
+                fn () => Agent::query()->where('email', $email)->pluck('tenant_id')->unique()->values()
+            );
 
-            // Marquer dans les users
-            \App\Models\User::where('email', $email)->update([
-                'email_verified_at' => null,
-            ]);
+            if ($agentTenants->count() > 1) {
+                Log::warning('Email webhook : adresse d\'agent partagée entre plusieurs tenants, non modifiée', [
+                    'tenants' => $agentTenants->count(), 'type' => $type,
+                ]);
+            } elseif ($agentTenants->count() === 1 && Schema::hasColumn('agents', 'email_valid')) {
+                TenantContext::runAs((int) $agentTenants->first(), fn () => Agent::query()->where('email', $email)->update(['email_valid' => false]));
+            }
+
+            // Users : l'e-mail est unique sur la plateforme, donc un seul propriétaire possible.
+            $user = TenantContext::withoutTenancy(fn () => User::query()->where('email', $email)->first(['id', 'tenant_id']));
+
+            if ($user !== null) {
+                $mark = fn () => User::query()->whereKey($user->id)->update(['email_verified_at' => null]);
+
+                $user->tenant_id !== null
+                    ? TenantContext::runAs((int) $user->tenant_id, $mark)
+                    : TenantContext::withoutTenancy($mark); // compte plateforme (sans tenant)
+            }
 
             // Logger l'action
             activity()

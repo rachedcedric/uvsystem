@@ -52,19 +52,43 @@ Tenant suspendu : `User::canAccessPanel()` refuse → blocage immédiat du web (
 | agents.phone, sous_distributeurs.telephone, payment_methods.code, caisse_categories.normalized_name, charge_categories.code | unique global → unique `(tenant_id, colonne)` | deux sociétés peuvent partager ces valeurs | 000002 |
 | uv_transactions, remboursements, approvisionnements, caisse_mouvements, charges, commissions, agents, activity_log | index `(tenant_id, created_at)` / `(tenant_id, status)` | performance par tenant | 000001 |
 
-Migration des données existantes : toutes les lignes sont rattachées au tenant n°1 « MODELEC CI » (`DEFAULT_TENANT_NAME` pour le nom), la migration vérifie qu'aucune ligne n'est orpheline et s'interrompt sinon. Rien n'est supprimé. Rollback : `php artisan migrate:rollback --step=2` (les données restent ; le retour des uniques globaux échoue volontairement s'il existe déjà des doublons entre tenants). Testé sur SQLite avec données (montée, descente, remontée) ; **non testé sur MySQL**.
+Migration des données existantes : les lignes des **tables cœur** sont rattachées au tenant n°1 « MODELEC CI » (`DEFAULT_TENANT_NAME` pour le nom) — c'était la seule société — et la migration s'interrompt s'il reste une ligne orpheline. Rien n'est supprimé. **Les tables héritées `clients*` ne sont jamais attribuées automatiquement** : voir « Contrôle préalable de migration ». Rollback : `php artisan migrate:rollback --step=2` (les données restent ; le retour des uniques globaux échoue volontairement s'il existe déjà des doublons entre tenants). Testé sur SQLite et sur MariaDB 12.3 avec une copie de données réelles (montée, descente, remontée) ; **non testé sur un MySQL 5.7/8 de production**.
+
+## Contrôle préalable de migration (`tenancy:preflight`)
+
+La migration appelle `MigrationPreflight::assertCanMigrate()` **avant toute modification**. Elle lève `MigrationBlocked` (rien n'est écrit) dans deux cas :
+
+1. **Propriété ambiguë** : une table héritée dont le nom commence par `client` (hors cœur) contient une ligne dont le propriétaire n'est pas démontrable. Une ligne est démontrable quand l'ensemble de ses preuves désigne UN seul tenant, le tenant d'origine : colonne propriétaire, lien vers une donnée cœur (ex. `clients.agent_id → agents`), parent hérité (un solde hérite de son client), ou lignes qui la référencent (une catégorie est démontrée par les clients qui l'utilisent). Sans preuve ou avec des preuves contradictoires : **ambigu**.
+2. **Sauvegarde non vérifiable** : des données existent et aucune sauvegarde de moins de 24 h (archive Spatie valide) ni sauvegarde manuelle vérifiée (< 48 h, fichier ≥ 1 Ko, ZIP valide) n'est enregistrée.
+
+```
+MIGRATION BLOQUÉE :
+Impossible de déterminer avec certitude le tenant propriétaire
+des données existantes.
+Validation humaine requise.
+```
+
+`php artisan tenancy:preflight` (lecture seule) affiche : tenants trouvés ; lignes existantes, sans tenant, et celles **qui seront attribuées au tenant n°1** (tables cœur) ; pour chaque table `clients*` : lignes, clés étrangères, colonnes propriétaire, lignes démontrables, lignes ambiguës (avec leurs identifiants) ; état de la sauvegarde ; verdict « Migration autorisée : OUI/NON ».
+
+Débloquer exige une action humaine explicite :
+- `tenancy:preflight --backup=/chemin/dump.sql` : vérifie et enregistre la sauvegarde ;
+- `tenancy:preflight --accept-unattributed --note="motif"` (+ confirmation) : l'opérateur reconnaît que les tables ambiguës **resteront sans tenant, intactes, inaccessibles à l'application**. Cette validation **n'attribue rien** ; elle est liée à l'empreinte exacte des données (toute modification l'invalide).
+
+Aucune donnée `clients*` n'est attribuée, supprimée, archivée ni déplacée par la migration. Leur attribution éventuelle sera une décision humaine séparée, à implémenter plus tard.
+
+Données locales testées (copie MariaDB) : `client_categories` 4 lignes (3 démontrables, **1 ambiguë : id 4**), `clients` 4, `client_soldes` 4, `client_transactions` 9 (démontrables via l'agent, `user_id` toujours vide).
 
 ## Déploiement (hébergement mutualisé)
 
-1. **Sauvegarde de la base** (phpMyAdmin / `php artisan backup:run --only-db`) et copie du dossier `storage/app/private`.
-2. Mettre le site en maintenance si possible (`php artisan down`).
-3. Envoyer le code par FTP (dont `database/migrations/2026_10_07_*`, `app/`, `routes/`, `config/`, `bootstrap/`) puis `composer install --no-dev -o` si `vendor` a changé.
-4. `php artisan migrate --force` (2 migrations). Vérifier : `select count(*) from agents where tenant_id is null` → 0.
+1. **Sauvegarde de la base** (phpMyAdmin / `php artisan backup:run --only-db`) et copie de `storage/app/private`. Vérifier qu'elle s'ouvre.
+2. Envoyer le code par FTP (dont `database/migrations/2026_10_07_*`, `app/`, `routes/`, `config/`, `bootstrap/`) puis `composer install --no-dev -o` si `vendor` a changé. **Ne pas encore migrer.**
+3. `php artisan tenancy:preflight` : lire le rapport. Si l'hébergeur n'a pas de sauvegarde Spatie : `tenancy:preflight --backup=/chemin/dump.sql`. S'il y a des tables `clients*` ambiguës : décision humaine, puis `tenancy:preflight --accept-unattributed --note="…"`.
+4. Mettre le site en maintenance (`php artisan down`), puis `php artisan migrate --force`. Vérifier : `select count(*) from agents where tenant_id is null` → 0 ; les tables `clients*` sont inchangées.
 5. `php artisan db:seed --class=RolesAndPermissionsSeeder --force` pour créer le rôle `super_admin`.
 6. `php artisan platform:super-admin votre@email.com --name="Votre nom"` (mot de passe demandé, 12 caractères min.). Connexion sur `/platform`.
-7. `php artisan tenancy:relocate-files` (simulation) puis `php artisan tenancy:relocate-files --apply` : range anciens justificatifs et exports dans `storage/app/private/tenants/1/`.
-8. Supprimer `public/storage/exports/*` (anciens exports publics).
-9. `php artisan optimize:clear` ; vérifier que le cron `schedule:run` tourne (les commandes planifiées s'exécutent désormais une fois par tenant actif).
+7. `php artisan tenancy:relocate-files` (simulation) puis `--apply` : range les anciens justificatifs et exports dans `storage/app/private/tenants/{tenant d'origine}/`. Seuls des fichiers **antérieurs** au multi-tenant, et uniquement vers le tenant d'origine, sont déplacés (voir « Fichiers »).
+8. Supprimer `public/storage/exports/*` et vérifier `storage/app/public/reports/` : **avant ce correctif, `uv:daily-report --save` écrivait sur le disque par défaut, qui peut être `public` (lisible par URL)** ; ces anciens PDF doivent être supprimés ou déplacés.
+9. `php artisan optimize:clear` ; vérifier que le cron `schedule:run` tourne.
 10. `php artisan up`. Se connecter en master du tenant 1 et contrôler agents / ventes / caisse ; créer un tenant de test dans `/platform` et vérifier qu'il démarre vide.
 
 L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
@@ -72,9 +96,9 @@ L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
 ## Limites connues / à faire
 
 - Sauvegardes : elles couvrent **toute** la plateforme, d'où l'accès super admin seul, désormais via `/platform` → Sauvegardes (lancer, télécharger, supprimer ; seuls les `.zip` du dossier de sauvegarde sont atteignables). Pas de restauration par tenant : restaurer une sauvegarde complète écraserait tous les tenants.
-- Les 15 commandes planifiées/maintenance utilisent `RunsPerTenant` ; les commandes de démo (`SetupDemoData`, `ClearDemoData`…) restent hors tenant et sont à ne pas lancer en production.
+- Voir « Commandes Artisan » : chaque commande est classée GLOBALE ou PAR TENANT.
 - Un `insert()` de masse via le query builder ne passe par aucun modèle : la colonne NOT NULL le fait échouer (fail closed), mais le code doit créer ses lignes via les modèles.
-- Contraintes composites `(tenant_id, parent_id)` entre tables non posées : la cohérence parent/enfant repose sur le scope et sur les règles `exists` tenant-aware.
+- Pas de contrainte composite SQL `(tenant_id, parent_id)` (décision maintenue) : la cohérence parent/enfant est garantie par le contrôle applicatif de `BelongsToTenant` (section suivante). Il ne couvre pas les écritures qui contournent les modèles (`insert()`/`update()` du query builder, `Model::where()->update()`, SQL brut) : le code ne doit pas en faire pour des tables tenantisées.
 - Pas d'impersonation (super admin → tenant) volontairement.
 
 ## Double authentification (2FA)
@@ -136,7 +160,7 @@ Non vérifié : clavier virtuel docké (l'émulateur affichait un clavier flotta
 | Commandes | Planifiées : exécutées une fois par tenant actif ; manuelles qui envoient ou créent (`uv:send-sms`, `sms:test`, `notifications:test`) : `--tenant=ID` obligatoire |
 | Calculs métier | Soldes UV, caisse, commission quotidienne du cron, analyses (et leur cache), destinataires de rappels, références : indépendants par tenant (`TenantBusinessIsolationTest`, vérifié par mutation) |
 | Fuite d'infrastructure | Le diagnostic de notifications n'affiche plus le volume de la file d'attente partagée ni l'expéditeur SMS/e-mail |
-| Données héritées | Si la base contient l'ancien module `clients*` (4 tables, sans modèle ni code dans le dépôt), la migration les rattache aussi au tenant n°1 (testé sur MariaDB avec 4 clients / 9 transactions) |
+| Données héritées | Les tables `clients*` (hors modèle, sans code) ne sont **jamais attribuées automatiquement** : le contrôle préalable les détecte, les compte, démontre ce qui peut l'être et **bloque** la migration si c'est ambigu (voir « Contrôle préalable de migration ») |
 
 ### Ce qui n'est PAS multi-tenant (limites assumées)
 - **Infrastructure partagée** : un seul expéditeur SMS (Twilio), un seul e-mail d'envoi, un seul projet Firebase pour toutes les sociétés.
@@ -145,3 +169,44 @@ Non vérifié : clavier virtuel docké (l'émulateur affichait un clavier flotta
 - **Sauvegarde / restauration** : sauvegardes de toute la plateforme par le super admin ; export par tenant possible, mais pas de restauration par tenant.
 - **E-mail unique à la plateforme** (identifiant de connexion) : une même adresse ne peut pas appartenir à deux tenants.
 - **Absent** : facturation, quotas par offre (le champ `plan` est informatif), inscription libre de nouveaux tenants, usurpation d'identité super admin → tenant.
+
+## Cohérence parent/enfant (V1)
+
+`BelongsToTenant` contrôle, **avant** chaque insertion et chaque modification, que toute clé étrangère vers un modèle tenantisé désigne un parent du MÊME tenant. Les parents sont découverts par réflexion sur les relations `belongsTo` (un test vérifie qu'aucune n'est sans type de retour). En cas de parent étranger : `CrossTenantReference` (une `ValidationException`, donc erreur de champ dans Filament/Livewire, 422 en API), aucune écriture, transaction annulée, avertissement journalisé (sans donnée du parent). Les relations par clé fonctionnelle (ex. `payment_method` = code) et les parents inexistants (laissés à la clé étrangère SQL) sont ignorés. Cela couvre Filament, API, services, imports, créations et modifications. Avant ce correctif, 4 formulaires Filament acceptaient un parent étranger (approvisionnement→fournisseur, sous-distributeur→agent, charge→catégorie, solde agent→agent).
+
+## Commandes Artisan
+
+| Commande | Portée | Règle |
+|---|---|---|
+| `commissions:calculer`, `commissions:rattraper`, `commissions:recalculer`, `commissions:verifier-historique`, `recovery:process`, `uv:check-debt-alerts`, `uv:send-debt-reminders`, `uv:send-reminders`, `sms:reminders`, `reports:generate`, `uv:daily-report`, `analytics:show`, `agents:recalculate-*`, `master-solde:backfill`, `security:verify-integrity` | **PAR TENANT** | une exécution par tenant actif (`RunsPerTenant`) ; lecture/écriture SQL via `TenantContext::table()` |
+| `uv:send-sms`, `sms:test`, `notifications:test`, `debts:migrate-old-system` | **UN tenant** | `--tenant=ID` obligatoire (`RunsForOneTenant`) |
+| `demo:clear`, `demo:setup` | **UN tenant, développement seulement** | refusées hors `local`/`development`/`mobiledev`, si l'URL n'est pas locale, ou dès qu'il existe plusieurs tenants ; `--tenant=ID` obligatoire ; aucune option ne contourne ces refus ; `staging` est exclu |
+| `backup:*`, `exports:cleanup`, `sanctum:prune-expired`, `queue:work`, `security:report`, `system:audit`, `platform:*`, `tenancy:*` | **GLOBALE** (infrastructure / plateforme) | ne produisent pas de donnée de tenant |
+
+## Fichiers (V4, V5, V7)
+
+- Rapports (`uv:daily-report`, `reports:generate`) : `tenants/{id}/reports/…` sur le disque **privé** ; les destinataires ne changent pas (tous les utilisateurs du tenant pour le rapport quotidien).
+- Exports (Excel, `analytics:show --export`) : `tenants/{id}/exports/…`.
+- `tenancy:relocate-files` : refuse tout tenant autre que le tenant d'origine ; un export hérité n'est déplacé que s'il est plus ancien que la création du multi-tenant ; un justificatif que s'il est référencé par une charge du tenant ; une destination existante n'est jamais écrasée.
+- Chemin hérité `charges/…` servi uniquement au tenant d'origine (`Tenant::legacyOwnerId()`, plus de « 1 » en dur).
+
+## Webhook e-mail (V6)
+
+Sans utilisateur, donc sans tenant : l'adresse est cherchée hors contexte **uniquement** pour identifier le tenant propriétaire, puis la mise à jour est faite dans ce tenant. Une adresse d'agent partagée par plusieurs tenants est ambiguë : non modifiée, avertissement journalisé. Les comptes ont un e-mail unique : un seul propriétaire. Le champ `to` de Resend est une liste : elle est maintenant acceptée (auparavant : erreur de type).
+
+## Défauts hérités découverts et corrigés pendant le durcissement
+
+| Défaut | Effet | Correctif |
+|---|---|---|
+| `uv:daily-report --save` écrivait sur le **disque par défaut** (`FILESYSTEM_DISK`, parfois `public`) | PDF financiers lisibles par URL | écriture explicite sur le disque `local` (privé), dans le dossier du tenant |
+| `security:verify-integrity` : `agent_soldes.*` écrasait `agents.id` | le contrôle (et `--fix`) utilisait l'id de la ligne de solde : `--fix` pouvait corriger le solde d'un autre agent ; invisible tant que les deux ids coïncident | colonnes explicites + test de non-régression |
+| `security:verify-integrity` plantait dès qu'un écart existait (`agent.name`, `$agent->nom`) | le contrôle planifié de 05h00 s'arrêtait justement quand il trouvait un problème | clés corrigées |
+| `analytics:show kpis` lisait une clé `uv_distribues` inexistante | commande inutilisable | ligne retirée |
+| Webhook Resend : `to` est une liste, la méthode attendait une chaîne | erreur de type sur un vrai rebond | liste ou chaîne acceptées |
+| `Schema::getTables()` (MySQL) liste toutes les bases visibles du serveur | un contrôle préalable aurait vu des tables d'autres bases | borné à la base de la connexion |
+
+Non corrigé (décision requise) : `agents.email_valid`, mise à jour par le webhook, n'existe dans aucune migration ; la mise à jour des agents est donc ignorée (journalisée) tant que la colonne n'existe pas.
+
+## Tests : portée par moteur
+
+Les suites `MigrationPreflightTest` (8) et deux tests du webhook créent des tables ou colonnes : sur MySQL/MariaDB le DDL valide implicitement la transaction de test et laisserait des tables et données derrière lui ; ils ne s'exécutent donc que sur SQLite (DDL transactionnel) et sont ignorés ailleurs. Le comportement sur MariaDB est validé par la procédure manuelle (copie des données réelles : rapport, blocage, sauvegarde, validation, migration, retour arrière, remontée).

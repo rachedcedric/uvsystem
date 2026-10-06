@@ -2,15 +2,20 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsForOneTenant;
 use App\Models\Agent;
 use App\Models\AgentSolde;
 use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class MigrateOldDebtsCommand extends Command
 {
+    use RunsForOneTenant;
+
     protected $signature = 'debts:migrate-old-system
+                            {--tenant= : Identifiant du tenant (obligatoire)}
                             {--dry-run : Afficher ce qui serait fait sans modifier la base}
                             {--force : Forcer la migration sans confirmation}';
 
@@ -33,8 +38,10 @@ class MigrateOldDebtsCommand extends Command
 
         // 1. Analyser l'ancien système
         $this->info('🔍 Analyse de l\'ancien système...');
-        $oldDebts = DB::table('dettes_agents')
+        // Base et jointure bornées au tenant : un partenaire d'un autre tenant ne peut jamais être migré ici.
+        $oldDebts = TenantContext::table('dettes_agents')
             ->join('agent_partenaires', 'dettes_agents.agent_partenaire_id', '=', 'agent_partenaires.id')
+            ->where('agent_partenaires.tenant_id', TenantContext::requireId())
             ->select(
                 'dettes_agents.*',
                 'agent_partenaires.nom_entreprise',

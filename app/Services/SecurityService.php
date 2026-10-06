@@ -2,15 +2,14 @@
 
 namespace App\Services;
 
-use App\Tenancy\TenantContext;
+use App\Models\Activity;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Activity;
 
 class SecurityService
 {
@@ -232,7 +231,9 @@ class SecurityService
         // Vérifier les soldes agents
         $agents = TenantContext::table('agents')
             ->join('agent_soldes', 'agents.id', '=', 'agent_soldes.agent_id')
-            ->select('agents.id', 'agents.name', 'agent_soldes.*')
+            // Colonnes explicites : « agent_soldes.* » contient aussi une colonne `id` qui écrasait agents.id, donc le
+            // contrôle (et surtout --fix) travaillait sur l'identifiant de la LIGNE DE SOLDE au lieu de celui de l'agent.
+            ->select('agents.id', 'agents.name', 'agent_soldes.total_uv_distribues')
             ->get();
 
         foreach ($agents as $agent) {
@@ -243,7 +244,7 @@ class SecurityService
                 $issues[] = [
                     'type' => 'solde_mismatch',
                     'agent_id' => $agent->id,
-                    'agent_name' => $agent->nom,
+                    'agent_name' => $agent->name,
                     'expected' => $calculatedTotal,
                     'actual' => $agent->total_uv_distribues,
                     'difference' => $calculatedTotal - $agent->total_uv_distribues,

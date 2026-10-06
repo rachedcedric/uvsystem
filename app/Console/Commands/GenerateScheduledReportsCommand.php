@@ -7,6 +7,7 @@ use App\Exports\UvTransactionsExport;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -167,7 +168,7 @@ class GenerateScheduledReportsCommand extends Command
     protected function generatePdf(array $data, string $type, string $periodLabel): string
     {
         $filename = "rapport_{$type}_".now()->format('Y-m-d_His').'.pdf';
-        $path = "reports/{$filename}";
+        $path = TenantContext::storagePath("reports/{$filename}");
 
         $pdf = Pdf::loadView('exports.scheduled-report-pdf', [
             'data' => $data,
@@ -190,7 +191,7 @@ class GenerateScheduledReportsCommand extends Command
     protected function generateExcel(array $data, string $type, $startDate, $endDate): string
     {
         $filename = "transactions_{$type}_".now()->format('Y-m-d_His').'.xlsx';
-        $path = "reports/{$filename}";
+        $path = TenantContext::storagePath("reports/{$filename}");
 
         Excel::store(
             new UvTransactionsExport(

@@ -51,6 +51,17 @@ class Tenant extends Model
         return $slug;
     }
 
+    /**
+     * Tenant « d'origine » : celui créé par la migration, auquel appartient tout ce qui existait avant le
+     * multi-tenant. C'est la seule société à laquelle des fichiers antérieurs peuvent être rattachés.
+     */
+    public static function legacyOwnerId(): ?int
+    {
+        $id = static::query()->min('id');
+
+        return $id === null ? null : (int) $id;
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

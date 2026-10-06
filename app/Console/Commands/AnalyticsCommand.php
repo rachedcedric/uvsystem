@@ -2,11 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\AnalyticsService;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 
 class AnalyticsCommand extends Command
 {
+    use RunsPerTenant;
+
     protected $signature = 'analytics:show
                             {type=kpis : Type d\'analyse (kpis, cashflow, scoring, trends)}
                             {--period=month : Période (today, week, month, quarter, year)}
@@ -59,11 +64,6 @@ class AnalyticsCommand extends Command
                     'Chiffre d\'affaires',
                     number_format($kpis['chiffre_affaires']['value'], 0, ',', ' ').' FCFA',
                     "{$caIcon} {$caGrowth}",
-                ],
-                [
-                    'UV distribués',
-                    number_format($kpis['uv_distribues']['value'], 0, ',', ' '),
-                    ($kpis['uv_distribues']['growth'] >= 0 ? '+' : '').$kpis['uv_distribues']['growth'].'%',
                 ],
                 [
                     'Remboursements',
@@ -243,15 +243,12 @@ class AnalyticsCommand extends Command
     protected function exportJson(string $type, $data): void
     {
         $filename = "analytics_{$type}_".now()->format('Y-m-d_His').'.json';
-        $path = storage_path("app/exports/{$filename}");
+        // Dossier du tenant courant : jamais d'export commun à plusieurs sociétés.
+        $path = TenantContext::storagePath("exports/{$filename}");
 
-        if (! is_dir(dirname($path))) {
-            mkdir(dirname($path), 0755, true);
-        }
-
-        file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        Storage::disk('local')->put($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         $this->info('');
-        $this->info("📁 Exporté: {$filename}");
+        $this->info("📁 Exporté: {$path}");
     }
 }

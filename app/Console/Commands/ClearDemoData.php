@@ -2,21 +2,28 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\GuardsDemoCommands;
+use App\Console\Commands\Concerns\RunsForOneTenant;
 use App\Models\Agent;
 use App\Models\Fournisseur;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class ClearDemoData extends Command
 {
+    use GuardsDemoCommands;
+    use RunsForOneTenant;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
     protected $signature = 'demo:clear
+                            {--tenant= : Identifiant du tenant (obligatoire)}
                             {--force : Ne pas demander de confirmation}';
 
     /**
@@ -31,9 +38,8 @@ class ClearDemoData extends Command
      */
     public function handle(): int
     {
-        if (! app()->environment('local', 'development', 'staging')) {
-            $this->error('❌ Cette commande ne peut être exécutée qu\'en développement!');
-            $this->error('   Environnement actuel: '.app()->environment());
+        if ($refusal = $this->demoRefusal()) {
+            $this->error('❌ Commande refusée : '.$refusal);
 
             return self::FAILURE;
         }
@@ -78,7 +84,7 @@ class ClearDemoData extends Command
             UvTransaction::query()->forceDelete();
 
             $this->info('  - Suppression des soldes agents...');
-            DB::table('agent_soldes')->delete();
+            TenantContext::table('agent_soldes')->delete();
 
             $this->info('  - Suppression des agents...');
             Agent::query()->forceDelete();

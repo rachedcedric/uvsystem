@@ -2,18 +2,25 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\GuardsDemoCommands;
+use App\Console\Commands\Concerns\RunsForOneTenant;
+use App\Models\Tenant;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 
 class SetupDemoData extends Command
 {
+    use GuardsDemoCommands;
+    use RunsForOneTenant;
+
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
     protected $signature = 'demo:setup
+                            {--tenant= : Identifiant du tenant (obligatoire)}
                             {--agents=5 : Nombre d\'agents à créer}
                             {--fournisseurs=5 : Nombre de fournisseurs à créer}
                             {--fresh : Réinitialiser la base de données avant}';
@@ -30,9 +37,8 @@ class SetupDemoData extends Command
      */
     public function handle(): int
     {
-        if (! app()->environment('local', 'development', 'staging')) {
-            $this->error('❌ Cette commande ne peut être exécutée qu\'en développement!');
-            $this->error('   Environnement actuel: '.app()->environment());
+        if ($refusal = $this->demoRefusal()) {
+            $this->error('❌ Commande refusée : '.$refusal);
 
             return self::FAILURE;
         }
@@ -51,6 +57,13 @@ class SetupDemoData extends Command
             $this->warn('🗑️  Réinitialisation de la base de données...');
             Artisan::call('migrate:fresh', [], $this->output);
             $this->newLine();
+
+            // migrate:fresh ne recrée que le tenant d'origine : le tenant demandé doit encore exister.
+            if (! Tenant::query()->whereKey(TenantContext::requireId())->exists()) {
+                $this->error('❌ Le tenant demandé n\'existe plus après migrate:fresh (seul le tenant n°1 est recréé).');
+
+                return self::FAILURE;
+            }
         }
 
         // Configuration des variables d'environnement temporaires
@@ -71,9 +84,9 @@ class SetupDemoData extends Command
         $this->newLine();
 
         // Statistiques
-        $agentsCreated = DB::table('agents')->count();
-        $fournisseursCreated = DB::table('fournisseurs')->count();
-        $transactions = DB::table('uv_transactions')->count();
+        $agentsCreated = TenantContext::table('agents')->count();
+        $fournisseursCreated = TenantContext::table('fournisseurs')->count();
+        $transactions = TenantContext::table('uv_transactions')->count();
 
         $this->info('📈 Statistiques:');
         $this->table(

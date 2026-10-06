@@ -78,7 +78,7 @@ return new class extends Migration
         $first = require __DIR__.'/2026_10_07_000001_create_tenants_and_add_tenant_id.php';
 
         return array_values(array_filter(
-            [...$first::TENANT_TABLES, ...$first::OPTIONAL_TENANT_TABLES],
+            $first::TENANT_TABLES,
             fn (string $name) => Schema::hasTable($name) && Schema::hasColumn($name, 'tenant_id')
         ));
     }

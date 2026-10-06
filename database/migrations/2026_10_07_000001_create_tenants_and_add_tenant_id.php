@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Schema;
  *
  *  1. crée `tenants` et le tenant n°1 (la société existante) ;
  *  2. ajoute `tenant_id` (nullable) à chaque table métier ;
- *  3. rattache TOUTES les lignes existantes au tenant n°1 et vérifie qu'il n'en reste aucune orpheline.
+ *  3. rattache les lignes des tables cœur au tenant n°1 et vérifie qu'il n'en reste aucune orpheline
+ *     (les tables héritées « clients* » ne sont JAMAIS attribuées automatiquement : voir MigrationPreflight).
  *
  * L'étape 2/2 (NOT NULL + index uniques par tenant) est une migration séparée, pour pouvoir
  * revenir en arrière indépendamment. Rollback complet : `php artisan migrate:rollback --step=2`.
@@ -27,13 +28,6 @@ return new class extends Migration
         'sous_distributeur_remboursements', 'sous_distributeur_soldes',
         'sous_distributeur_transactions', 'sous_distributeurs', 'uv_transactions', 'ventes_uv',
     ];
-
-    /**
-     * Tables d'un ancien module « clients » présentes dans certaines bases (migrations déjà jouées mais
-     * fichiers absents du dépôt, aucun modèle ni code ne les utilise). Si elles existent, leurs lignes
-     * sont rattachées au tenant n°1 comme le reste : aucune donnée n'est laissée sans propriétaire.
-     */
-    public const OPTIONAL_TENANT_TABLES = ['client_categories', 'clients', 'client_soldes', 'client_transactions'];
 
     /** Tables où tenant_id reste nullable (super admin de plateforme, logs de plateforme). */
     public const NULLABLE_TENANT_TABLES = ['users', 'activity_log'];
@@ -52,6 +46,10 @@ return new class extends Migration
 
     public function up(): void
     {
+        // Contrôle préalable : lève MigrationBlocked AVANT toute modification si l'appartenance de données
+        // existantes est ambiguë (ex. tables clients*) ou si aucune sauvegarde vérifiable n'existe.
+        \App\Tenancy\MigrationPreflight::assertCanMigrate();
+
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -75,7 +73,7 @@ return new class extends Migration
             'updated_at' => now(),
         ]);
 
-        foreach ([...self::TENANT_TABLES, ...self::OPTIONAL_TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES] as $name) {
+        foreach ([...self::TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES] as $name) {
             if (! Schema::hasTable($name)) {
                 continue;
             }
@@ -103,7 +101,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $tables = array_filter([...self::TENANT_TABLES, ...self::OPTIONAL_TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES], fn ($name) => Schema::hasTable($name) && Schema::hasColumn($name, 'tenant_id'));
+        $tables = array_filter([...self::TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES], fn ($name) => Schema::hasTable($name) && Schema::hasColumn($name, 'tenant_id'));
 
         // MySQL/MariaDB : un index composite (tenant_id, …) sert d'appui à la clé étrangère, il ne peut
         // pas être supprimé tant que la clé existe (erreur 1553) → clés d'abord, puis index, puis colonne.
@@ -120,6 +118,11 @@ return new class extends Migration
         }
 
         foreach ($tables as $name) {
+            // Index d'appui posé par le retour arrière de la migration 2 : SQLite refuse de supprimer une colonne indexée.
+            if (Schema::hasIndex($name, "{$name}_tenant_id_index")) {
+                Schema::table($name, fn (Blueprint $table) => $table->dropIndex("{$name}_tenant_id_index"));
+            }
+
             Schema::table($name, fn (Blueprint $table) => $table->dropColumn('tenant_id'));
         }
 

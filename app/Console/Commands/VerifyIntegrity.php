@@ -4,8 +4,8 @@ namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\SecurityService;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class VerifyIntegrity extends Command
 {
@@ -125,7 +125,7 @@ class VerifyIntegrity extends Command
         if ($type === 'invalid_signature') {
             return [
                 $issue['transaction_id'],
-                $issue['agent.name'] ?? 'N/A',
+                $issue['agent_name'] ?? 'N/A',
                 number_format($issue['amount'] ?? 0, 0, ',', ' ').' FCFA',
                 $issue['date'] ?? 'N/A',
             ];
@@ -137,7 +137,7 @@ class VerifyIntegrity extends Command
 
             return [
                 $issue['agent_id'],
-                $issue['agent.name'],
+                $issue['agent_name'] ?? 'N/A',
                 sprintf('<fg=blue>%s</>', number_format($issue['expected'], 0, ',', ' ')),
                 sprintf('<fg=yellow>%s</>', number_format($issue['actual'], 0, ',', ' ')),
                 sprintf('<fg=%s>%s%s</>',
@@ -201,11 +201,11 @@ class VerifyIntegrity extends Command
         // Pour le moment, on ne corrige que les écarts de solde
         if ($issue['type'] === 'solde_mismatch') {
             // Recalculer le solde à partir des transactions
-            DB::table('agent_soldes')
+            TenantContext::table('agent_soldes')
                 ->where('agent_id', $issue['agent_id'])
                 ->update([
                     'total_uv_distribues' => $issue['expected'],
-                    'solde_restant' => $issue['expected'] - DB::table('remboursements')
+                    'solde_restant' => $issue['expected'] - TenantContext::table('remboursements')
                         ->where('agent_id', $issue['agent_id'])
                         ->sum('amount'),
                     'updated_at' => now(),

@@ -7,6 +7,7 @@ use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -95,8 +96,10 @@ class GenerateDailyReport extends Command
     {
         $pdf = Pdf::loadView('exports.daily-report-pdf', $data)->setPaper('a4', 'portrait');
         $filename = "rapport_quotidien_{$date->format('Y-m-d')}.pdf";
-        $path = "reports/{$filename}";
-        Storage::put($path, $pdf->output());
+        // Dossier du tenant : un tenant ne peut jamais écraser le rapport d'un autre.
+        $path = TenantContext::storagePath("reports/{$filename}");
+        // Disque PRIVÉ explicite : le disque par défaut peut être « public » (FILESYSTEM_DISK), donc lisible par URL.
+        Storage::disk('local')->put($path, $pdf->output());
 
         return $path;
     }
@@ -110,7 +113,7 @@ class GenerateDailyReport extends Command
                 function ($message) use ($user, $pdfPath, $date) {
                     $message->to($user->email)
                         ->subject("📊 Rapport quotidien UV - {$date->format('d/m/Y')}")
-                        ->attach(Storage::path($pdfPath));
+                        ->attach(Storage::disk('local')->path($pdfPath));
                 }
             );
         }
