@@ -157,6 +157,9 @@ class AppServiceProvider extends ServiceProvider
     protected function configureRateLimiting(): void
     {
         // Global API rate limit: 60 requests per minute
+        // Inscription publique : plafond par adresse IP, réglable (des opérateurs mobiles partagent une même IP entre nombreux abonnés).
+        RateLimiter::for('signup', fn (Request $request) => Limit::perHour((int) config('subscriptions.signup.max_requests_per_ip_per_hour', 20))->by($request->ip()));
+
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });

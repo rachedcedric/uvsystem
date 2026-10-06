@@ -32,7 +32,8 @@ return [
     'signup' => [
         'link_ttl_hours' => 24,
         'min_seconds_to_submit' => 3,   // un formulaire envoyé plus vite est un robot
-        'max_per_ip_per_day' => 3,      // inscriptions vérifiées par adresse IP et par 24 h
+        'max_per_ip_per_day' => 10,     // inscriptions vérifiées par adresse IP et par 24 h (IP partagées des opérateurs mobiles)
+        'max_requests_per_ip_per_hour' => 20, // envois du formulaire par adresse IP et par heure
         'max_mails_per_email_per_hour' => 3,
         'disposable_domains' => ['mailinator.com', 'yopmail.com', '10minutemail.com', 'guerrillamail.com', 'tempmail.com', 'trashmail.com', 'sharklasers.com', 'getnada.com', 'dispostable.com'],
     ],

@@ -25,7 +25,7 @@
                         <li><x-m.icon name="check" />{{ $feature }}</li>
                     @endforeach
                 </ul>
-                <a class="btn" href="{{ route('souscrire', ['plan' => $plan->slug, 'cycle' => $cycle->value]) }}">
+                <a class="btn" href="{{ route('inscription', ['plan' => $plan->slug, 'cycle' => $cycle->value]) }}">
                     {{ $plan->trial_days > 0 ? 'Essayer '.$plan->trial_days.' jours' : 'Choisir cette offre' }}
                 </a>
             </article>

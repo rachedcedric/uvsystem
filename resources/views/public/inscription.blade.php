@@ -7,7 +7,7 @@
             @if ($plan->trial_days > 0) Essai gratuit de {{ $plan->trial_days }} jours, rien n'est facturé aujourd'hui.@endif</p>
         <p><a href="{{ route('offres', ['cycle' => $cycle->value]) }}">Changer d'offre</a></p>
 
-        <form method="POST" action="{{ route('souscrire.store') }}" novalidate>
+        <form method="POST" action="{{ route('inscription.store') }}" novalidate>
             @csrf
             <input type="hidden" name="plan" value="{{ $plan->slug }}">
             <input type="hidden" name="cycle" value="{{ $cycle->value }}">

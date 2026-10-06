@@ -35,7 +35,7 @@ class SubscribeController extends Controller
         $request->session()->put('signup_token', $token);
         $request->session()->put('signup_issued_at', now()->timestamp);
 
-        return view('public.souscrire', ['plan' => $plan, 'cycle' => $cycle, 'price' => $plan->priceFor($cycle), 'token' => $token]);
+        return view('public.inscription', ['plan' => $plan, 'cycle' => $cycle, 'price' => $plan->priceFor($cycle), 'token' => $token]);
     }
 
     public function store(Request $request, TenantSignupService $signup): RedirectResponse
@@ -58,7 +58,13 @@ class SubscribeController extends Controller
             'website' => ['nullable', 'max:0'], // leurre : un humain ne voit pas ce champ
         ], ['accept_terms.accepted' => 'Vous devez accepter les conditions d\'utilisation.']);
 
-        // Consommé AVANT toute création : un second envoi du même formulaire ne passe jamais.
+        // Double clic / rechargement du MÊME formulaire déjà accepté : idempotent, on renvoie à la même page, sans second e-mail.
+        $done = $request->session()->get('signup_done_token');
+        if (is_string($done) && hash_equals($done, $data['token'])) {
+            return redirect()->route('inscription.envoye')->with('signup_email', $data['email']);
+        }
+
+        // Jeton à usage unique : consommé AVANT toute création.
         $expected = $request->session()->pull('signup_token');
         if (! is_string($expected) || ! hash_equals($expected, $data['token'])) {
             return redirect()->route('offres')->withErrors(['token' => 'Ce formulaire a expiré ou a déjà été envoyé. Recommencez depuis le choix de l\'offre.']);
@@ -77,8 +83,9 @@ class SubscribeController extends Controller
 
         // Aucune entreprise n'est créée ici : un lien de confirmation est envoyé à l'adresse indiquée.
         $signup->request($plan, SubscriptionCycle::from($data['cycle']), $data, $request->ip());
+        $request->session()->put('signup_done_token', $data['token']);
 
-        return redirect()->route('souscrire.envoye')->with('signup_email', $data['email']);
+        return redirect()->route('inscription.envoye')->with('signup_email', $data['email']);
     }
 
     public function sent(Request $request)
@@ -95,12 +102,19 @@ class SubscribeController extends Controller
     public function confirm(string $token, TenantSignupService $signup): RedirectResponse
     {
         try {
-            $signup->complete($token);
+            $signup->complete($token, $created);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->route('offres')->withErrors($e->errors());
+        } catch (\Throwable $e) {
+            // La transaction est annulée : rien n'a été créé et le lien reste utilisable pour un nouvel essai.
+            report($e);
+
+            return redirect()->back()->withErrors(['token' => 'La création de votre entreprise a échoué, rien n\'a été créé. Réessayez dans un instant en rouvrant le lien reçu par e-mail.']);
         }
 
-        return redirect()->route('m.login')->with('status', 'Votre adresse est confirmée, votre entreprise est créée et votre essai gratuit démarre. Connectez-vous avec l\'adresse e-mail et le mot de passe choisis.');
+        return redirect()->route('m.login')->with('status', $created
+            ? 'Votre adresse est confirmée, votre entreprise est créée et votre essai gratuit démarre. Connectez-vous avec l\'adresse e-mail et le mot de passe choisis.'
+            : 'Votre entreprise est déjà créée : connectez-vous avec l\'adresse e-mail et le mot de passe choisis.');
     }
 
     private function plan(string $slug): ?SubscriptionPlan

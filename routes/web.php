@@ -7,18 +7,21 @@ use App\Http\Controllers\RemboursementReceiptController;
 use App\Http\Controllers\TwoFactorChallengeController;
 use Illuminate\Support\Facades\Route;
 
-// Offres et souscription publiques (aucune authentification requise ; la création est limitée en débit).
+// Parcours public : landing -> /offres -> /inscription?plan=…&cycle=… -> e-mail de confirmation -> connexion.
+// `plan` et `cycle` ne sont que des INDICATIONS du navigateur : le serveur les revalide contre la base à chaque étape.
 Route::middleware('web')->group(function () {
     Route::get('/offres', \App\Http\Controllers\Public\PricingController::class)->name('offres');
-    Route::get('/souscrire', [\App\Http\Controllers\Public\SubscribeController::class, 'show'])->name('souscrire');
-    Route::post('/souscrire', [\App\Http\Controllers\Public\SubscribeController::class, 'store'])
-        ->middleware('throttle:5,60')->name('souscrire.store');
-    Route::get('/souscrire/envoye', [\App\Http\Controllers\Public\SubscribeController::class, 'sent'])->name('souscrire.envoye');
+    Route::get('/inscription', [\App\Http\Controllers\Public\SubscribeController::class, 'show'])->name('inscription');
+    Route::post('/inscription', [\App\Http\Controllers\Public\SubscribeController::class, 'store'])
+        ->middleware('throttle:signup')->name('inscription.store');
+    Route::get('/inscription/envoye', [\App\Http\Controllers\Public\SubscribeController::class, 'sent'])->name('inscription.envoye');
     // Lien de l'e-mail : signé (intégrité + expiration), puis jeton à usage unique ; la création se fait au POST.
-    Route::get('/souscrire/verifier/{token}', [\App\Http\Controllers\Public\SubscribeController::class, 'verify'])
-        ->middleware(['signed', 'throttle:20,60'])->name('souscrire.verifier');
-    Route::post('/souscrire/verifier/{token}', [\App\Http\Controllers\Public\SubscribeController::class, 'confirm'])
-        ->middleware(['signed', 'throttle:10,60'])->name('souscrire.confirmer');
+    Route::get('/inscription/verifier/{token}', [\App\Http\Controllers\Public\SubscribeController::class, 'verify'])
+        ->middleware(['signed', 'throttle:20,60'])->name('inscription.verifier');
+    Route::post('/inscription/verifier/{token}', [\App\Http\Controllers\Public\SubscribeController::class, 'confirm'])
+        ->middleware(['signed', 'throttle:10,60'])->name('inscription.confirmer');
+    // Ancienne adresse du parcours : on conserve plan et cycle.
+    Route::get('/souscrire', fn (\Illuminate\Http\Request $request) => redirect()->route('inscription', $request->query(), 301));
 });
 
 Route::get('/', function () {

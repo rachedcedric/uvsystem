@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
 
-/** Pages publiques /offres et /souscrire (double confirmation e-mail + anti-abus d'essais). */
+/** Pages publiques /offres et /inscription (double confirmation e-mail + anti-abus d'essais). */
 class SubscriptionPublicTest extends SubscriptionTestCase
 {
     protected function setUp(): void
@@ -31,7 +31,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
 
     private function fields(array $overrides = [], string $plan = 'pro', string $cycle = 'monthly'): array
     {
-        $this->get("/souscrire?plan={$plan}&cycle={$cycle}");
+        $this->get("/inscription?plan={$plan}&cycle={$cycle}");
 
         return $overrides + [
             'plan' => $plan, 'cycle' => $cycle, 'token' => session('signup_token'),
@@ -42,7 +42,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
 
     private function submit(array $overrides = [], string $plan = 'pro', string $cycle = 'monthly'): TestResponse
     {
-        return $this->post('/souscrire', $this->fields($overrides, $plan, $cycle));
+        return $this->post('/inscription', $this->fields($overrides, $plan, $cycle));
     }
 
     /** Lien de confirmation envoyé par e-mail (dernière notification). */
@@ -102,14 +102,14 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $tenants = $this->tenantCount();
         $users = User::withoutGlobalScopes()->count();
 
-        $this->submit()->assertRedirect(route('souscrire.envoye'));
+        $this->submit()->assertRedirect(route('inscription.envoye'));
 
         $this->assertSame($tenants, $this->tenantCount(), 'aucune entreprise avant la confirmation');
         $this->assertSame($users, User::withoutGlobalScopes()->count(), 'aucun compte avant la confirmation');
         $this->assertCount(1, SubscriptionSignup::all());
         $this->assertNull(SubscriptionSignup::first()->verified_at);
         Notification::assertSentOnDemand(VerifySignupNotification::class);
-        $this->assertStringContainsString('/souscrire/verifier/', $this->link());
+        $this->assertStringContainsString('/inscription/verifier/', $this->link());
     }
 
     public function test_the_pending_request_stores_no_clear_text_secret(): void
@@ -193,16 +193,18 @@ class SubscriptionPublicTest extends SubscriptionTestCase
 
     // ---------------------------------------------------------------- étape 2 : lien
 
-    public function test_the_link_works_once_only(): void
+    public function test_confirming_twice_is_idempotent_and_creates_nothing_more(): void
     {
         $this->submit();
         $link = $this->link();
 
-        $this->post($link)->assertRedirect(route('m.login'));
-        $tenants = $this->tenantCount();
-        $this->post($link)->assertRedirect(route('offres'))->assertSessionHasErrors('token');
+        $this->post($link)->assertRedirect(route('m.login'))->assertSessionHas('status', fn ($m) => str_contains($m, 'est confirmée'));
+        $counts = [$this->tenantCount(), User::withoutGlobalScopes()->count(), \App\Models\TenantSubscription::withoutGlobalScopes()->count()];
 
-        $this->assertSame($tenants, $this->tenantCount());
+        $this->post($link)->assertRedirect(route('m.login'))->assertSessionHas('status', fn ($m) => str_contains($m, 'déjà créée'));
+        $this->post($link)->assertRedirect(route('m.login'));
+
+        $this->assertSame($counts, [$this->tenantCount(), User::withoutGlobalScopes()->count(), \App\Models\TenantSubscription::withoutGlobalScopes()->count()]);
     }
 
     public function test_an_expired_link_is_refused_and_creates_nothing(): void
@@ -220,9 +222,9 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $this->submit();
         $token = basename(parse_url($this->link(), PHP_URL_PATH));
 
-        $this->post("/souscrire/verifier/{$token}")->assertForbidden();
+        $this->post("/inscription/verifier/{$token}")->assertForbidden();
         $this->post($this->link().'x')->assertForbidden();
-        $this->post(\Illuminate\Support\Facades\URL::temporarySignedRoute('souscrire.verifier', now()->addHour(), ['token' => 'inconnu']))->assertRedirect(route('offres'));
+        $this->post(\Illuminate\Support\Facades\URL::temporarySignedRoute('inscription.verifier', now()->addHour(), ['token' => 'inconnu']))->assertRedirect(route('offres'));
         $this->assertNull(Tenant::where('contact_email', 'awa@example.com')->first());
     }
 
@@ -301,7 +303,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
 
         // Le lendemain, la limite est levée.
         $this->travelToDate(now()->addDay()->addMinute()->toDateTimeString());
-        $this->submit(['email' => 'second@example.com', 'company_name' => 'Seconde', 'phone' => '0708000000'])->assertRedirect(route('souscrire.envoye'));
+        $this->submit(['email' => 'second@example.com', 'company_name' => 'Seconde', 'phone' => '0708000000'])->assertRedirect(route('inscription.envoye'));
     }
 
     public function test_a_filled_honeypot_creates_nothing(): void
@@ -322,7 +324,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         // Un humain qui prend son temps passe.
         $fields = $this->fields();
         $this->travelToDate(now()->addSeconds(10)->toDateTimeString());
-        $this->post('/souscrire', $fields)->assertRedirect(route('souscrire.envoye'));
+        $this->post('/inscription', $fields)->assertRedirect(route('inscription.envoye'));
     }
 
     public function test_confirmation_mails_per_address_are_limited(): void
@@ -330,8 +332,8 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         config(['subscriptions.signup.max_mails_per_email_per_hour' => 2]);
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
 
-        $this->submit()->assertRedirect(route('souscrire.envoye'));
-        $this->submit()->assertRedirect(route('souscrire.envoye'));
+        $this->submit()->assertRedirect(route('inscription.envoye'));
+        $this->submit()->assertRedirect(route('inscription.envoye'));
         $this->submit()->assertSessionHasErrors('email');
 
         $this->assertCount(1, SubscriptionSignup::all(), 'un seul lien valide à la fois par adresse');
@@ -367,14 +369,24 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $this->assertCount(0, SubscriptionSignup::all());
     }
 
-    public function test_the_same_form_cannot_be_submitted_twice(): void
+    public function test_submitting_the_same_form_twice_is_idempotent(): void
     {
         $fields = $this->fields();
 
-        $this->post('/souscrire', $fields)->assertRedirect(route('souscrire.envoye'));
-        $this->post('/souscrire', $fields)->assertRedirect(route('offres'))->assertSessionHasErrors('token');
+        $this->post('/inscription', $fields)->assertRedirect(route('inscription.envoye'));
+        $this->post('/inscription', $fields)->assertRedirect(route('inscription.envoye'));
 
         $this->assertCount(1, SubscriptionSignup::all());
+        Notification::assertSentOnDemandTimes(VerifySignupNotification::class, 1);
+    }
+
+    public function test_a_post_with_a_forged_token_is_refused(): void
+    {
+        $fields = $this->fields();
+        $fields['token'] = 'forge';
+
+        $this->post('/inscription', $fields)->assertRedirect(route('offres'))->assertSessionHasErrors('token');
+        $this->assertCount(0, SubscriptionSignup::all());
     }
 
     public function test_weak_passwords_and_missing_terms_are_refused(): void
@@ -393,12 +405,12 @@ class SubscriptionPublicTest extends SubscriptionTestCase
     public function test_an_unknown_or_inactive_plan_is_refused(): void
     {
         $this->plan('pro')->update(['is_active' => false]);
-        $this->get('/souscrire?plan=pro')->assertRedirect(route('offres'));
-        $this->get('/souscrire?plan=inexistant')->assertRedirect(route('offres'));
+        $this->get('/inscription?plan=pro')->assertRedirect(route('offres'));
+        $this->get('/inscription?plan=inexistant')->assertRedirect(route('offres'));
 
         $fields = $this->fields(plan: 'essentiel');
         $fields['plan'] = 'pro'; // plan désactivé, forgé dans le POST
-        $this->post('/souscrire', $fields)->assertRedirect(route('offres'));
+        $this->post('/inscription', $fields)->assertRedirect(route('offres'));
         $this->assertCount(0, SubscriptionSignup::all());
     }
 
@@ -408,18 +420,19 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $this->actingAs($this->userIn($tenant));
         $count = $this->tenantCount();
 
-        $this->get('/souscrire?plan=pro')->assertRedirect(route('offres'));
-        $this->post('/souscrire', ['plan' => 'pro'])->assertRedirect(route('offres'));
+        $this->get('/inscription?plan=pro')->assertRedirect(route('offres'));
+        $this->post('/inscription', ['plan' => 'pro'])->assertRedirect(route('offres'));
 
         $this->assertSame($count, $this->tenantCount());
         $this->assertCount(0, SubscriptionSignup::all());
     }
 
-    public function test_the_signup_is_rate_limited(): void
+    public function test_the_signup_is_rate_limited_with_a_configurable_ceiling(): void
     {
+        config(['subscriptions.signup.max_requests_per_ip_per_hour' => 3]);
         $statuses = [];
         for ($i = 0; $i < 7; $i++) {
-            $statuses[] = $this->post('/souscrire', ['company_name' => ''])->getStatusCode();
+            $statuses[] = $this->post('/inscription', ['company_name' => ''])->getStatusCode();
         }
 
         $this->assertContains(429, $statuses);

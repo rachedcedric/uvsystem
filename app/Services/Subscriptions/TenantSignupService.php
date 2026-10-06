@@ -73,6 +73,11 @@ class TenantSignupService
         $phone = self::normalizePhone($data['phone'] ?? null);
         $config = config('subscriptions.signup');
 
+        // Un essai exige une offre qui en prévoit un : on le refuse AVANT d'envoyer le moindre e-mail.
+        if (! $plan->is_active || $plan->trial_days < 1) {
+            throw ValidationException::withMessages(['plan' => 'Cette offre n\'est pas disponible à l\'essai.']);
+        }
+
         $this->assertAllowed($data['company_name'], $email, $normalized, $phone, $ip, (array) $config['disposable_domains']);
 
         $key = 'signup-mail:'.$normalized;
@@ -100,7 +105,7 @@ class TenantSignupService
             return $signup;
         });
 
-        $url = URL::temporarySignedRoute('souscrire.verifier', now()->addHours($ttl), ['token' => $token]);
+        $url = URL::temporarySignedRoute('inscription.verifier', now()->addHours($ttl), ['token' => $token]);
 
         try {
             Notification::route('mail', $email)->notify(new VerifySignupNotification($url, trim($data['company_name']), $ttl));
@@ -113,12 +118,24 @@ class TenantSignupService
         return $token;
     }
 
-    /** Étape 2 : confirmation de l'adresse, puis création de l'entreprise, du master et de l'essai. */
-    public function complete(string $token): Tenant
+    /**
+     * Étape 2 : confirmation de l'adresse, puis création de l'entreprise, du master et de l'essai, en UNE transaction :
+     * tout est créé ou rien ne l'est. IDEMPOTENT : la ligne d'inscription est verrouillée (FOR UPDATE) ; une seconde
+     * confirmation du même lien (double clic, rechargement, deux onglets) ne crée rien et renvoie le tenant déjà créé.
+     *
+     * @param  bool|null  $created  vrai si CET appel a créé l'entreprise, faux s'il s'agit d'une répétition
+     */
+    public function complete(string $token, ?bool &$created = null): Tenant
     {
+        $created = false;
+
         try {
-            return DB::transaction(function () use ($token) {
+            return DB::transaction(function () use ($token, &$created) {
                 $signup = SubscriptionSignup::query()->where('token_hash', hash('sha256', $token))->lockForUpdate()->first();
+
+                if ($signup !== null && $signup->verified_at !== null && $signup->tenant_id !== null) {
+                    return Tenant::query()->findOrFail($signup->tenant_id); // répétition : rien n'est recréé
+                }
 
                 if ($signup === null || ! $signup->isUsable()) {
                     throw ValidationException::withMessages(['token' => 'Ce lien de confirmation est invalide, expiré ou déjà utilisé. Recommencez la souscription.']);
@@ -140,8 +157,11 @@ class TenantSignupService
                 ], ['name' => $data['name'], 'email' => $signup->email, 'password_hash' => $data['password_hash']],
                     fn (Tenant $new) => $this->manager->startTrial($new, $plan, SubscriptionCycle::from($signup->cycle)));
 
+                $this->assertOnlyTenantMaster($tenant);
+
                 $signup->setPayloadData([]);
                 $signup->forceFill(['verified_at' => now(), 'tenant_id' => $tenant->id])->save();
+                $created = true;
 
                 return $tenant;
             });
@@ -149,6 +169,24 @@ class TenantSignupService
             throw ValidationException::withMessages(['token' => 'Un compte existe déjà avec cette adresse e-mail ou ce nom d\'entreprise.']);
         } catch (InvalidSubscriptionTransition $e) {
             throw ValidationException::withMessages(['plan' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Garde-fou final, dans la transaction : le seul compte créé est UN master rattaché au nouveau tenant, sans aucun
+     * pouvoir de plateforme. Au moindre écart, tout est annulé (aucun chemin de ce parcours ne peut produire un super admin).
+     */
+    private function assertOnlyTenantMaster(Tenant $tenant): void
+    {
+        $users = User::withoutGlobalScopes()->where('tenant_id', $tenant->id)->get();
+
+        $valid = $users->count() === 1
+            && $users->first()->getRoleNames()->all() === ['master']
+            && ! $users->first()->isSuperAdmin()
+            && (int) $users->first()->tenant_id === (int) $tenant->id;
+
+        if (! $valid) {
+            throw new \LogicException('Inscription annulée : le compte créé doit être un master du nouveau tenant, sans autre rôle.');
         }
     }
 
