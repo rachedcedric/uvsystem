@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -17,7 +18,7 @@ class DashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $cacheKey = 'api_dashboard_stats_'.now()->format('Y-m-d-H');
+        $cacheKey = TenantContext::cacheKey('api_dashboard_stats_'.now()->format('Y-m-d-H'));
 
         $stats = Cache::remember($cacheKey, 300, function () {
             return [

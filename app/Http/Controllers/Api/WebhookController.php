@@ -27,7 +27,7 @@ class WebhookController extends Controller
             if (! $this->verifyResendSignature($request)) {
                 Log::warning('Resend webhook signature verification failed', [
                     'ip' => $request->ip(),
-                    'headers' => $request->headers->all(),
+                    'headers' => array_intersect_key($request->headers->all(), array_flip(['user-agent', 'content-type', 'svix-id', 'svix-timestamp'])),
                 ]);
 
                 return response()->json([
@@ -121,7 +121,7 @@ class WebhookController extends Controller
             if (! $this->verifyMailtrapSignature($request)) {
                 Log::warning('Mailtrap webhook signature verification failed', [
                     'ip' => $request->ip(),
-                    'headers' => $request->headers->all(),
+                    'headers' => array_intersect_key($request->headers->all(), array_flip(['user-agent', 'content-type', 'svix-id', 'svix-timestamp'])),
                 ]);
 
                 return response()->json([

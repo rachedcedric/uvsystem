@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\AgentCollection;
 use App\Http\Resources\AgentResource;
 use App\Models\Agent;
+use App\Models\Remboursement;
+use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AgentController extends Controller
 {
@@ -41,8 +45,10 @@ class AgentController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $sortDirection = $request->get('sort_direction', 'desc');
+        $sortBy = in_array($request->get('sort_by'), ['name', 'created_at', 'current_debt', 'status', 'zone'], true)
+            ? $request->get('sort_by')
+            : 'created_at';
+        $sortDirection = $request->get('sort_direction') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortDirection);
 
         // Pagination
@@ -72,8 +78,8 @@ class AgentController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|regex:/^[0-9]{8,15}$/|unique:agents,phone',
-            'email' => 'nullable|email|unique:agents,email',
+            'phone' => ['required', 'regex:/^[0-9]{8,15}$/', Rule::unique('agents', 'phone')->where('tenant_id', TenantContext::id())],
+            'email' => ['nullable', 'email', Rule::unique('agents', 'email')->where('tenant_id', TenantContext::id())],
             'address' => 'nullable|string|max:500',
             'zone' => 'nullable|string|max:100',
             'type' => 'sometimes|in:standard,premium,vip',
@@ -102,8 +108,8 @@ class AgentController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'phone' => 'sometimes|required|regex:/^[0-9]{8,15}$/|unique:agents,phone,'.$agent->id,
-            'email' => 'nullable|email|unique:agents,email,'.$agent->id,
+            'phone' => ['sometimes', 'required', 'regex:/^[0-9]{8,15}$/', Rule::unique('agents', 'phone')->where('tenant_id', TenantContext::id())->ignore($agent->id)],
+            'email' => ['nullable', 'email', Rule::unique('agents', 'email')->where('tenant_id', TenantContext::id())->ignore($agent->id)],
             'address' => 'nullable|string|max:500',
             'zone' => 'nullable|string|max:100',
             'type' => 'sometimes|in:standard,premium,vip',
@@ -186,6 +192,9 @@ class AgentController extends Controller
      */
     public function transactions(Request $request, Agent $agent): JsonResponse
     {
+        $this->authorize('view', $agent);
+        $this->authorize('viewAny', UvTransaction::class);
+
         $query = $agent->transactions()->with('fournisseur');
 
         // Date filters
@@ -209,6 +218,9 @@ class AgentController extends Controller
      */
     public function remboursements(Request $request, Agent $agent): JsonResponse
     {
+        $this->authorize('view', $agent);
+        $this->authorize('viewAny', Remboursement::class);
+
         $query = $agent->remboursements();
 
         // Date filters

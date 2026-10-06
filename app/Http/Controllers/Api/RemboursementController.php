@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Services\RemboursementService;
+use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class RemboursementController extends Controller
 {
@@ -116,7 +118,7 @@ class RemboursementController extends Controller
         $this->authorize('create', Remboursement::class);
 
         $validated = $request->validate([
-            'agent_id' => 'required|exists:agents,id',
+            'agent_id' => ['required', Rule::exists('agents', 'id')->where('tenant_id', TenantContext::id())],
             'montant' => 'required|numeric|min:0.01|max:999999999',
             'mode_paiement' => 'required|in:cash,virement,cheque,mobile_money',
             'reference_paiement' => 'nullable|string|max:100',
@@ -179,6 +181,8 @@ class RemboursementController extends Controller
      */
     public function update(Request $request, Remboursement $remboursement): JsonResponse
     {
+        $this->authorize('update', $remboursement);
+
         $validated = $request->validate([
             'status' => 'sometimes|in:pending,completed,cancelled',
             'notes' => 'nullable|string|max:1000',
@@ -206,6 +210,8 @@ class RemboursementController extends Controller
      */
     public function stats(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Remboursement::class);
+
         $from = $request->get('from', now()->startOfMonth()->toDateString());
         $to = $request->get('to', now()->toDateString());
 

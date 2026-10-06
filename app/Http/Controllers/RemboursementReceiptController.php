@@ -12,6 +12,8 @@ class RemboursementReceiptController extends Controller
      */
     public function download(Remboursement $remboursement)
     {
+        $this->authorize('view', $remboursement);
+
         $remboursement->load(['agent', 'paymentMethod']);
 
         $data = [
@@ -34,6 +36,8 @@ class RemboursementReceiptController extends Controller
      */
     public function show(Remboursement $remboursement)
     {
+        $this->authorize('view', $remboursement);
+
         $remboursement->load(['agent', 'paymentMethod']);
 
         $data = [

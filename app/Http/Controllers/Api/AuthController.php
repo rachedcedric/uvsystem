@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,36 +12,6 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    /**
-     * Register a new user.
-     */
-    public function register(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'device_name' => 'required|string|max:255',
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
-
-        $token = $user->createToken($validated['device_name'])->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Utilisateur créé avec succès',
-            'data' => [
-                'user' => $user,
-                'token' => $token,
-            ],
-        ], 201);
-    }
-
     /**
      * Login and get token.
      */
@@ -54,7 +25,10 @@ class AuthController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if (! $user || ! Hash::check($validated['password'], $user->password)) {
+        // Fail closed : mot de passe faux, compte inconnu OU compte sans rôle métier => même message.
+        if (! $user
+            || ! Hash::check($validated['password'], $user->password)
+            || ! $user->canAccessPanel(Filament::getPanel('admin'))) {
             throw ValidationException::withMessages([
                 'email' => ['Les informations d\'identification fournies sont incorrectes.'],
             ]);
@@ -68,7 +42,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Connexion réussie',
             'data' => [
-                'user' => $user,
+                'user' => $this->present($user),
                 'token' => $token,
             ],
         ]);
@@ -79,12 +53,9 @@ class AuthController extends Controller
      */
     public function user(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $user->load('agent');
-
         return response()->json([
             'success' => true,
-            'data' => $user,
+            'data' => $this->present($request->user()),
         ]);
     }
 
@@ -138,5 +109,21 @@ class AuthController extends Controller
                 'token' => $token,
             ],
         ]);
+    }
+
+    /**
+     * Représentation publique d'un utilisateur : jamais le modèle brut.
+     *
+     * @return array<string, mixed>
+     */
+    private function present(User $user): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'roles' => $user->getRoleNames(),
+            'two_factor_enabled' => $user->hasTwoFactorEnabled(),
+        ];
     }
 }

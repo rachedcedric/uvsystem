@@ -12,6 +12,25 @@ use Illuminate\Support\Facades\Schedule;
 */
 
 // ============================================
+// SURVEILLANCE - Planificateur et file d'attente
+// ============================================
+
+// Battement de cœur : prouve que le cron « schedule:run » tourne (voir l'écran
+// « Diagnostic des notifications »).
+Schedule::call(fn () => \Illuminate\Support\Facades\Cache::put(\App\Services\NotificationDiagnostics::HEARTBEAT_KEY, now()->timestamp, now()->addHour()))
+    ->name('scheduler-heartbeat')
+    ->everyMinute();
+
+// Worker de la file d'attente : traite e-mails et alertes push en attente.
+// Sur un hébergement mutualisé sans worker permanent, un seul cron
+// « schedule:run » suffit ainsi à tout faire partir.
+Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')
+    ->name('queue-worker')
+    ->everyMinute()
+    ->withoutOverlapping(2)
+    ->runInBackground();
+
+// ============================================
 // BACKUPS - Sauvegardes automatiques
 // ============================================
 
@@ -170,10 +189,13 @@ Schedule::command('exports:cleanup --days=1')
 
 // Nettoyage des anciennes activités (>90 jours) - Chaque dimanche à 3h30
 Schedule::call(function () {
-    \Spatie\Activitylog\Models\Activity::where('created_at', '<', now()->subDays(90))->delete();
+    \App\Models\Activity::where('created_at', '<', now()->subDays(90))->delete();
 })->weekly()->sundays()->at('03:30');
 
 // Nettoyage des tokens API expirés - Tous les jours à 4h30
 Schedule::call(function () {
     \Laravel\Sanctum\PersonalAccessToken::where('expires_at', '<', now())->delete();
 })->dailyAt('04:30');
+
+// Purge des tokens API expirés (config/sanctum.php : expiration 7 jours par défaut).
+Schedule::command('sanctum:prune-expired --hours=24')->daily();

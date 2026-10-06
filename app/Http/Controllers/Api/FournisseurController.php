@@ -16,6 +16,8 @@ class FournisseurController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', Fournisseur::class);
+
         $query = Fournisseur::query();
 
         // Search
@@ -39,11 +41,13 @@ class FournisseurController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'desc');
+        $sortBy = in_array($request->input('sort_by'), ['name', 'type', 'is_active', 'created_at'], true)
+            ? $request->input('sort_by')
+            : 'created_at';
+        $sortOrder = $request->input('sort_order') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortOrder);
 
-        $perPage = $request->input('per_page', 15);
+        $perPage = min(max((int) $request->input('per_page', 15), 1), 100);
         $fournisseurs = $query->paginate($perPage);
 
         return response()->json($fournisseurs);
@@ -54,6 +58,8 @@ class FournisseurController extends Controller
      */
     public function list(): JsonResponse
     {
+        $this->authorize('viewAny', Fournisseur::class);
+
         $fournisseurs = Fournisseur::where('is_active', true)
             ->select('id', 'name', 'type')
             ->orderBy('name')
@@ -67,6 +73,8 @@ class FournisseurController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorize('create', Fournisseur::class);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => ['required', Rule::in(['bank', 'premium_agent', 'other'])],
@@ -96,6 +104,8 @@ class FournisseurController extends Controller
      */
     public function show(Fournisseur $fournisseur): JsonResponse
     {
+        $this->authorize('view', $fournisseur);
+
         return response()->json(['data' => $fournisseur]);
     }
 
@@ -104,6 +114,8 @@ class FournisseurController extends Controller
      */
     public function update(Request $request, Fournisseur $fournisseur): JsonResponse
     {
+        $this->authorize('update', $fournisseur);
+
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'type' => ['sometimes', 'required', Rule::in(['bank', 'premium_agent', 'other'])],
@@ -138,6 +150,8 @@ class FournisseurController extends Controller
      */
     public function destroy(Fournisseur $fournisseur): JsonResponse
     {
+        $this->authorize('delete', $fournisseur);
+
         // Vérifier s'il y a des transactions liées
         $transactionCount = UvTransaction::where('fournisseur_id', $fournisseur->id)->count();
 
@@ -173,6 +187,8 @@ class FournisseurController extends Controller
      */
     public function transactions(Request $request, Fournisseur $fournisseur): JsonResponse
     {
+        $this->authorize('view', $fournisseur);
+
         $query = UvTransaction::where('fournisseur_id', $fournisseur->id)
             ->with('agent:id,name');
 
@@ -197,6 +213,8 @@ class FournisseurController extends Controller
      */
     public function stats(Fournisseur $fournisseur): JsonResponse
     {
+        $this->authorize('view', $fournisseur);
+
         $transactions = UvTransaction::where('fournisseur_id', $fournisseur->id);
 
         $stats = [

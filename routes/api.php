@@ -37,7 +37,6 @@ use Illuminate\Support\Facades\Route;
 
 // Authentication with rate limiting (brute force protection)
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
 });
 
@@ -54,7 +53,7 @@ Route::get('/health', function () {
 // Protected Routes (Authentication Required)
 // ============================================
 
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+Route::middleware(['auth:sanctum', 'staff', 'throttle:api'])->group(function () {
 
     // Authentication (standard API rate limit)
     Route::prefix('auth')->group(function () {
@@ -65,7 +64,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     });
 
     // Dashboard & Statistics (cached, lower rate limit)
-    Route::prefix('dashboard')->middleware('throttle:dashboard')->group(function () {
+    Route::prefix('dashboard')->middleware(['throttle:dashboard', 'can:view_dashboard'])->group(function () {
         Route::get('/', [DashboardController::class, 'index']);
         Route::get('/realtime', [DashboardController::class, 'realtime']);
         Route::get('/charts', [DashboardController::class, 'charts']);
@@ -114,7 +113,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     });
 
     // Reports (heavy operations, stricter rate limit)
-    Route::prefix('reports')->middleware('throttle:heavy')->group(function () {
+    Route::prefix('reports')->middleware(['throttle:heavy', 'can:view_reports'])->group(function () {
         Route::get('/', [ReportController::class, 'index']);
         Route::get('/agents', [ReportController::class, 'agents']);
         Route::get('/transactions', [ReportController::class, 'transactions']);
@@ -122,7 +121,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     });
 
     // Activity Log (Audit Trail)
-    Route::prefix('activities')->group(function () {
+    Route::prefix('activities')->middleware('can:view_activity_log')->group(function () {
         Route::get('/', [ActivityLogController::class, 'index']);
         Route::get('/stats', [ActivityLogController::class, 'stats']);
         Route::get('/log-names', [ActivityLogController::class, 'logNames']);
@@ -150,27 +149,6 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         Route::post('/regenerate-recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes']);
         Route::post('/verify', [TwoFactorController::class, 'verify']);
     });
-});
-
-// ============================================
-// Rate Limit Info Endpoint
-// ============================================
-
-Route::get('/rate-limits', function (Request $request) {
-    return response()->json([
-        'limits' => [
-            'auth' => '5 requests per minute',
-            'api' => '60 requests per minute',
-            'transactions' => '30 requests per minute',
-            'dashboard' => '20 requests per minute',
-            'heavy' => '10 requests per minute',
-        ],
-        'headers' => [
-            'X-RateLimit-Limit' => 'Maximum requests allowed',
-            'X-RateLimit-Remaining' => 'Remaining requests',
-            'Retry-After' => 'Seconds until rate limit resets (when exceeded)',
-        ],
-    ]);
 });
 
 /*

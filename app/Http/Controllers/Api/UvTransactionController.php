@@ -7,9 +7,11 @@ use App\Models\Agent;
 use App\Models\Fournisseur;
 use App\Models\UvTransaction;
 use App\Services\UvDistributionService;
+use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class UvTransactionController extends Controller
@@ -124,8 +126,8 @@ class UvTransactionController extends Controller
         $this->authorize('create', UvTransaction::class);
 
         $validated = $request->validate([
-            'agent_id' => 'required|exists:agents,id',
-            'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+            'agent_id' => ['required', Rule::exists('agents', 'id')->where('tenant_id', TenantContext::id())],
+            'fournisseur_id' => ['nullable', Rule::exists('fournisseurs', 'id')->where('tenant_id', TenantContext::id())],
             'amount' => 'required|numeric|min:1',
             'date_transaction' => 'nullable|date|before_or_equal:today',
             'notes' => 'nullable|string|max:1000',
@@ -197,6 +199,8 @@ class UvTransactionController extends Controller
      */
     public function update(Request $request, UvTransaction $uvTransaction): JsonResponse
     {
+        $this->authorize('update', $uvTransaction);
+
         // Only notes can be updated for data integrity
         $validated = $request->validate([
             'notes' => 'nullable|string|max:1000',
@@ -216,6 +220,8 @@ class UvTransactionController extends Controller
      */
     public function dailyStats(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', UvTransaction::class);
+
         $date = $request->get('date', now()->toDateString());
 
         $stats = UvTransaction::whereDate('date_transaction', $date)
@@ -249,6 +255,8 @@ class UvTransactionController extends Controller
      */
     public function monthlyStats(Request $request): JsonResponse
     {
+        $this->authorize('viewAny', UvTransaction::class);
+
         $year = $request->get('year', now()->year);
         $month = $request->get('month', now()->month);
 

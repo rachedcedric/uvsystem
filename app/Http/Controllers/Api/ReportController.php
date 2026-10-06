@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Controller for generating reports and statistics
@@ -173,7 +175,7 @@ class ReportController extends Controller
             'period' => ['sometimes', 'in:today,week,month,year,custom'],
             'start_date' => ['required_if:period,custom', 'date'],
             'end_date' => ['required_if:period,custom', 'date'],
-            'agent_id' => ['sometimes', 'exists:agents,id'],
+            'agent_id' => ['sometimes', Rule::exists('agents', 'id')->where('tenant_id', TenantContext::id())],
         ]);
 
         $period = $validated['period'] ?? 'month';

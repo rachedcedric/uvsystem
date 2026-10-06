@@ -15,26 +15,21 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'admin/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'http://localhost:3000',      // Frontend Vite
-        'http://localhost:5173',      // Frontend Vite alt
-        'http://localhost:5174',      // Frontend Vite alt
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:5173',
-        'http://localhost:8081',      // Expo Mobile
-        'http://localhost:19006',     // Expo Web
-        'exp://localhost:8081',       // Expo Dev
-        'https://uv-system.com',      // Production
-        'https://app.uv-system.com',  // Production frontend
-    ],
+    // Origines autorisées : liste explicite par environnement (CORS_ALLOWED_ORIGINS, séparées par des virgules).
+    // L'APK et /admin sont same-origin et n'ont pas besoin de CORS ; ceci ne sert qu'aux clients API externes.
+    'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+        'CORS_ALLOWED_ORIGINS',
+        'https://uv-system.com,https://app.uv-system.com'
+    ))))),
 
-    'allowed_origins_patterns' => [
-        '#^http://192\.168\.\d+\.\d+:\d+$#', // Local network for mobile dev
-    ],
+    // Réseau local de développement mobile : uniquement hors production.
+    'allowed_origins_patterns' => env('APP_ENV') === 'local'
+        ? ['#^http://192\.168\.\d+\.\d+:\d+$#', '#^http://localhost:\d+$#']
+        : [],
 
     'allowed_headers' => ['*'],
 
