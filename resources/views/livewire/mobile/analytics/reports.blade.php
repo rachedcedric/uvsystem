@@ -45,4 +45,10 @@
             <div class="m-callout m-callout--warn" style="flex:1;margin:0"><span>Vous n'avez pas le droit d'exporter des rapports.</span></div>
         @endif
     </div>
+
+    @if (auth()->user()->hasRole('master'))
+        <div class="m-actions" style="margin-top:12px">
+            <a href="{{ route('exports.tenant-data') }}" target="_blank" class="m-action" data-haptic><x-m.icon name="document-arrow-down" /> Exporter toutes mes données (ZIP)</a>
+        </div>
+    @endif
 </div>

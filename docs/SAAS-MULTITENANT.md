@@ -71,7 +71,7 @@ L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
 
 ## Limites connues / à faire
 
-- Sauvegardes : elles couvrent **toute** la plateforme, d'où l'accès super admin seul ; pas encore d'écran de sauvegarde dans `/platform` (téléchargement via `/backup/download/…` ou cPanel). Une sauvegarde/export par tenant reste à construire.
+- Sauvegardes : elles couvrent **toute** la plateforme, d'où l'accès super admin seul, désormais via `/platform` → Sauvegardes (lancer, télécharger, supprimer ; seuls les `.zip` du dossier de sauvegarde sont atteignables). Pas de restauration par tenant : restaurer une sauvegarde complète écraserait tous les tenants.
 - Les 15 commandes planifiées/maintenance utilisent `RunsPerTenant` ; les commandes de démo (`SetupDemoData`, `ClearDemoData`…) restent hors tenant et sont à ne pas lancer en production.
 - Un `insert()` de masse via le query builder ne passe par aucun modèle : la colonne NOT NULL le fait échouer (fail closed), mais le code doit créer ses lignes via les modèles.
 - Contraintes composites `(tenant_id, parent_id)` entre tables non posées : la cohérence parent/enfant repose sur le scope et sur les règles `exists` tenant-aware.
@@ -91,3 +91,7 @@ Garde-fous : codes jamais rejouables, 5 essais / 5 min par compte et IP, codes d
 **Déploiement progressif recommandé** : 1) déployer sans `SECURITY_2FA_ENFORCE_FROM` (rappel seulement) ; 2) quand les `master`/`admin` ont activé leur 2FA, fixer par exemple `SECURITY_2FA_ENFORCE_FROM=2026-11-15` dans `.env` puis `php artisan config:clear` ; 3) en cas de téléphone perdu : le super admin utilise « Réinitialiser la 2FA » sur l'utilisateur dans `/platform`, ou `php artisan platform:2fa-reset email@…` (le seul moyen pour le super admin lui-même).
 
 Le premier super admin doit activer sa 2FA dès sa première connexion à `/platform` (redirection automatique).
+
+## Export des données d'un tenant
+
+Le `master` d'un tenant actif télécharge toutes ses données (un CSV par table, comptes sans mot de passe ni 2FA, justificatifs, `manifest.json`) : application mobile → Rapports et exports → « Exporter toutes mes données (ZIP) », ou `/exports/mes-donnees` (limité à 3 par 10 minutes, tracé dans le journal d'activité). Le contenu est borné au tenant courant par les modèles scopés ; les cellules commençant par `=`, `+`, `-` ou `@` sont neutralisées contre l'injection de formules Excel.

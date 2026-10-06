@@ -30,6 +30,10 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/security/2fa/disable', [\App\Http\Controllers\TwoFactorEnrollmentController::class, 'disable'])->name('security.2fa.disable');
 });
 
+// Export complet des données du tenant (master) : 3 par 10 minutes, c'est une opération lourde
+Route::middleware(['web', 'auth', '2fa', 'staff', 'throttle:3,10'])->get('/exports/mes-donnees', [\App\Http\Controllers\TenantDataExportController::class, 'download'])
+    ->name('exports.tenant-data');
+
 // Export Download Route (protected)
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/exports/download/{filename}', [ExportDownloadController::class, 'download'])

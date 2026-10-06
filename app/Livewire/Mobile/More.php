@@ -51,7 +51,6 @@ class More extends Component
                 \App\Filament\Pages\AgentScoringPage::getUrl(),
                 \App\Filament\Pages\ReportsPage::getUrl(),
                 \App\Filament\Pages\ImportPage::getUrl(),
-                \App\Filament\Pages\BackupPage::getUrl(),
                 \App\Filament\Pages\TwoFactorAuthPage::getUrl(),
                 \App\Filament\Pages\ActivityLogPage::getUrl(),
             ];

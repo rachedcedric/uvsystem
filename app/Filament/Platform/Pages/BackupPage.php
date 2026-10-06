@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Pages;
+namespace App\Filament\Platform\Pages;
 
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -130,11 +130,23 @@ class BackupPage extends Page
         $this->loadBackups();
     }
 
+    /**
+     * Les méthodes Livewire reçoivent leurs arguments du navigateur : on ne garde que le nom de fichier
+     * et on le replace dans le dossier de sauvegarde, sans quoi on pourrait viser n'importe quel fichier.
+     */
+    private function backupPath(string $path): string
+    {
+        $name = basename($path);
+
+        return Str::endsWith($name, '.zip') ? config('app.name', 'uv-system').'/'.$name : '';
+    }
+
     public function downloadBackup(string $path): void
     {
+        $path = $this->backupPath($path);
         $disk = Storage::disk('local');
 
-        if ($disk->exists($path)) {
+        if ($path !== '' && $disk->exists($path)) {
             activity()
                 ->causedBy(Auth::user())
                 ->withProperties(['file' => $path])
@@ -146,9 +158,10 @@ class BackupPage extends Page
 
     public function deleteBackup(string $path): void
     {
+        $path = $this->backupPath($path);
         $disk = Storage::disk('local');
 
-        if ($disk->exists($path)) {
+        if ($path !== '' && $disk->exists($path)) {
             $disk->delete($path);
 
             Notification::make()

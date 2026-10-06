@@ -33,6 +33,7 @@ class PlatformPanelProvider extends PanelProvider
             ->colors(['primary' => Color::Indigo])
             ->brandName('Plateforme — Administration des tenants')
             ->discoverResources(in: app_path('Filament/Platform/Resources'), for: 'App\\Filament\\Platform\\Resources')
+            ->discoverPages(in: app_path('Filament/Platform/Pages'), for: 'App\\Filament\\Platform\\Pages')
             ->pages([Pages\Dashboard::class])
             ->middleware([
                 EncryptCookies::class,
