@@ -3,9 +3,13 @@
 namespace Tests\E2E;
 
 use App\Models\Agent;
+use App\Models\Approvisionnement;
+use App\Models\Fournisseur;
 use App\Models\Remboursement;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class AgentFlowTest extends TestCase
@@ -17,16 +21,25 @@ class AgentFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
-        $this->master = User::where('email', 'master@uv-system.com')->first()
-            ?? User::factory()->create(['email' => 'master@uv-system.com']);
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->master = User::factory()->create(['email' => 'master@uv-system.com']);
+        $this->master->assignRole('master');
+
+        // Stock UV disponible : sans approvisionnement, aucune distribution n'est possible.
+        $fournisseur = Fournisseur::factory()->create(['type' => 'AGENT_PREMIUM', 'is_active' => true]);
+        Approvisionnement::create(['user_id' => $this->master->id, 'fournisseur_id' => $fournisseur->id, 'amount' => 50_000_000, 'date_approvisionnement' => now()]);
+    }
+
+    private function login(): void
+    {
+        Sanctum::actingAs($this->master);
     }
 
     /** @test */
     public function complete_agent_lifecycle_flow(): void
     {
         // 1. Master se connecte
-        $this->actingAs($this->master);
+        $this->login();
 
         // 2. Créer un nouvel agent
         $agentData = [
@@ -46,8 +59,7 @@ class AgentFlowTest extends TestCase
         $distributionData = [
             'agent_id' => $agent->id,
             'amount' => 100000,
-            'type' => 'distribution',
-            'transaction_date' => now()->toDateString(),
+            'date_transaction' => now()->toDateString(),
         ];
 
         $response = $this->postJson('/api/transactions', $distributionData);
@@ -61,9 +73,9 @@ class AgentFlowTest extends TestCase
         // 5. Enregistrer un remboursement partiel
         $remboursementData = [
             'agent_id' => $agent->id,
-            'amount' => 50000,
-            'payment_method' => 'cash',
-            'payment_date' => now()->toDateString(),
+            'montant' => 50000,
+            'mode_paiement' => 'cash',
+            'date_remboursement' => now()->toDateString(),
         ];
 
         $response = $this->postJson('/api/remboursements', $remboursementData);
@@ -82,14 +94,14 @@ class AgentFlowTest extends TestCase
         // 8. Vérifier l'historique agent
         $response = $this->getJson("/api/agents/{$agent->id}/transactions");
         $response->assertStatus(200);
-        $response->assertJsonCount(1, 'data');
+        $response->assertJsonCount(1, 'data.data');
 
         // 9. Remboursement total
         $remboursementData2 = [
             'agent_id' => $agent->id,
-            'amount' => 50000,
-            'payment_method' => 'bank_transfer',
-            'payment_date' => now()->toDateString(),
+            'montant' => 50000,
+            'mode_paiement' => 'virement',
+            'date_remboursement' => now()->toDateString(),
         ];
 
         $response = $this->postJson('/api/remboursements', $remboursementData2);
@@ -104,7 +116,7 @@ class AgentFlowTest extends TestCase
     /** @test */
     public function debt_limit_enforcement_flow(): void
     {
-        $this->actingAs($this->master);
+        $this->login();
 
         // Créer agent avec plafond
         $agent = Agent::create([
@@ -119,8 +131,7 @@ class AgentFlowTest extends TestCase
         $response = $this->postJson('/api/transactions', [
             'agent_id' => $agent->id,
             'amount' => 50000,
-            'type' => 'distribution',
-            'transaction_date' => now()->toDateString(),
+            'date_transaction' => now()->toDateString(),
         ]);
         $response->assertStatus(201);
 
@@ -128,8 +139,7 @@ class AgentFlowTest extends TestCase
         $response = $this->postJson('/api/transactions', [
             'agent_id' => $agent->id,
             'amount' => 50000,
-            'type' => 'distribution',
-            'transaction_date' => now()->toDateString(),
+            'date_transaction' => now()->toDateString(),
         ]);
         $response->assertStatus(201);
 
@@ -137,8 +147,7 @@ class AgentFlowTest extends TestCase
         $response = $this->postJson('/api/transactions', [
             'agent_id' => $agent->id,
             'amount' => 10000,
-            'type' => 'distribution',
-            'transaction_date' => now()->toDateString(),
+            'date_transaction' => now()->toDateString(),
         ]);
         // Selon l'implémentation, peut être 422 ou 201 avec warning
         $this->assertTrue(in_array($response->status(), [201, 422]));
@@ -147,7 +156,7 @@ class AgentFlowTest extends TestCase
     /** @test */
     public function multi_agent_distribution_flow(): void
     {
-        $this->actingAs($this->master);
+        $this->login();
 
         // Créer 3 agents
         $agents = [];

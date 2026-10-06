@@ -91,6 +91,8 @@ Données locales testées (copie MariaDB) : `client_categories` 4 lignes (3 dém
 9. `php artisan optimize:clear` ; vérifier que le cron `schedule:run` tourne.
 10. `php artisan up`. Se connecter en master du tenant 1 et contrôler agents / ventes / caisse ; créer un tenant de test dans `/platform` et vérifier qu'il démarre vide.
 
+11. `php artisan tenancy:deploy-check` (lecture seule, aucun effet) : signale `FILESYSTEM_DISK` lisible par URL, `APP_DEBUG` actif en production, fichiers lisibles par URL sous `storage/app/public/{reports,exports,tenants}` et l'état du contrôle préalable. Code retour 1 s'il reste une erreur : à corriger avant de migrer.
+
 L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
 
 ## Limites connues / à faire
@@ -204,6 +206,9 @@ Sans utilisateur, donc sans tenant : l'adresse est cherchée hors contexte **uni
 | `analytics:show kpis` lisait une clé `uv_distribues` inexistante | commande inutilisable | ligne retirée |
 | Webhook Resend : `to` est une liste, la méthode attendait une chaîne | erreur de type sur un vrai rebond | liste ou chaîne acceptées |
 | `Schema::getTables()` (MySQL) liste toutes les bases visibles du serveur | un contrôle préalable aurait vu des tables d'autres bases | borné à la base de la connexion |
+| API `RemboursementController` / `UvTransactionController` / `AgentResource` utilisaient d'anciennes colonnes (`nom`, `plafond_dette`, `mode_paiement`…) | `POST` remboursement en erreur 500, statistiques sur colonnes inexistantes | alignés sur le schéma actuel ; les anciennes clés JSON (`nom`, `telephone`, `plafond_dette`…) restent renvoyées pour l'APK ; `CrossTenantReference` n'est plus avalée par le `catch` générique |
+| Route de webhook du paquet Resend accessible sans authentification | endpoint public non voulu | désactivée (`config/resend.php`) ; test `ApiSecurityTest` |
+| Suite `tests/E2E` obsolète (jeu de données sans rôles, formes de réponse) | tests non exécutés | réécrits et ajoutés à `phpunit.xml` (16 tests) |
 
 `agents.email_valid` (mise à jour par le webhook) n'existait dans aucune migration : créée par `2026_10_08_000000_add_email_valid_to_agents_table` (booléen, `true` par défaut, additive et rejouable ; les adresses existantes restent valides). Tant que la migration n'est pas passée, le webhook ignore la mise à jour des agents au lieu de planter.
 

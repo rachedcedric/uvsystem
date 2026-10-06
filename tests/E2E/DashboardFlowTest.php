@@ -5,7 +5,9 @@ namespace Tests\E2E;
 use App\Models\Agent;
 use App\Models\User;
 use App\Models\UvTransaction;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class DashboardFlowTest extends TestCase
@@ -17,146 +19,89 @@ class DashboardFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
-        $this->master = User::where('email', 'master@uv-system.com')->first()
-            ?? User::factory()->create();
+        $this->seed(RolesAndPermissionsSeeder::class);
+        $this->master = User::factory()->create();
+        $this->master->assignRole('master');
+        Sanctum::actingAs($this->master);
+    }
+
+    private function agent(string $name, array $attributes = []): Agent
+    {
+        return Agent::factory()->create(['name' => $name, 'status' => 'active'] + $attributes);
+    }
+
+    private function sale(Agent $agent, int $amount, $date = null): UvTransaction
+    {
+        return UvTransaction::withoutEvents(fn () => UvTransaction::forceCreate([
+            'agent_id' => $agent->id, 'amount' => $amount, 'transaction_type' => 'distribution', 'status' => 'completed',
+            'reference' => 'E2E-'.uniqid(), 'transaction_date' => $date ?? now(), 'tenant_id' => $agent->tenant_id,
+        ]));
     }
 
     /** @test */
     public function dashboard_displays_correct_statistics(): void
     {
-        $this->actingAs($this->master);
+        $this->sale($this->agent('Agent Stats 1'), 100000);
+        $this->sale($this->agent('Agent Stats 2', ['type' => 'premium']), 200000);
 
-        // Setup: créer données de test
-        $agent1 = Agent::create([
-            'name' => 'Agent Stats 1',
-            'phone' => '0611111111',
-            'type' => 'standard',
-            'status' => 'active',
-        ]);
+        $this->getJson('/api/dashboard/realtime')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['agents', 'today', 'debts']]);
 
-        $agent2 = Agent::create([
-            'name' => 'Agent Stats 2',
-            'phone' => '0622222222',
-            'type' => 'premium',
-            'status' => 'active',
-        ]);
-
-        // Créer transactions
-        UvTransaction::create([
-            'agent_id' => $agent1->id,
-            'amount' => 100000,
-            'type' => 'distribution',
-            'transaction_date' => now(),
-        ]);
-
-        UvTransaction::create([
-            'agent_id' => $agent2->id,
-            'amount' => 200000,
-            'type' => 'distribution',
-            'transaction_date' => now(),
-        ]);
-
-        // Vérifier dashboard
-        $response = $this->getJson('/api/dashboard');
-        $response->assertStatus(200);
-        $response->assertJsonStructure([
-            'data' => [
-                'total_uv',
-                'total_amount',
-                'total_agents',
-                'total_debt',
-            ],
-        ]);
+        $this->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['agents', 'today', 'month', 'debts']]);
     }
 
     /** @test */
     public function charts_endpoint_returns_valid_data(): void
     {
-        $this->actingAs($this->master);
-
-        $response = $this->getJson('/api/dashboard/charts');
-        $response->assertStatus(200);
-        $response->assertJsonStructure([
-            'data' => [
-                'daily',
-                'monthly',
-            ],
-        ]);
+        $this->getJson('/api/dashboard/charts')->assertOk()->assertJsonStructure(['data']);
     }
 
     /** @test */
     public function top_agents_endpoint_works(): void
     {
-        $this->actingAs($this->master);
-
-        // Créer agents avec transactions
-        for ($i = 1; $i <= 5; $i++) {
-            $agent = Agent::create([
-                'name' => "Top Agent $i",
-                'phone' => "061111111$i",
-                'type' => 'standard',
-                'status' => 'active',
-            ]);
-
-            UvTransaction::create([
-                'agent_id' => $agent->id,
-                'amount' => $i * 10000,
-                'type' => 'distribution',
-                'transaction_date' => now(),
-            ]);
+        foreach (range(1, 5) as $i) {
+            $this->sale($this->agent("Top Agent {$i}"), $i * 10000);
         }
 
-        $response = $this->getJson('/api/dashboard/top-agents');
-        $response->assertStatus(200);
+        $this->getJson('/api/dashboard/top-agents')->assertOk();
     }
 
     /** @test */
     public function alerts_endpoint_shows_overdue_debts(): void
     {
-        $this->actingAs($this->master);
+        $agent = $this->agent('Agent Alerte', ['debt_limit' => 50000, 'current_debt' => 100000]);
+        $this->sale($agent, 100000, now()->subDays(30));
 
-        // Créer agent avec dette élevée
-        $agent = Agent::create([
-            'name' => 'Agent Alerte',
-            'phone' => '0699999999',
-            'type' => 'standard',
-            'debt_limit' => 50000,
-            'status' => 'active',
-        ]);
-
-        // Créer transaction qui dépasse le plafond
-        UvTransaction::create([
-            'agent_id' => $agent->id,
-            'amount' => 100000,
-            'type' => 'distribution',
-            'transaction_date' => now()->subDays(30),
-        ]);
-
-        $response = $this->getJson('/api/dashboard/alerts');
-        $response->assertStatus(200);
+        $this->getJson('/api/dashboard/alerts')->assertOk();
     }
 
     /** @test */
     public function realtime_stats_endpoint(): void
     {
-        $this->actingAs($this->master);
-
-        $response = $this->getJson('/api/dashboard/realtime');
-        $response->assertStatus(200);
+        $this->getJson('/api/dashboard/realtime')->assertOk();
     }
 
     /** @test */
     public function transaction_stats_by_period(): void
     {
-        $this->actingAs($this->master);
+        $this->getJson('/api/transactions/stats/daily')->assertOk();
+        $this->getJson('/api/transactions/stats/monthly')->assertOk();
+    }
 
-        // Stats journalières
-        $response = $this->getJson('/api/transactions/stats?period=daily');
-        $response->assertStatus(200);
+    /** @test */
+    public function a_user_without_the_dashboard_permission_is_refused(): void
+    {
+        // Sanctum::actingAs a basculé le guard par défaut sur « sanctum » : les rôles Spatie sont du guard « web ».
+        $this->app['auth']->shouldUse('web');
+        $roleless = User::factory()->create();
+        $roleless->assignRole('commercial');
+        \Spatie\Permission\Models\Role::findByName('commercial')->revokePermissionTo('view_dashboard');
+        $this->app['auth']->forgetGuards();
+        Sanctum::actingAs($roleless->fresh());
 
-        // Stats mensuelles
-        $response = $this->getJson('/api/transactions/stats?period=monthly');
-        $response->assertStatus(200);
+        $this->getJson('/api/dashboard')->assertForbidden();
     }
 }

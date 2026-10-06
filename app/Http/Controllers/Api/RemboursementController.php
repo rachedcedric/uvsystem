@@ -10,11 +10,13 @@ use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class RemboursementController extends Controller
 {
+    /** Modes de paiement acceptés par l'API → codes des moyens de paiement de l'application. */
+    private const PAYMENT_METHODS = ['cash' => 'cash', 'virement' => 'bank_transfer', 'cheque' => 'cheque', 'mobile_money' => 'mobile_money'];
+
     use AuthorizesRequests;
 
     public function __construct(
@@ -143,17 +145,15 @@ class RemboursementController extends Controller
         }
 
         try {
-            $remboursement = DB::transaction(function () use ($validated) {
-                return Remboursement::create([
-                    'agent_id' => $validated['agent_id'],
-                    'montant' => $validated['montant'],
-                    'mode_paiement' => $validated['mode_paiement'],
-                    'reference_paiement' => $validated['reference_paiement'] ?? null,
-                    'date_remboursement' => $validated['date_remboursement'] ?? now(),
-                    'status' => 'completed',
-                    'notes' => $validated['notes'] ?? null,
-                ]);
-            });
+            // Même chemin que l'application mobile : le service valide, enregistre et recalcule dette et soldes.
+            $remboursement = $this->remboursementService->process(
+                $agent,
+                (float) $validated['montant'],
+                self::PAYMENT_METHODS[$validated['mode_paiement']],
+                $validated['date_remboursement'] ?? null,
+                $validated['notes'] ?? null,
+                $validated['reference_paiement'] ?? null,
+            );
 
             $remboursement->load('agent');
 
@@ -167,6 +167,8 @@ class RemboursementController extends Controller
                 ],
             ], 201);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e; // règle métier refusée : 422, pas une erreur serveur
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -215,29 +217,29 @@ class RemboursementController extends Controller
         $from = $request->get('from', now()->startOfMonth()->toDateString());
         $to = $request->get('to', now()->toDateString());
 
-        $stats = Remboursement::whereBetween('date_remboursement', [$from, $to])
+        $stats = Remboursement::whereBetween('payment_date', [$from, $to.' 23:59:59'])
             ->where('status', 'completed')
             ->selectRaw('
                 COUNT(*) as total_remboursements,
-                SUM(montant) as total_montant,
-                AVG(montant) as moyenne_montant,
+                SUM(amount) as total_montant,
+                AVG(amount) as moyenne_montant,
                 COUNT(DISTINCT agent_id) as agents_ayant_rembourse
             ')
             ->first();
 
-        $byPaymentMode = Remboursement::whereBetween('date_remboursement', [$from, $to])
+        $byPaymentMode = Remboursement::whereBetween('payment_date', [$from, $to.' 23:59:59'])
             ->where('status', 'completed')
-            ->selectRaw('mode_paiement, COUNT(*) as count, SUM(montant) as total')
-            ->groupBy('mode_paiement')
+            ->selectRaw('payment_method as mode_paiement, COUNT(*) as count, SUM(amount) as total')
+            ->groupBy('payment_method')
             ->get();
 
-        $topPayers = Remboursement::whereBetween('date_remboursement', [$from, $to])
+        $topPayers = Remboursement::whereBetween('payment_date', [$from, $to.' 23:59:59'])
             ->where('status', 'completed')
-            ->selectRaw('agent_id, SUM(montant) as total')
+            ->selectRaw('agent_id, SUM(amount) as total')
             ->groupBy('agent_id')
             ->orderByDesc('total')
             ->limit(5)
-            ->with('agent:id,nom,prenom')
+            ->with('agent:id,name')
             ->get();
 
         return response()->json([

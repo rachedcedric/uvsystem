@@ -57,7 +57,7 @@ class ExportExcelTest extends TestCase
         echo "   - Montant: {$mapped[4]} FCFA\n";
 
         $this->assertEquals('Banque Test Export', $mapped[2]);
-        $this->assertEquals('1,000.00', $mapped[4]);
+        $this->assertEquals('50 000', $mapped[4]);   // number_format(50000, 0, ',', ' ') : format de l'application
 
         echo "✅ Export Excel validé avec succès!\n";
     }

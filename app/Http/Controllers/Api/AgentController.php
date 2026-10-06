@@ -173,7 +173,7 @@ class AgentController extends Controller
                     'total_rembourse' => $agent->solde?->total_rembourse ?? 0,
                     'solde_restant' => $agent->solde?->solde_restant ?? 0,
                     'current_debt' => $agent->current_debt,
-                    'plafond_dette' => $agent->plafond_dette,
+                    'plafond_dette' => $agent->debt_limit,
                     'debt_ratio' => $agent->debt_ratio,
                     'available_credit' => $agent->available_credit,
                 ],

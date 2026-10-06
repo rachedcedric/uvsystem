@@ -145,7 +145,7 @@ class UvTransactionController extends Controller
                 'message' => $validation['message'],
                 'data' => [
                     'current_debt' => $agent->current_debt,
-                    'plafond_dette' => $agent->plafond_dette,
+                    'plafond_dette' => $agent->debt_limit,
                     'montant_demande' => $montantTotal,
                     'available_credit' => $agent->available_credit,
                 ],
@@ -224,7 +224,7 @@ class UvTransactionController extends Controller
 
         $date = $request->get('date', now()->toDateString());
 
-        $stats = UvTransaction::whereDate('date_transaction', $date)
+        $stats = UvTransaction::whereDate('transaction_date', $date)
             ->selectRaw('
                 COUNT(*) as total_transactions,
                 SUM(amount) as total_montant,
@@ -232,7 +232,7 @@ class UvTransactionController extends Controller
             ')
             ->first();
 
-        $topAgents = UvTransaction::whereDate('date_transaction', $date)
+        $topAgents = UvTransaction::whereDate('transaction_date', $date)
             ->selectRaw('agent_id, SUM(amount) as total')
             ->groupBy('agent_id')
             ->orderByDesc('total')
@@ -260,8 +260,8 @@ class UvTransactionController extends Controller
         $year = $request->get('year', now()->year);
         $month = $request->get('month', now()->month);
 
-        $stats = UvTransaction::whereYear('date_transaction', $year)
-            ->whereMonth('date_transaction', $month)
+        $stats = UvTransaction::whereYear('transaction_date', $year)
+            ->whereMonth('transaction_date', $month)
             ->selectRaw('
                 COUNT(*) as total_transactions,
                 SUM(amount) as total_montant,
@@ -270,9 +270,9 @@ class UvTransactionController extends Controller
             ')
             ->first();
 
-        $dailyBreakdown = UvTransaction::whereYear('date_transaction', $year)
-            ->whereMonth('date_transaction', $month)
-            ->selectRaw('DATE(date_transaction) as date, SUM(amount) as total, COUNT(*) as count')
+        $dailyBreakdown = UvTransaction::whereYear('transaction_date', $year)
+            ->whereMonth('transaction_date', $month)
+            ->selectRaw('DATE(transaction_date) as date, SUM(amount) as total, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->get();

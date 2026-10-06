@@ -219,4 +219,12 @@ class ApiSecurityTest extends TestCase
         $this->getJson('/api/fournisseurs?search=0102030405&type=bank')->assertOk()->assertJsonPath('total', 1);
         $this->postJson('/api/fournisseurs', ['name' => 'X', 'type' => 'other'])->assertStatus(422);
     }
+
+    public function test_the_unauthenticated_package_webhook_route_is_unreachable(): void
+    {
+        $this->postJson('/resend/webhook', ['type' => 'email.bounced', 'data' => ['to' => ['a@example.com']]])->assertNotFound();
+
+        // la route de l'application, elle, existe et refuse une requête non signée
+        $this->postJson('/api/webhooks/resend', ['type' => 'email.bounced'])->assertStatus(401);
+    }
 }

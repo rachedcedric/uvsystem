@@ -256,9 +256,8 @@ class FilamentNotificationService
      */
     public static function broadcastToAdmins(string $title, string $message, string $type = 'info'): void
     {
-        $admins = User::where('role', 'admin')
-            ->orWhere('role', 'master')
-            ->get();
+        // Rôles Spatie (la colonne users.role n'existe pas) ; limité au tenant courant par le scope de User.
+        $admins = User::role(['master', 'admin'])->get();
 
         foreach ($admins as $admin) {
             self::system($title, $message, $type, $admin);
