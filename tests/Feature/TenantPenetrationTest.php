@@ -374,4 +374,23 @@ class TenantPenetrationTest extends TestCase
         $this->get("/m/g/utilisateurs/{$this->victim->id}/modifier")->assertNotFound();
         $this->assertTrue(User::withoutGlobalScopes()->whereKey($this->victim->id)->exists());
     }
+
+    // ---- 6. tenant suspendu avec une session déjà ouverte ---------------------------------------------------------
+
+    public function test_a_suspended_tenants_open_session_cannot_download_receipts_exports_or_files(): void
+    {
+        $remboursement = $this->victimIds[Remboursement::class];
+        $charge = $this->victimIds[Charge::class];
+        $victim = $this->victim->fresh();
+
+        $this->actingAs($victim)->get("/remboursement/{$remboursement}/receipt")->assertOk();
+
+        // La suspension survient alors que la session existe encore : elle ne doit plus rien ouvrir.
+        $this->b->suspend();
+        $victim = $victim->fresh();
+
+        foreach (["/remboursement/{$remboursement}/receipt", "/remboursement/{$remboursement}/receipt/download", "/charges/justificatif/{$charge}/download", '/exports/download/x.xlsx', '/exports/mes-donnees', '/m'] as $url) {
+            $this->actingAs($victim)->get($url)->assertForbidden();
+        }
+    }
 }

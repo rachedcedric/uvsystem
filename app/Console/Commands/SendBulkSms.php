@@ -2,13 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsForOneTenant;
 use App\Models\Agent;
 use App\Services\SmsService;
 use Illuminate\Console\Command;
 
 class SendBulkSms extends Command
 {
-    protected $signature = 'uv:send-sms 
+    use RunsForOneTenant;
+
+    protected $signature = 'uv:send-sms {--tenant= : Identifiant du tenant (obligatoire)} 
                             {--type=all : Filter by agent type (all, standard, premium, vip)}
                             {--status=active : Filter by agent status (all, active, inactive)}
                             {--min-debt=0 : Minimum debt amount}

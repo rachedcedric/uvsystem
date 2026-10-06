@@ -28,6 +28,13 @@ return new class extends Migration
         'sous_distributeur_transactions', 'sous_distributeurs', 'uv_transactions', 'ventes_uv',
     ];
 
+    /**
+     * Tables d'un ancien module « clients » présentes dans certaines bases (migrations déjà jouées mais
+     * fichiers absents du dépôt, aucun modèle ni code ne les utilise). Si elles existent, leurs lignes
+     * sont rattachées au tenant n°1 comme le reste : aucune donnée n'est laissée sans propriétaire.
+     */
+    public const OPTIONAL_TENANT_TABLES = ['client_categories', 'clients', 'client_soldes', 'client_transactions'];
+
     /** Tables où tenant_id reste nullable (super admin de plateforme, logs de plateforme). */
     public const NULLABLE_TENANT_TABLES = ['users', 'activity_log'];
 
@@ -68,7 +75,7 @@ return new class extends Migration
             'updated_at' => now(),
         ]);
 
-        foreach ([...self::TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES] as $name) {
+        foreach ([...self::TENANT_TABLES, ...self::OPTIONAL_TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES] as $name) {
             if (! Schema::hasTable($name)) {
                 continue;
             }
@@ -96,7 +103,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $tables = array_filter([...self::TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES], fn ($name) => Schema::hasTable($name) && Schema::hasColumn($name, 'tenant_id'));
+        $tables = array_filter([...self::TENANT_TABLES, ...self::OPTIONAL_TENANT_TABLES, ...self::NULLABLE_TENANT_TABLES], fn ($name) => Schema::hasTable($name) && Schema::hasColumn($name, 'tenant_id'));
 
         // MySQL/MariaDB : un index composite (tenant_id, …) sert d'appui à la clé étrangère, il ne peut
         // pas être supprimé tant que la clé existe (erreur 1553) → clés d'abord, puis index, puis colonne.

@@ -2,13 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsForOneTenant;
 use App\Models\Agent;
 use App\Services\SmsService;
 use Illuminate\Console\Command;
 
 class TestSmsCommand extends Command
 {
-    protected $signature = 'sms:test
+    use RunsForOneTenant;
+
+    protected $signature = 'sms:test {--tenant= : Identifiant du tenant (obligatoire)} 
                             {phone? : Numéro de téléphone}
                             {--type=simple : Type de SMS (simple, debt, reminder, transaction, remboursement)}
                             {--agent= : ID de l\'agent (pour tests avec données réelles)}';

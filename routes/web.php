@@ -52,7 +52,7 @@ Route::middleware(['web', 'auth', '2fa', 'staff', 'throttle:3,10'])->get('/expor
     ->name('exports.tenant-data');
 
 // Export Download Route (protected)
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'staff'])->group(function () {
     Route::get('/exports/download/{filename}', [ExportDownloadController::class, 'download'])
         ->name('exports.download')
         ->where('filename', '.*\.xlsx');
@@ -66,13 +66,13 @@ Route::middleware(['web', 'auth'])->group(function () {
 });
 
 // Charge Justificatif Download Route (protected)
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'staff'])->group(function () {
     Route::get('/charges/justificatif/{charge}/download', [ChargeJustificatifController::class, 'download'])
         ->name('charges.justificatif.download');
 });
 
 // Remboursement Receipt Route (protected)
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'staff'])->group(function () {
     Route::get('/remboursement/{remboursement}/receipt', [RemboursementReceiptController::class, 'show'])
         ->name('remboursement.receipt');
     Route::get('/remboursement/{remboursement}/receipt/download', [RemboursementReceiptController::class, 'download'])

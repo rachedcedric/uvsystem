@@ -125,3 +125,23 @@ Parcours réalisé avec l'APK de débogage branché sur un serveur local (copie 
 Corrigé suite à ce test : la page d'activation 2FA n'avait pas de lien de retour (seulement « Se déconnecter »).
 
 Non vérifié : clavier virtuel docké (l'émulateur affichait un clavier flottant « matériel »), caméra, notification push reçue, APK de production signé, appareil physique.
+
+## Contrôle de complétude du multi-tenant (vérifié par script et par tests)
+
+| Contrôle | Résultat |
+|---|---|
+| Tables / modèles | 27 tables portent `tenant_id` ; les 26 modèles métier utilisent `BelongsToTenant`. Sans `tenant_id` : tables système uniquement (`cache`, `jobs`, `failed_jobs`, `migrations`, `roles`/`permissions`, `sessions`, `notifications` et `personal_access_tokens`, liés à l'utilisateur, `password_reset_tokens`, `tenants`) |
+| Contournements du scope | Aucun `withoutGlobalScopes()` hors suppression logique ; tous les `DB::table()` métier passent par `TenantContext::table()` ; jointures bornées par une table déjà scopée ; aucune requête SQL brute nommant une table métier |
+| Routes | 222 routes passées en revue : les routes sans authentification sont uniquement connexion, mot de passe oublié, santé, webhooks, page de connexion ; les téléchargements (reçus, exports, justificatifs) exigent rôle métier + tenant actif |
+| Commandes | Planifiées : exécutées une fois par tenant actif ; manuelles qui envoient ou créent (`uv:send-sms`, `sms:test`, `notifications:test`) : `--tenant=ID` obligatoire |
+| Calculs métier | Soldes UV, caisse, commission quotidienne du cron, analyses (et leur cache), destinataires de rappels, références : indépendants par tenant (`TenantBusinessIsolationTest`, vérifié par mutation) |
+| Fuite d'infrastructure | Le diagnostic de notifications n'affiche plus le volume de la file d'attente partagée ni l'expéditeur SMS/e-mail |
+| Données héritées | Si la base contient l'ancien module `clients*` (4 tables, sans modèle ni code dans le dépôt), la migration les rattache aussi au tenant n°1 (testé sur MariaDB avec 4 clients / 9 transactions) |
+
+### Ce qui n'est PAS multi-tenant (limites assumées)
+- **Infrastructure partagée** : un seul expéditeur SMS (Twilio), un seul e-mail d'envoi, un seul projet Firebase pour toutes les sociétés.
+- **Réglages globaux** : fuseau, heure de clôture 18h02, seuils et textes de `config/*` sont identiques pour tous les tenants ; seuls les paliers de commission, moyens de paiement et catégories sont propres à chaque tenant.
+- **Isolation applicative** : une seule base ; la garantie vient du scope Eloquent, du `NOT NULL` et des tests, pas d'une isolation matérielle (pas de row-level security, pas de contraintes composites `(tenant_id, parent_id)`).
+- **Sauvegarde / restauration** : sauvegardes de toute la plateforme par le super admin ; export par tenant possible, mais pas de restauration par tenant.
+- **E-mail unique à la plateforme** (identifiant de connexion) : une même adresse ne peut pas appartenir à deux tenants.
+- **Absent** : facturation, quotas par offre (le champ `plan` est informatif), inscription libre de nouveaux tenants, usurpation d'identité super admin → tenant.

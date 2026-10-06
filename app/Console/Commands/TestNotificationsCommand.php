@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsForOneTenant;
 use App\Models\Agent;
 use App\Models\User;
 use App\Notifications\DebtAlertNotification;
@@ -11,7 +12,9 @@ use Illuminate\Support\Facades\Notification;
 
 class TestNotificationsCommand extends Command
 {
-    protected $signature = 'notifications:test
+    use RunsForOneTenant;
+
+    protected $signature = 'notifications:test {--tenant= : Identifiant du tenant (obligatoire)} 
                             {type=debt : Type de notification (debt, payment, all)}
                             {--email= : Email du destinataire}';
 

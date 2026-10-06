@@ -95,15 +95,15 @@ class NotificationDiagnostics
 
         if ($pending > 0 && $age >= 3) {
             return $this->check('queue', 'File d\'attente', 'error',
-                "{$pending} tâche(s) en attente depuis {$age} min : aucun « worker » ne les traite. Les e-mails et alertes push de dette restent bloqués.",
+                "Des tâches attendent depuis plus de {$age} min : aucun « worker » ne les traite. Les e-mails et alertes push de dette restent bloqués. Contactez l'administrateur de la plateforme.",
                 'Le planificateur lance désormais le worker chaque minute (cron schedule:run requis). Sinon, mettez QUEUE_CONNECTION=sync dans le .env du serveur.');
         }
 
         if ($failed > 0) {
-            return $this->check('queue', 'File d\'attente', 'warn', "{$failed} tâche(s) en échec (e-mail ou push refusé).", 'Consultez storage/logs/laravel.log ; relancez avec : php artisan queue:retry all');
+            return $this->check('queue', 'File d\'attente', 'warn', 'Des tâches ont échoué (e-mail ou push refusé). Contactez l\'administrateur de la plateforme.', 'Les détails techniques sont réservés à l\'administrateur de la plateforme.');
         }
 
-        return $this->check('queue', 'File d\'attente', 'ok', $pending > 0 ? "{$pending} tâche(s) en cours de traitement." : 'Vide — rien en attente, aucun échec.');
+        return $this->check('queue', 'File d\'attente', 'ok', $pending > 0 ? 'Des tâches sont en cours de traitement.' : 'Vide — rien en attente, aucun échec.');
     }
 
     private function reminders(): array
@@ -139,7 +139,7 @@ class NotificationDiagnostics
             return $this->check('mail', 'E-mail', 'warn', "Mode « {$mailer} » : les e-mails sont écrits dans les journaux, pas envoyés.", 'Choisissez MAIL_MAILER=resend (ou smtp) en production.');
         }
 
-        return $this->check('mail', 'E-mail', 'ok', "Service « {$mailer} » configuré, expéditeur {$from}.", 'Utilisez le bouton « Envoyer un e-mail de test » pour confirmer la livraison (le domaine doit être validé chez le fournisseur).');
+        return $this->check('mail', 'E-mail', 'ok', "Service « {$mailer} » configuré.", 'Utilisez le bouton « Envoyer un e-mail de test » pour confirmer la livraison (le domaine doit être validé chez le fournisseur).');
     }
 
     private function sms(): array
@@ -152,7 +152,7 @@ class NotificationDiagnostics
             ->filter(fn ($v) => blank($v))->keys();
 
         return $missing->isEmpty()
-            ? $this->check('sms', 'SMS', 'ok', 'Twilio configuré : expéditeur '.config('services.twilio.from').'.')
+            ? $this->check('sms', 'SMS', 'ok', 'Twilio configuré.')
             : $this->check('sms', 'SMS', 'error', 'SMS activés mais '.$missing->implode(', ').' manquant(s) : aucun SMS ne part.', 'Renseignez ces variables dans le .env du serveur (numéro Twilio avec indicatif, ex. +1…).');
     }
 
