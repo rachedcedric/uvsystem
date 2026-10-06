@@ -96,6 +96,10 @@ class Form extends Component
 
         try {
             $saved = $r::save($clean, $record);
+        } catch (\App\Exceptions\SubscriptionException $e) {
+            $this->addError('form', collect($e->errors())->flatten()->implode(' '));
+
+            return null;
         } catch (ValidationException $e) {
             $errors = [];
             foreach ($e->errors() as $key => $messages) {

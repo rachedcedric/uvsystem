@@ -7,6 +7,14 @@ use App\Http\Controllers\RemboursementReceiptController;
 use App\Http\Controllers\TwoFactorChallengeController;
 use Illuminate\Support\Facades\Route;
 
+// Offres et souscription publiques (aucune authentification requise ; la création est limitée en débit).
+Route::middleware('web')->group(function () {
+    Route::get('/offres', \App\Http\Controllers\Public\PricingController::class)->name('offres');
+    Route::get('/souscrire', [\App\Http\Controllers\Public\SubscribeController::class, 'show'])->name('souscrire');
+    Route::post('/souscrire', [\App\Http\Controllers\Public\SubscribeController::class, 'store'])
+        ->middleware('throttle:5,60')->name('souscrire.store');
+});
+
 Route::get('/', function () {
     return view('welcome');
 });

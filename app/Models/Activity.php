@@ -13,6 +13,12 @@ class Activity extends SpatieActivity
 {
     use BelongsToTenant;
 
+    /** Écriture permise même en accès restreint : voir BelongsToTenant::tenantWritesAlwaysAllowed(). */
+    protected static function tenantWritesAlwaysAllowed(): bool
+    {
+        return true;
+    }
+
     protected static function tenantIdRequired(): bool
     {
         return false;

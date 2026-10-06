@@ -102,6 +102,15 @@ Schedule::command('commissions:rattraper')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/commissions-rattrapage.log'));
 
+// Abonnements : expiration des essais/abonnements échus et avertissements J-7/J-3/J-1.
+// Idempotent (peut être relancé sans doublon) ; s'exécute dans le même planificateur que le reste.
+Schedule::command('subscriptions:process')
+    ->dailyAt('01:00')
+    ->timezone(config('app.timezone'))
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/subscriptions.log'));
+
 // Processus de recouvrement automatisé - 2x par jour (9h et 15h)
 Schedule::command('recovery:process')
     ->twiceDaily(9, 15)

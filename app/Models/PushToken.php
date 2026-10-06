@@ -10,6 +10,12 @@ class PushToken extends Model
 {
     use BelongsToTenant;
 
+    /** Écriture permise même en accès restreint : voir BelongsToTenant::tenantWritesAlwaysAllowed(). */
+    protected static function tenantWritesAlwaysAllowed(): bool
+    {
+        return true;
+    }
+
     protected $fillable = [
         'user_id',
         'token',

@@ -18,6 +18,7 @@ use App\Livewire\Mobile\More;
 use App\Livewire\Mobile\Notifications;
 use App\Livewire\Mobile\Remboursements;
 use App\Livewire\Mobile\RemboursementsFournisseurs;
+use App\Livewire\Mobile\Subscription\Show as SubscriptionShow;
 use App\Livewire\Mobile\Ventes;
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +62,8 @@ Route::prefix('m')->name('m.')->group(function () {
         Route::get('sauvegardes/telecharger', [ExportController::class, 'sauvegarde'])->name('sauvegardes.telecharger');
         Route::get('import', Admin\Import::class)->name('import');
         Route::get('securite', Admin\TwoFactor::class)->name('securite');
+        // Abonnement du tenant courant (master/admin) : reste accessible quand l'abonnement est expiré.
+        Route::get('abonnement', SubscriptionShow::class)->name('abonnement');
         Route::get('diagnostic-notifications', Admin\NotificationsDiagnostic::class)->name('diagnostic-notifications');
         Route::get('exports/caisse/historique', [ExportController::class, 'caisseHistorique'])->name('exports.caisse-historique');
         Route::get('exports/caisse/{date}', [ExportController::class, 'caisseJour'])->name('exports.caisse-jour')->where('date', '\d{4}-\d{2}-\d{2}');

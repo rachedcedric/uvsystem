@@ -72,6 +72,7 @@ class Nav
             ['label' => 'Import de données', 'route' => 'm.import', 'icon' => 'arrow-up-tray', 'can' => null, 'roles' => ['master', 'admin']],
             ['label' => 'Sauvegardes', 'route' => 'm.sauvegardes', 'icon' => 'cloud-arrow-up', 'can' => null, 'roles' => ['super_admin']],
             ['label' => 'Diagnostic des notifications', 'route' => 'm.diagnostic-notifications', 'icon' => 'bell-alert', 'can' => null, 'roles' => ['master', 'admin']],
+            ['label' => 'Mon abonnement', 'route' => 'm.abonnement', 'icon' => 'credit-card', 'can' => null, 'roles' => ['master', 'admin']],
             ['label' => 'Sécurité du compte', 'route' => 'm.securite', 'icon' => 'shield-check', 'can' => null],
             ['label' => 'Notifications', 'route' => 'm.notifications', 'icon' => 'bell', 'can' => null],
         ];

@@ -10,6 +10,12 @@ class SousDistributeurSolde extends Model
 {
     use BelongsToTenant;
 
+    /** Écriture permise même en accès restreint : voir BelongsToTenant::tenantWritesAlwaysAllowed(). */
+    protected static function tenantWritesAlwaysAllowed(): bool
+    {
+        return true;
+    }
+
     protected $table = 'sous_distributeur_soldes';
 
     protected $fillable = [

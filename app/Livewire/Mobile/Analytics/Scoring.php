@@ -26,6 +26,7 @@ class Scoring extends Component
     public function mount(): void
     {
         abort_unless(auth()->user()->can('view_statistics') || auth()->user()->can('view_agents'), 403);
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
     }
 
     private static function band(string $grade): string

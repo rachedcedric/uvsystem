@@ -42,6 +42,7 @@ class ImportPage extends Page implements HasForms
 
     public function mount(): void
     {
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
         $this->form->fill();
     }
 
@@ -125,6 +126,7 @@ class ImportPage extends Page implements HasForms
 
     public function import(): void
     {
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
         $data = $this->form->getState();
 
         if (empty($data['file']) || empty($data['import_type'])) {

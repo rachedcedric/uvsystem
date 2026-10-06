@@ -3,6 +3,7 @@
 namespace App\Tenancy;
 
 use App\Models\Tenant;
+use App\Services\Subscriptions\SubscriptionAccessPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Scope;
@@ -32,6 +33,10 @@ trait BelongsToTenant
     public static function bootBelongsToTenant(): void
     {
         static::addGlobalScope(static::tenantScope());
+
+        // Suppression (physique ou logique) : même refus d'écriture qu'à l'insertion/modification quand
+        // l'abonnement du tenant est expiré. (Les modèles exemptés : voir tenantWritesAlwaysAllowed().)
+        static::deleting(fn ($model) => $model->assertSubscriptionAllowsWrite());
     }
 
     protected static function tenantScope(): Scope
@@ -44,6 +49,29 @@ trait BelongsToTenant
     {
         return true;
     }
+
+    /**
+     * Modèles dont l'écriture reste permise même quand l'abonnement est expiré : comptes (2FA, mot de passe,
+     * déconnexion), journal, jetons push, soldes dérivés recalculés par le système, abonnement lui-même.
+     * Tout le reste (données métier) est refusé en accès restreint.
+     */
+    protected static function tenantWritesAlwaysAllowed(): bool
+    {
+        return false;
+    }
+
+    protected function assertSubscriptionAllowsWrite(): void
+    {
+        if (! static::tenantWritesAlwaysAllowed()) {
+            SubscriptionAccessPolicy::assertWritable($this);
+        }
+    }
+
+    /** Limites d'abonnement à la création (User, Agent) : surchargé par les modèles concernés. */
+    protected function enforceEntitlementsOnInsert(): void {}
+
+    /** Limites d'abonnement à la modification (ex. restauration d'un agent) : surchargé par les modèles concernés. */
+    protected function enforceEntitlementsOnUpdate(): void {}
 
     protected function performInsert(Builder $query)
     {
@@ -60,6 +88,8 @@ trait BelongsToTenant
         }
 
         $this->assertParentsBelongToTenant(onlyDirty: false);
+        $this->assertSubscriptionAllowsWrite();
+        $this->enforceEntitlementsOnInsert();
 
         return parent::performInsert($query);
     }
@@ -71,6 +101,8 @@ trait BelongsToTenant
         }
 
         $this->assertParentsBelongToTenant(onlyDirty: true);
+        $this->assertSubscriptionAllowsWrite();
+        $this->enforceEntitlementsOnUpdate();
 
         return parent::performUpdate($query);
     }

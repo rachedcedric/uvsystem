@@ -4,12 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 /**
  * Une société cliente de la plateforme. Volontairement NON scopée : seul le super admin
  * de plateforme la manipule (voir PlatformPanelProvider) ; l'utilisateur d'un tenant n'accède
  * qu'à son propre tenant via User::tenant().
+ *
+ * OBSOLÈTE : `plan` et `trial_ends_at` sont des champs HÉRITÉS, conservés pour la compatibilité et le retour
+ * arrière. La source de vérité est TenantSubscription (offre, essai, période, statut) ; SubscriptionManager
+ * les recopie en miroir à chaque changement et personne ne doit plus les lire pour une décision.
+ * Leur suppression fera l'objet d'une migration distincte, après validation complète.
  */
 class Tenant extends Model
 {
@@ -67,10 +73,26 @@ class Tenant extends Model
         return $this->hasMany(User::class);
     }
 
+    /**
+     * Le tenant n'est-il pas suspendu par la plateforme ? L'expiration d'un essai ou d'un abonnement ne coupe
+     * plus l'accès (récupération des données, exports, réactivation) : elle restreint les écritures,
+     * voir SubscriptionAccessPolicy.
+     */
     public function isActive(): bool
     {
-        return $this->status === self::STATUS_ACTIVE
-            && ($this->trial_ends_at === null || $this->trial_ends_at->isFuture());
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    /** Toutes les lignes d'abonnement du tenant, historique compris (récentes d'abord). */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(TenantSubscription::class)->latest('id');
+    }
+
+    /** L'abonnement courant (une seule ligne par tenant, garanti par current_marker unique). */
+    public function currentSubscription(): HasOne
+    {
+        return $this->hasOne(TenantSubscription::class)->whereNotNull('current_marker');
     }
 
     public function suspend(): void

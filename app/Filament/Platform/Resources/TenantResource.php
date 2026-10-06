@@ -2,10 +2,13 @@
 
 namespace App\Filament\Platform\Resources;
 
+use App\Enums\SubscriptionCycle;
 use App\Filament\Platform\Resources\TenantResource\Pages;
 use App\Filament\Platform\Resources\TenantResource\RelationManagers\UsersRelationManager;
 use App\Models\Agent;
+use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -53,9 +56,19 @@ class TenantResource extends Resource
                     Tenant::STATUS_ACTIVE => 'Actif',
                     Tenant::STATUS_SUSPENDED => 'Suspendu',
                 ])->default(Tenant::STATUS_ACTIVE)->required(),
-                Forms\Components\TextInput::make('plan')->label('Offre')->maxLength(50),
-                Forms\Components\DateTimePicker::make('trial_ends_at')->label('Fin de période d\'essai'),
             ])->columns(2),
+            Forms\Components\Section::make('Offre')
+                ->description('L\'abonnement se gère ensuite dans « Abonnements » (changement d\'offre, essai, suspension…).')
+                ->schema([
+                    Forms\Components\Select::make('subscription_plan_id')->label('Offre')
+                        ->options(fn () => SubscriptionPlan::active()->ordered()->pluck('name', 'id'))
+                        ->default(fn () => SubscriptionPlan::active()->ordered()->value('id'))->required(),
+                    Forms\Components\Select::make('subscription_cycle')->label('Cycle')
+                        ->options(SubscriptionCycle::options())->default('monthly')->required(),
+                    Forms\Components\Select::make('subscription_mode')->label('Démarrage')
+                        ->options(['trial' => 'Période d\'essai', 'active' => 'Abonnement actif (sans paiement)'])->default('trial')->required(),
+                ])->columns(3)
+                ->visible(fn (?Tenant $record) => $record === null),
             Forms\Components\Section::make('Contact')->schema([
                 Forms\Components\TextInput::make('contact_name')->label('Nom du contact')->maxLength(255),
                 Forms\Components\TextInput::make('contact_email')->label('E-mail')->email()->maxLength(255),
@@ -83,7 +96,8 @@ class TenantResource extends Resource
                 Tables\Columns\TextColumn::make('status')->label('Statut')->badge()
                     ->color(fn (string $state) => $state === Tenant::STATUS_ACTIVE ? 'success' : 'danger')
                     ->formatStateUsing(fn (string $state) => $state === Tenant::STATUS_ACTIVE ? 'Actif' : 'Suspendu'),
-                Tables\Columns\TextColumn::make('plan')->label('Offre')->placeholder('—'),
+                Tables\Columns\TextColumn::make('subscription')->label('Offre')
+                    ->state(fn (Tenant $record) => app(SubscriptionManager::class)->current($record)?->plan?->name)->placeholder('—'),
                 Tables\Columns\TextColumn::make('users_count')->counts('users')->label('Utilisateurs'),
                 Tables\Columns\TextColumn::make('agents')->label('Agents')
                     ->state(fn (Tenant $record) => TenantContext::withoutTenancy(

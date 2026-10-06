@@ -87,6 +87,12 @@ class TenantContext
         return $id ? Tenant::find($id) : null;
     }
 
+    /** Un contexte posé par du code serveur de confiance (runAs / withoutTenancy) est-il actif ? */
+    public static function hasExplicitContext(): bool
+    {
+        return self::$stack !== [];
+    }
+
     /** true si le scope ne doit filtrer sur rien (bypass explicite ou mode système console). */
     public static function isUnscoped(): bool
     {
@@ -192,5 +198,6 @@ class TenantContext
         self::$stack = [];
         self::$fallback = null;
         self::$console = null;
+        \App\Services\Subscriptions\SubscriptionAccessPolicy::flush();
     }
 }

@@ -41,6 +41,20 @@ class Agent extends Model
         'created_at' => 'datetime',
     ];
 
+    /** Limite d'agents de l'offre : refus réel côté serveur (Filament, API, import, mobile, commandes). */
+    protected function enforceEntitlementsOnInsert(): void
+    {
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
+    }
+
+    /** Restaurer un agent supprimé logiquement le recompte : la limite s'applique aussi. */
+    protected function enforceEntitlementsOnUpdate(): void
+    {
+        if ($this->isDirty('deleted_at') && $this->deleted_at === null) {
+            app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
+        }
+    }
+
     // ==================== RELATIONS ====================
 
     public function transactions(): HasMany

@@ -12,6 +12,12 @@ class AgentSolde extends Model
     use BelongsToTenant;
     use HasFactory;
 
+    /** Écriture permise même en accès restreint : voir BelongsToTenant::tenantWritesAlwaysAllowed(). */
+    protected static function tenantWritesAlwaysAllowed(): bool
+    {
+        return true;
+    }
+
     protected $fillable = [
         'agent_id',
         'total_uv_distribues',

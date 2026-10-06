@@ -30,6 +30,11 @@ class AgentScoringPage extends Page implements HasTable
 
     public ?int $selectedAgentId = null;
 
+    public function mount(): void
+    {
+        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
+    }
+
     private ?Collection $scoringData = null;
 
     protected function getScoring(): Collection
@@ -58,10 +63,10 @@ class AgentScoringPage extends Page implements HasTable
                     })
                     ->badge()
                     ->color(fn ($state) => match ((int) $state) {
-                         1 => 'warning',
-                         2 => 'gray',
-                         3 => 'danger', 
-                         default => 'gray',
+                        1 => 'warning',
+                        2 => 'gray',
+                        3 => 'danger',
+                        default => 'gray',
                     })
                     ->width('50px')
                     ->alignCenter()

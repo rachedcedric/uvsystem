@@ -72,6 +72,20 @@ class User extends Authenticatable implements FilamentUser
         return new UserTenantScope;
     }
 
+    /** Comptes : 2FA, mot de passe, déconnexion restent possibles en accès restreint (la CRÉATION reste limitée). */
+    protected static function tenantWritesAlwaysAllowed(): bool
+    {
+        return true;
+    }
+
+    /** Limite d'utilisateurs de l'offre : refus réel côté serveur, quel que soit le point d'entrée. */
+    protected function enforceEntitlementsOnInsert(): void
+    {
+        if ($this->tenant_id !== null) {
+            app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateUser((int) $this->tenant_id);
+        }
+    }
+
     /** Un super admin de plateforme n'a pas de tenant : tenant_id peut rester vide. */
     protected static function tenantIdRequired(): bool
     {
@@ -105,7 +119,7 @@ class User extends Authenticatable implements FilamentUser
         }
     }
 
-    /** Le tenant de cet utilisateur est-il actif (non suspendu, essai non expiré) ? */
+    /** Le tenant de cet utilisateur est-il actif (non suspendu) ? L'expiration d'abonnement n'ôte pas l'accès : voir SubscriptionAccessPolicy. */
     public function hasActiveTenant(): bool
     {
         return $this->tenant_id !== null && (bool) $this->tenant?->isActive();
