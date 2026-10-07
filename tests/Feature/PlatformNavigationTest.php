@@ -9,7 +9,7 @@ use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-/** Menu de la console plateforme : tout est rangé dans un groupe, réservé au super admin. */
+/** Menu de la console plateforme : chaque élément dans son groupe, réservé au super admin. */
 class PlatformNavigationTest extends TestCase
 {
     use RefreshDatabase;
@@ -44,8 +44,9 @@ class PlatformNavigationTest extends TestCase
         $menu = $this->menu();
 
         $this->assertArrayNotHasKey('', $menu, 'aucun élément ne doit rester hors groupe');
-        $this->assertSame(['Gestion du SaaS', 'Abonnements', 'Système'], array_keys($menu));
-        $this->assertSame(['Tableau de bord', 'Tenants'], $menu['Gestion du SaaS']);
+        $this->assertSame(['Pilotage', 'Entreprises', 'Abonnements', 'Système'], array_keys($menu));
+        $this->assertSame(['Tableau de bord'], $menu['Pilotage']);
+        $this->assertSame(['Tenants'], $menu['Entreprises']);
         $this->assertSame(['Abonnements', 'Offres', 'Demandes de changement'], $menu['Abonnements']);
         $this->assertContains('Sauvegardes', $menu['Système']);
     }

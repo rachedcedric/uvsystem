@@ -6,11 +6,11 @@ use Filament\Pages\Dashboard as BaseDashboard;
 
 /**
  * Tableau de bord de la console plateforme : identique à celui de Filament (widgets découverts dans
- * Filament/Platform/Widgets) ; seule sa place dans le menu change (groupe « Gestion du SaaS », en premier).
+ * Filament/Platform/Widgets) ; seule sa place dans le menu change (son propre groupe « Pilotage », en premier).
  */
 class Dashboard extends BaseDashboard
 {
-    protected static ?string $navigationGroup = 'Gestion du SaaS';
+    protected static ?string $navigationGroup = 'Pilotage';
 
     protected static ?int $navigationSort = 1;
 
