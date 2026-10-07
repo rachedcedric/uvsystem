@@ -117,11 +117,11 @@ class AgentResource extends Resource
                     ])
                     ->columns(2),
 
-                // Le master peut lier une fiche agent à un compte de son entreprise (le sien compris) : le titulaire
-                // retrouve alors ses propres ventes et remboursements dans « Mon espace agent ». Réservé au master ;
+                // Le master ou l'admin peut lier une fiche agent à un compte de son entreprise (le sien compris) : le titulaire
+                // retrouve alors ses propres ventes et remboursements dans « Mon espace agent ». Réservé au master et à l'admin ;
                 // un champ masqué n'est jamais enregistré, un compte d'une autre entreprise n'est pas proposé ni accepté.
                 Forms\Components\Section::make('Compte de connexion')
-                    ->description('Facultatif : donne à un compte de votre entreprise l\'accès à son espace agent. Un master peut ainsi être aussi agent.')
+                    ->description('Facultatif : donne à un compte de votre entreprise l\'accès à son espace agent. Un master ou un admin peut ainsi être aussi agent.')
                     ->icon('heroicon-o-user-circle')
                     ->schema([
                         Forms\Components\Select::make('user_id')
@@ -136,7 +136,7 @@ class AgentResource extends Resource
                             ])
                             ->validationMessages(['unique' => 'Ce compte est déjà lié à un autre agent.', 'in' => 'Ce compte n\'appartient pas à votre entreprise.']),
                     ])
-                    ->visible(fn (): bool => auth()->user()?->isMaster() ?? false)
+                    ->visible(fn (): bool => auth()->user()?->isAdmin() ?? false)
                     ->collapsible(),
 
                 Forms\Components\Section::make('Notes & Observations')

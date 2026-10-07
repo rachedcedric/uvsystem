@@ -124,9 +124,20 @@ class MasterAsAgentTest extends TestCase
         $this->assertSame(0, Agent::withoutGlobalScopes()->where('user_id', $foreign->id)->count());
     }
 
-    public function test_only_the_master_sees_and_can_set_the_link(): void
+    public function test_the_admin_can_link_an_account_too(): void
     {
-        foreach (['admin', 'commercial'] as $role) { // le comptable n'a pas le droit de créer des agents du tout
+        $admin = $this->userIn($this->tenant, 'admin');
+        $this->act($admin);
+
+        Livewire::test(CreateAgent::class)->assertFormFieldIsVisible('user_id')
+            ->fillForm($this->agentData(['name' => 'Fiche admin', 'user_id' => $admin->id]))->call('create')->assertHasNoFormErrors();
+
+        $this->assertSame($admin->id, Agent::where('name', 'Fiche admin')->value('user_id'));
+    }
+
+    public function test_roles_without_admin_rights_neither_see_nor_can_set_the_link(): void
+    {
+        foreach (['commercial'] as $role) { // le comptable ne peut pas ouvrir la page de création
             $user = $this->userIn($this->tenant, $role);
             $this->act($user);
 
@@ -199,7 +210,7 @@ class MasterAsAgentTest extends TestCase
 
     // ------------------------------------------------------------------ mobile
 
-    public function test_on_mobile_only_the_master_can_link_the_account(): void
+    public function test_on_mobile_master_and_admin_can_link_the_account_but_a_commercial_cannot(): void
     {
         $this->act($this->master);
         Livewire::test(Crud\Form::class, ['resource' => 'agents'])
@@ -213,7 +224,15 @@ class MasterAsAgentTest extends TestCase
         Livewire::test(Crud\Form::class, ['resource' => 'agents'])
             ->set('data.name', 'Admin mobile')->set('data.phone', '0701020305')->set('data.type', 'standard')->set('data.status', 'active')
             ->set('data.debt_limit', '100000')->set('data.commission_rate', '5')->set('data.user_id', (string) $admin->id)
+            ->call('save')->assertHasNoErrors();
+        $this->assertSame($admin->id, Agent::where('name', 'Admin mobile')->value('user_id'));
+
+        $commercial = $this->userIn($this->tenant, 'commercial');
+        $this->act($commercial);
+        Livewire::test(Crud\Form::class, ['resource' => 'agents'])
+            ->set('data.name', 'Commercial mobile')->set('data.phone', '0701020306')->set('data.type', 'standard')->set('data.status', 'active')
+            ->set('data.debt_limit', '100000')->set('data.commission_rate', '5')->set('data.user_id', (string) $commercial->id)
             ->call('save');
-        $this->assertNull(Agent::where('name', 'Admin mobile')->value('user_id'), 'champ absent pour un non-master : valeur forgée ignorée');
+        $this->assertNull(Agent::where('name', 'Commercial mobile')->value('user_id'), 'champ absent pour un rôle non administrateur : valeur forgée ignorée');
     }
 }

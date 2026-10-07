@@ -169,7 +169,7 @@ class MobileCrudTest extends TestCase
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
-        $admin->givePermissionTo(['view_users', 'create_users', 'edit_users']);
+        $admin->givePermissionTo(['view_users', 'create_users', 'edit_users', 'assign_roles']);
         $this->actingAs($admin);
 
         Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])

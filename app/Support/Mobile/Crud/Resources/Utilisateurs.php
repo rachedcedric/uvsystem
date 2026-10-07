@@ -3,11 +3,11 @@
 namespace App\Support\Mobile\Crud\Resources;
 
 use App\Models\User;
+use App\Security\RoleAssignmentGuard;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class Utilisateurs extends MobileResource
@@ -74,8 +74,11 @@ class Utilisateurs extends MobileResource
             Field::email('email', 'E-mail')->required()->maxLength(255)->unique('users'),
             Field::password('password', 'Mot de passe')->required()->hint('8 caractères minimum'),
             Field::password('password_confirmation', 'Confirmer le mot de passe')->virtual()->rules('same:data.password', 'required_with:data.password'),
-            Field::multi('roles', 'Rôles', fn () => Role::whereIn('name', User::assignableRoleNames())->orderBy('name')->pluck('name', 'name')->map(fn ($n) => ucfirst($n))->all())
-                ->hint('Master : accès total · Admin : tout sauf les rôles · Comptable : finances · Commercial : agents et transactions'),
+            // Champ présent seulement pour qui peut attribuer des rôles ; un admin ne se voit pas proposer « master ».
+            ...(RoleAssignmentGuard::canAssignRoles(auth()->user()) ? [
+                Field::multi('roles', 'Rôles', fn () => Role::whereIn('name', RoleAssignmentGuard::assignableFor(auth()->user()))->orderBy('name')->pluck('name', 'name')->map(fn ($n) => ucfirst($n))->all())
+                    ->hint('Master et admin : administration complète de l\'entreprise (seul un master nomme un master) · Comptable : finances · Commercial : agents et transactions'),
+            ] : []),
         ];
     }
 
@@ -88,22 +91,21 @@ class Utilisateurs extends MobileResource
 
     public static function save(array $data, ?Model $record): Model
     {
+        $rolesSubmitted = array_key_exists('roles', $data);
         $roles = (array) ($data['roles'] ?? []);
         unset($data['roles']);
 
-        // Élévation de privilèges : un utilisateur de tenant ne peut attribuer que des rôles de tenant.
-        if (array_diff($roles, User::assignableRoleNames())) {
-            throw ValidationException::withMessages(['roles' => 'Rôle non autorisé.']);
-        }
-
-        $actor = auth()->user();
-        if (in_array('master', $roles, true) && ! $actor?->hasRole('master')) {
-            throw ValidationException::withMessages(['roles' => 'Seul un master peut attribuer le rôle master.']);
+        // Règle unique d'attribution des rôles (élévation de privilèges, comptes master, dernier master) : voir le garde.
+        if ($rolesSubmitted) {
+            RoleAssignmentGuard::assertCanAssign(auth()->user(), $record, $roles);
         }
 
         $user = $record ?? new User;
         $user->fill($data)->save();
-        $user->syncRoles($roles);
+
+        if ($rolesSubmitted) { // sans le champ, les rôles existants ne sont JAMAIS effacés
+            $user->syncRoles($roles);
+        }
 
         return $user;
     }

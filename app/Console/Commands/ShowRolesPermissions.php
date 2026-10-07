@@ -44,7 +44,7 @@ class ShowRolesPermissions extends Command
 
             $description = match ($role->name) {
                 'master' => 'Accès total (toutes permissions)',
-                'admin' => 'Tout sauf gestion des rôles',
+                'admin' => 'Administration complète de l\'entreprise (ne nomme pas de master)',
                 'comptable' => 'Finances, remboursements, commissions',
                 'commercial' => 'Agents, transactions UV, fournisseurs',
                 default => 'Rôle personnalisé',
@@ -65,7 +65,7 @@ class ShowRolesPermissions extends Command
                 $role->permissions->count(),
                 match ($role->name) {
                     'master' => '✅ ACCÈS TOTAL',
-                    'admin' => '✅ Tout sauf rôles',
+                    'admin' => '✅ Comme le master (hors nomination d\'un master)',
                     'comptable' => '💰 Finances',
                     'commercial' => '👥 Agents/Transactions',
                     default => 'Personnalisé',

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Security\RoleAssignmentGuard;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -71,11 +72,14 @@ class UserResource extends Resource
                         Forms\Components\Select::make('roles')
                             ->label('Rôles')
                             ->multiple()
-                            ->relationship('roles', 'name', fn ($query) => $query->whereIn('name', User::assignableRoleNames()))
+                            // Seuls les rôles que l'acteur peut réellement attribuer sont proposés (un admin ne voit pas « master »).
+                            ->relationship('roles', 'name', fn ($query) => $query->whereIn('name', RoleAssignmentGuard::assignableFor(auth()->user())))
                             ->preload()
                             ->searchable()
-                            ->visible(fn (): bool => auth()->user()?->isMaster() && auth()->user()?->can('assign_roles'))
-                            ->helperText('master = administration complète du tenant, admin = tout sauf attribution des rôles, comptable = finances, commercial = agents/transactions'),
+                            // Masqué pour qui ne peut pas attribuer de rôles, et pour un admin devant le compte d'un master.
+                            ->visible(fn (?User $record): bool => RoleAssignmentGuard::canAssignRoles(auth()->user())
+                                && ! ($record?->hasRole('master') && ! auth()->user()->isMaster()))
+                            ->helperText('master et admin = administration complète de l\'entreprise (seul un master peut nommer un master), comptable = finances, commercial = agents/transactions'),
                     ]),
             ]);
     }
@@ -157,7 +161,8 @@ class UserResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return auth()->user()?->can('edit_users') ?? false;
+        // Politique d'accès : le compte d'un master n'est modifiable que par un master.
+        return auth()->user()?->can('update', $record) ?? false;
     }
 
     public static function canDelete($record): bool

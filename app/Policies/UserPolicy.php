@@ -35,13 +35,19 @@ class UserPolicy
             return true;
         }
 
+        // Le compte d'un master (propriétaire) n'est modifiable que par un master : sinon un admin pourrait
+        // changer son mot de passe ou son e-mail et prendre le contrôle du compte client.
+        if ($model->hasRole('master') && ! $user->isMaster()) {
+            return false;
+        }
+
         return $user->can('edit_users');
     }
 
     public function delete(User $user, User $model): bool
     {
-        // Impossible de se supprimer soi-même
-        if ($user->id === $model->id) {
+        // Impossible de se supprimer soi-même, ni de supprimer un compte master (l'entreprise garde son propriétaire)
+        if ($user->id === $model->id || $model->hasRole('master')) {
             return false;
         }
 

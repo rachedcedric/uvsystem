@@ -145,14 +145,12 @@ class RolesAndPermissionsSeeder extends Seeder
         $master->syncPermissions($tenantPermissions);
         $this->command->info('✅ MASTER : '.$tenantPermissions->count().' permissions (administration complète du tenant)');
 
-        // 2. ADMIN - Tout sauf gestion des rôles
+        // 2. ADMIN - mêmes autorisations que le master (chaque compte client a son admin). Ce qui l'en distingue n'est pas
+        //    une permission mais une règle : il ne peut ni créer ni promouvoir un master (voir RoleAssignmentGuard).
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $adminPermissions = Permission::whereNotIn('name', [
-            ...User::FORBIDDEN_TENANT_PERMISSIONS,
-            'assign_roles',
-        ])->pluck('name')->toArray();
+        $adminPermissions = Permission::whereNotIn('name', User::FORBIDDEN_TENANT_PERMISSIONS)->pluck('name')->toArray();
         $admin->syncPermissions($adminPermissions);
-        $this->command->info('✅ ADMIN : '.count($adminPermissions).' permissions (tout sauf rôles)');
+        $this->command->info('✅ ADMIN : '.count($adminPermissions).' permissions (administration complète du tenant, sans pouvoir nommer un master)');
 
         // 3. COMPTABLE - Finances uniquement
         $comptable = Role::firstOrCreate(['name' => 'comptable', 'guard_name' => 'web']);
@@ -303,7 +301,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ['Rôle', 'Permissions', 'Accès'],
             [
                 ['MASTER', $master->permissions->count(), '✅ ACCÈS TOTAL (toutes permissions)'],
-                ['ADMIN', $admin->permissions->count(), '✅ Tout sauf gestion des rôles'],
+                ['ADMIN', $admin->permissions->count(), '✅ Comme le master (ne nomme pas de master)'],
                 ['COMPTABLE', $comptable->permissions->count(), '💰 Finances, remboursements, commissions'],
                 ['COMMERCIAL', $commercial->permissions->count(), '👥 Agents, transactions UV, fournisseurs'],
             ]

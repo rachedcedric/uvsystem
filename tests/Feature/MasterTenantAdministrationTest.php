@@ -117,7 +117,7 @@ class MasterTenantAdministrationTest extends TestCase
         $this->assertFalse(UserResource::canDelete($otherMaster));
     }
 
-    public function test_only_master_can_change_tenant_user_roles_even_with_a_forged_livewire_state(): void
+    public function test_a_tenant_admin_can_manage_roles_but_can_never_grant_master_even_with_a_forged_livewire_state(): void
     {
         $target = TenantContext::runAs($this->master->tenant_id, function () {
             $user = User::factory()->create();
@@ -141,13 +141,21 @@ class MasterTenantAdministrationTest extends TestCase
         });
         $this->actingAs($tenantAdmin);
 
+        // L'admin peut attribuer les rôles d'administration et métier…
+        Livewire::test(EditUser::class, ['record' => $target->getRouteKey()])
+            ->set('data.roles', [Role::findByName('comptable')->getKey()])
+            ->call('save')
+            ->assertHasNoErrors();
+        $this->assertTrue($target->fresh()->hasRole('comptable'));
+
+        // …mais jamais « master » : refusé avec un message, rien n'est enregistré.
         Livewire::test(EditUser::class, ['record' => $target->getRouteKey()])
             ->set('data.roles', [Role::findByName('master')->getKey()])
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertHasErrors(['roles']);
 
         $target->refresh();
-        $this->assertTrue($target->hasRole('admin'));
+        $this->assertTrue($target->hasRole('comptable'));
         $this->assertFalse($target->hasRole('master'));
     }
 }

@@ -35,7 +35,10 @@ Règles : `tenant_id` n'est dans aucun `$fillable` ; une écriture avec un autre
 |---|---|---|
 | `super_admin` | Plateforme, `tenant_id` NULL | `/platform` uniquement (jamais `/master`, `/m`, API ni données métier). Seul à pouvoir télécharger les sauvegardes |
 | `master` (= TENANT_ADMIN) | Son tenant | Toutes les permissions métier |
-| `admin` (= MANAGER) | Son tenant | Tout sauf gestion des rôles |
+| `admin` (= MANAGER) | Son tenant | **Mêmes permissions que le master** : chaque compte client a son admin. Ne peut ni créer ni promouvoir un master, ni modifier le compte d'un master (`App\Security\RoleAssignmentGuard`, `UserPolicy`) |
+| comptable, commercial | Son tenant | Périmètre limité ; n'attribuent aucun rôle |
+
+Règles d'attribution des rôles (web **et** mobile, toujours côté serveur) : le master attribue tous les rôles de l'entreprise ; l'admin attribue `admin`, `comptable`, `commercial` mais jamais `master` ; aucun rôle de plateforme n'est attribuable ; l'entreprise garde toujours au moins un master ; aucun compte master ne se supprime. Les permissions protégées (`FORBIDDEN_TENANT_PERMISSIONS` : gestion de la définition des rôles, suppression du journal, sauvegardes globales) ne sont données à aucun compte client. **Sur une base existante, relancer** `php artisan db:seed --class=RolesAndPermissionsSeeder --force` pour que les admins reçoivent leurs nouvelles permissions.
 | `comptable`, `commercial` (= USER) | Son tenant | Permissions du seeder `RolesAndPermissionsSeeder` |
 
 Les permissions Spatie existantes (`view_agents`, `create_uv_transactions`, …) sont conservées et toujours évaluées dans le tenant de l'utilisateur. `super_admin` n'a aucune permission métier. Un compte rattaché à un tenant qui recevrait le rôle `super_admin` n'obtient aucun pouvoir (`isSuperAdmin()` exige `tenant_id` NULL) ; les écrans de rôles n'offrent jamais `super_admin`.

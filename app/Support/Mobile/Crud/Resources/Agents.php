@@ -64,9 +64,9 @@ class Agents extends MobileResource
             Field::number('commission_rate', 'Taux de commission (%)')->min(0)->max(100)->default(5),
             Field::select('status', 'Statut', self::STATUSES)->required()->default('active'),
             Field::textarea('notes', 'Notes internes'),
-            // Master seulement : lier la fiche à un compte de l'entreprise (le sien compris) pour qu'il retrouve ses propres
+            // Master et admin : lier la fiche à un compte de l'entreprise (le sien compris) pour qu'il retrouve ses propres
             // opérations. Le champ n'existe pas pour les autres rôles : une valeur forgée est ignorée.
-            ...(auth()->user()?->isMaster() ? [
+            ...(auth()->user()?->isAdmin() ? [
                 Field::select('user_id', 'Compte de connexion lié', fn (): array => ['' => 'Aucun compte'] + \App\Models\User::query()->orderBy('name')->pluck('name', 'id')->all())
                     ->unique('agents', 'user_id')->hint('Facultatif : donne à ce compte l\'accès à son espace agent.'),
             ] : []),
