@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Mobile\Admin;
 
+use App\Models\Activity;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use App\Models\Activity;
 
 #[Layout('components.layouts.mobile')]
 #[Title('Journal d\'activité')]

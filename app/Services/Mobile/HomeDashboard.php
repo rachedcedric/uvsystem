@@ -2,7 +2,6 @@
 
 namespace App\Services\Mobile;
 
-use App\Tenancy\TenantContext;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Remboursement;
@@ -10,6 +9,7 @@ use App\Models\User;
 use App\Models\UvTransaction;
 use App\Services\CommissionService;
 use App\Services\MasterSoldeService;
+use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

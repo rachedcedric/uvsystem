@@ -33,15 +33,16 @@ class FixUserPermissions extends Command
         // Assigner rôle master si email fourni
         $email = $this->argument('email');
 
-        if (!$email) {
+        if (! $email) {
             $email = $this->ask('Email de l\'utilisateur à promouvoir master');
         }
 
         if ($email) {
             $user = User::where('email', $email)->first();
 
-            if (!$user) {
+            if (! $user) {
                 $this->error("❌ Utilisateur avec email '{$email}' non trouvé");
+
                 return 1;
             }
 
@@ -49,7 +50,7 @@ class FixUserPermissions extends Command
             $user->syncRoles(['master']);
 
             $this->info("✅ Utilisateur {$user->name} ({$user->email}) a maintenant le rôle MASTER");
-            $this->info("🔑 Permissions: " . $user->getAllPermissions()->count());
+            $this->info('🔑 Permissions: '.$user->getAllPermissions()->count());
         }
 
         // Afficher tous les utilisateurs avec leurs rôles

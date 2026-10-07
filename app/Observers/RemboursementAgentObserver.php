@@ -2,10 +2,9 @@
 
 namespace App\Observers;
 
-use App\Tenancy\TenantContext;
 use App\Models\DetteAgent;
 use App\Models\RemboursementAgent;
-use Illuminate\Support\Facades\DB;
+use App\Tenancy\TenantContext;
 
 class RemboursementAgentObserver
 {

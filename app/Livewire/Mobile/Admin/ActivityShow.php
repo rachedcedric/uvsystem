@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Mobile\Admin;
 
+use App\Models\Activity;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use App\Models\Activity;
 
 #[Layout('components.layouts.mobile')]
 #[Title('Détail de l\'activité')]

@@ -2,10 +2,9 @@
 
 namespace App\Observers;
 
-use App\Tenancy\TenantContext;
 use App\Models\DetteAgent;
 use App\Models\VenteUv;
-use Illuminate\Support\Facades\DB;
+use App\Tenancy\TenantContext;
 
 class VenteUvObserver
 {

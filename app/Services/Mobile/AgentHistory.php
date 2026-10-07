@@ -2,8 +2,8 @@
 
 namespace App\Services\Mobile;
 
-use App\Tenancy\TenantContext;
 use App\Models\Agent;
+use App\Tenancy\TenantContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 

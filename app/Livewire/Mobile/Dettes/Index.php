@@ -3,7 +3,6 @@
 namespace App\Livewire\Mobile\Dettes;
 
 use App\Filament\Pages\DettesPage;
-use App\Models\Agent;
 use App\Models\Fournisseur;
 use App\Services\FournisseurDebtService;
 use Illuminate\Database\Eloquent\Builder;
