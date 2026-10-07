@@ -33,7 +33,7 @@ class SubscriptionMigrationTest extends SubscriptionTestCase
 
     public function test_the_legacy_plan_is_mapped_without_touching_the_legacy_columns(): void
     {
-        Artisan::call('migrate:rollback', ['--step' => 1]);
+        Artisan::call('migrate:rollback', ['--step' => 2]);
         $this->assertFalse(Schema::hasTable('tenant_subscriptions'));
 
         $pro = $this->insertTenant('Chez Pro', 'Pro');
@@ -76,7 +76,7 @@ class SubscriptionMigrationTest extends SubscriptionTestCase
 
     public function test_the_default_legacy_plan_is_configurable(): void
     {
-        Artisan::call('migrate:rollback', ['--step' => 1]);
+        Artisan::call('migrate:rollback', ['--step' => 2]);
         config(['subscriptions.default_legacy_plan' => 'essentiel']);
         $id = $this->insertTenant('Défaut changé', null);
 
@@ -92,9 +92,9 @@ class SubscriptionMigrationTest extends SubscriptionTestCase
         $id = $this->insertTenant('Garde ses colonnes', 'Pro');
         $tenantsBefore = DB::table('tenants')->count();
 
-        Artisan::call('migrate:rollback', ['--step' => 1]);
+        Artisan::call('migrate:rollback', ['--step' => 2]);
 
-        foreach (['subscription_plans', 'tenant_subscriptions', 'subscription_payments', 'subscription_notification_logs'] as $table) {
+        foreach (['subscription_plans', 'tenant_subscriptions', 'subscription_payments', 'subscription_notification_logs', 'subscription_change_requests', 'subscription_signups'] as $table) {
             $this->assertFalse(Schema::hasTable($table), "$table doit disparaître au retour arrière");
         }
         $this->assertTrue(Schema::hasColumns('tenants', ['plan', 'trial_ends_at']));
@@ -109,7 +109,7 @@ class SubscriptionMigrationTest extends SubscriptionTestCase
 
     public function test_the_migration_creates_the_three_plans_with_integer_prices_and_null_for_unlimited(): void
     {
-        Artisan::call('migrate:rollback', ['--step' => 1]);
+        Artisan::call('migrate:rollback', ['--step' => 2]);
         Artisan::call('migrate');
 
         $plans = DB::table('subscription_plans')->orderBy('display_order')->get();
@@ -117,5 +117,19 @@ class SubscriptionMigrationTest extends SubscriptionTestCase
         $this->assertSame([15000, 30000, 60000], $plans->pluck('monthly_price')->map(fn ($v) => (int) $v)->all());
         $this->assertNull($plans->last()->max_users);
         $this->assertNull($plans->last()->max_agents);
+    }
+
+    public function test_the_workflow_tables_are_added_to_an_existing_subscription_installation(): void
+    {
+        Artisan::call('migrate:rollback', ['--step' => 1]);
+
+        $this->assertTrue(Schema::hasTable('tenant_subscriptions'));
+        $this->assertFalse(Schema::hasTable('subscription_change_requests'));
+        $this->assertFalse(Schema::hasTable('subscription_signups'));
+
+        Artisan::call('migrate');
+
+        $this->assertTrue(Schema::hasTable('subscription_change_requests'));
+        $this->assertTrue(Schema::hasTable('subscription_signups'));
     }
 }

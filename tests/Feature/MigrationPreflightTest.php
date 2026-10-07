@@ -246,8 +246,8 @@ class MigrationPreflightTest extends TestCase
 
     public function test_the_real_migration_is_blocked_before_any_change_then_runs_without_touching_clients(): void
     {
-        // État d'avant le multi-tenant : on défait les deux migrations tenant et celle d'email_valid qui les suit
-        Artisan::call('migrate:rollback', ['--step' => 4]);
+        // État d'avant le multi-tenant : on défait les deux migrations tenant et celles qui les suivent.
+        Artisan::call('migrate:rollback', ['--step' => 5]);
         $this->assertFalse(Schema::hasTable('tenants'));
 
         $this->createLegacyTables();

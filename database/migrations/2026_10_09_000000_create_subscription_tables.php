@@ -101,39 +101,6 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Demande de changement d'offre faite par un master ; appliquée à la confirmation du paiement (ou tout de suite si rien à payer).
-        Schema::create('subscription_change_requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('tenant_id')->constrained('tenants')->restrictOnDelete();
-            $table->foreignId('tenant_subscription_id')->constrained('tenant_subscriptions')->restrictOnDelete();
-            $table->foreignId('requested_plan_id')->constrained('subscription_plans')->restrictOnDelete();
-            $table->string('requested_cycle', 20);
-            $table->string('status', 20)->index(); // pending | applied | rejected | cancelled
-            $table->unsignedBigInteger('requested_by')->nullable();
-            $table->unsignedBigInteger('resolved_by')->nullable();
-            $table->timestamp('resolved_at')->nullable();
-            $table->json('quote')->nullable(); // prorata calculé à la demande
-            $table->string('note')->nullable();
-            $table->timestamps();
-        });
-
-        // Inscriptions publiques en attente de vérification de l'e-mail (double confirmation) et registre des essais.
-        Schema::create('subscription_signups', function (Blueprint $table) {
-            $table->id();
-            $table->string('token_hash', 64)->unique(); // seul le hash du lien est stocké
-            $table->string('email');
-            $table->string('email_normalized')->index(); // minuscules, sans +alias, sans points gmail
-            $table->string('phone_normalized', 30)->nullable()->index();
-            $table->string('ip', 45)->nullable()->index();
-            $table->string('plan_slug', 100);
-            $table->string('cycle', 20);
-            $table->text('payload'); // chiffré (APP_KEY) ; mot de passe déjà haché ; vidé à la vérification
-            $table->timestamp('expires_at');
-            $table->timestamp('verified_at')->nullable();
-            $table->unsignedBigInteger('tenant_id')->nullable();
-            $table->timestamps();
-        });
-
         $this->backfill();
     }
 
@@ -193,8 +160,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subscription_signups');
-        Schema::dropIfExists('subscription_change_requests');
         Schema::dropIfExists('subscription_notification_logs');
         Schema::dropIfExists('subscription_payments');
         Schema::dropIfExists('tenant_subscriptions');
