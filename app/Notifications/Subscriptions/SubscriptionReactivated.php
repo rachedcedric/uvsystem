@@ -9,16 +9,19 @@ class SubscriptionReactivated extends SubscriptionNotification
         return 'subscription_reactivated';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return 'Votre abonnement est réactivé';
+        return 'Abonnement réactivé';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre abonnement {$this->plan()} est de nouveau actif.",
-            'Vous pouvez de nouveau enregistrer des opérations.',
+            'subject' => 'Votre abonnement est réactivé',
+            'lines' => [
+                'Votre abonnement {plan} est de nouveau actif.',
+                'Vous pouvez de nouveau enregistrer des opérations.',
+            ],
         ];
     }
 }

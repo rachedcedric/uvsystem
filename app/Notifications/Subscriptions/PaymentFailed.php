@@ -9,16 +9,19 @@ class PaymentFailed extends SubscriptionNotification
         return 'payment_failed';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
         return 'Paiement non abouti';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre paiement de {$this->amount()} pour l'offre {$this->plan()} n'a pas abouti.",
-            "Aucun montant n'est compté ; votre abonnement n'a pas été modifié.",
+            'subject' => 'Paiement non abouti',
+            'lines' => [
+                'Votre paiement de {amount} pour l\'offre {plan} n\'a pas abouti.',
+                'Aucun montant n\'est compté ; votre abonnement n\'a pas été modifié.',
+            ],
         ];
     }
 }

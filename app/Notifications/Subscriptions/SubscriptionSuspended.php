@@ -9,16 +9,19 @@ class SubscriptionSuspended extends SubscriptionNotification
         return 'subscription_suspended';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return 'Votre abonnement est suspendu';
+        return 'Abonnement suspendu';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre abonnement {$this->plan()} a été suspendu.",
-            "Vos données restent consultables ; les modifications sont suspendues jusqu'à la réactivation.",
+            'subject' => 'Votre abonnement est suspendu',
+            'lines' => [
+                'Votre abonnement {plan} a été suspendu.',
+                'Vos données restent consultables ; les modifications sont suspendues jusqu\'à la réactivation.',
+            ],
         ];
     }
 }

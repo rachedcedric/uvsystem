@@ -2,9 +2,9 @@
 @section('title', 'Souscription')
 @section('content')
     <div class="card">
-        <h1>Créer votre entreprise</h1>
+        <h1>{{ cms('public.inscription.title') }}</h1>
         <p>Offre <strong>{{ $plan->name }}</strong> — {{ $cycle->label() }} : {{ number_format($price, 0, ',', ' ') }} FCFA / {{ $cycle === \App\Enums\SubscriptionCycle::Yearly ? 'an' : 'mois' }}.
-            @if ($plan->trial_days > 0) Essai gratuit de {{ $plan->trial_days }} jours, rien n'est facturé aujourd'hui.@endif</p>
+            @if ($plan->trial_days > 0) {{ cms('public.inscription.trial_note', ['days' => $plan->trial_days]) }}@endif</p>
         <p><a href="{{ route('offres', ['cycle' => $cycle->value]) }}">Changer d'offre</a></p>
 
         <form method="POST" action="{{ route('inscription.store') }}" novalidate>
@@ -37,9 +37,9 @@
             <input type="password" id="password_confirmation" name="password_confirmation" required autocomplete="new-password">
 
             <label class="check"><input type="checkbox" name="accept_terms" value="1" {{ old('accept_terms') ? 'checked' : '' }}>
-                <span>J'accepte les @if (config('subscriptions.terms_url'))<a href="{{ config('subscriptions.terms_url') }}" target="_blank" rel="noopener">conditions d'utilisation</a>@else conditions d'utilisation @endif.</span></label>
+                <span>J'accepte les @if ($termsUrl = (cms('settings.links.terms_url') ?: config('subscriptions.terms_url')))<a href="{{ $termsUrl }}" target="_blank" rel="noopener">conditions d'utilisation</a>@else conditions d'utilisation @endif.</span></label>
 
-            <div style="margin-top:20px"><button type="submit" onclick="this.disabled=true;this.form.submit()">Recevoir mon lien de confirmation</button></div>
+            <div style="margin-top:20px"><button type="submit" onclick="this.disabled=true;this.form.submit()">{{ cms('public.inscription.submit') }}</button></div>
         </form>
     </div>
 @endsection

@@ -9,16 +9,19 @@ class TrialStarted extends SubscriptionNotification
         return 'trial_started';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return 'Votre essai gratuit a démarré';
+        return 'Essai démarré';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre période d'essai de l'offre {$this->plan()} est active jusqu'au {$this->date()}.",
-            "Toutes les fonctions de l'offre sont disponibles pendant l'essai.",
+            'subject' => 'Votre essai gratuit a démarré',
+            'lines' => [
+                'Votre période d\'essai de l\'offre {plan} est active jusqu\'au {date}.',
+                'Toutes les fonctions de l\'offre sont disponibles pendant l\'essai.',
+            ],
         ];
     }
 }

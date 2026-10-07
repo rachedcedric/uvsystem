@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Subscriptions;
 
+use App\Cms\Content;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -9,6 +10,9 @@ use Illuminate\Notifications\Notification;
  * Base des notifications d'abonnement : canaux mail + base (déjà utilisés par le projet). Ne contient que des
  * valeurs simples (pas de modèle). Volontairement NON mises en file : l'envoi est synchrone et piloté par
  * SubscriptionNotifier (anti-doublon, échec conservé et repris), pour qu'un échec ne soit jamais invisible.
+ *
+ * Les textes (objet et corps) sont ceux du CMS (/platform > CMS > E-mails et messages) ; les valeurs par défaut
+ * sont définies ici dans defaults(), avec des repères {plan}, {cycle}, {date}, {days}, {amount}.
  */
 abstract class SubscriptionNotification extends Notification
 {
@@ -17,10 +21,11 @@ abstract class SubscriptionNotification extends Notification
 
     abstract public static function type(): string;
 
-    abstract protected function subject(): string;
+    /** Nom lisible dans le CMS. */
+    abstract public static function label(): string;
 
-    /** @return list<string> */
-    abstract protected function lines(): array;
+    /** @return array{subject: string, lines: list<string>} textes par défaut, avec repères */
+    abstract public static function defaults(): array;
 
     public function via(object $notifiable): array
     {
@@ -29,13 +34,13 @@ abstract class SubscriptionNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)->subject($this->subject())->greeting('Bonjour,');
+        $mail = (new MailMessage)->subject($this->subject())->greeting(Content::text('emails.common.greeting'));
 
         foreach ($this->lines() as $line) {
             $mail->line($line);
         }
 
-        return $mail->action('Voir mon abonnement', url('/m/abonnement'));
+        return $mail->action(Content::text('emails.common.action'), url('/m/abonnement'));
     }
 
     public function toArray(object $notifiable): array
@@ -49,28 +54,26 @@ abstract class SubscriptionNotification extends Notification
         ] + $this->context;
     }
 
-    protected function plan(): string
+    protected function subject(): string
     {
-        return (string) ($this->context['plan'] ?? 'votre offre');
+        return Content::text('emails.'.static::type().'.subject', $this->vars());
     }
 
-    protected function date(): string
+    /** @return list<string> */
+    protected function lines(): array
     {
-        return (string) ($this->context['ends_at'] ?? '');
+        return Content::lines('emails.'.static::type().'.body', $this->vars());
     }
 
-    protected function days(): int
+    /** @return array<string, string> repères utilisables dans les textes */
+    protected function vars(): array
     {
-        return (int) ($this->context['days'] ?? 0);
-    }
-
-    protected function amount(): string
-    {
-        return number_format((int) ($this->context['amount'] ?? 0), 0, ',', ' ').' FCFA';
-    }
-
-    protected function cycle(): string
-    {
-        return (string) ($this->context['cycle'] ?? '');
+        return [
+            'plan' => (string) ($this->context['plan'] ?? 'votre offre'),
+            'cycle' => (string) ($this->context['cycle'] ?? ''),
+            'date' => (string) ($this->context['ends_at'] ?? ''),
+            'days' => (string) (int) ($this->context['days'] ?? 0),
+            'amount' => number_format((int) ($this->context['amount'] ?? 0), 0, ',', ' ').' FCFA',
+        ];
     }
 }

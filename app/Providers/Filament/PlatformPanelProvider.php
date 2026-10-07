@@ -61,7 +61,7 @@ class PlatformPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Platform/Pages'), for: 'App\\Filament\\Platform\\Pages')
             ->discoverWidgets(in: app_path('Filament/Platform/Widgets'), for: 'App\\Filament\\Platform\\Widgets')
             // Ordre des groupes du menu : chaque élément est rangé dans un groupe (aucun élément isolé, aucune fusion).
-            ->navigationGroups(['Pilotage', 'Entreprises', 'Abonnements', 'Système'])
+            ->navigationGroups(['Pilotage', 'Entreprises', 'Abonnements', 'CMS', 'Système'])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

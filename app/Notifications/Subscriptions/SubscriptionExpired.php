@@ -9,16 +9,19 @@ class SubscriptionExpired extends SubscriptionNotification
         return 'subscription_expired';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return 'Votre abonnement a expiré';
+        return 'Abonnement expiré';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre abonnement {$this->plan()} a expiré le {$this->date()}.",
-            "Vos données sont intactes et consultables, ainsi que les exports. Les modifications sont suspendues jusqu'à la réactivation par l'administrateur.",
+            'subject' => 'Votre abonnement a expiré',
+            'lines' => [
+                'Votre abonnement {plan} a expiré le {date}.',
+                'Vos données sont intactes et consultables, ainsi que les exports. Les modifications sont suspendues jusqu\'à la réactivation par l\'administrateur.',
+            ],
         ];
     }
 }

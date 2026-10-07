@@ -31,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Helpers du CMS : cms(), cms_html(), cms_lines().
+        require_once app_path('Cms/helpers.php');
+
         // Un seul notifieur par processus : il cumule les échecs d'envoi rapportés par subscriptions:process.
         $this->app->singleton(\App\Services\Subscriptions\SubscriptionNotifier::class);
 

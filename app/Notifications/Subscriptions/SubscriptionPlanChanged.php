@@ -9,16 +9,19 @@ class SubscriptionPlanChanged extends SubscriptionNotification
         return 'subscription_plan_changed';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return 'Votre offre a changé';
+        return 'Offre changée';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre abonnement est passé à l'offre {$this->plan()} (cycle {$this->cycle()}).",
-            'Vos données existantes sont conservées.',
+            'subject' => 'Votre offre a changé',
+            'lines' => [
+                'Votre abonnement est passé à l\'offre {plan} (cycle {cycle}).',
+                'Vos données existantes sont conservées.',
+            ],
         ];
     }
 }

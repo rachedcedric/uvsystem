@@ -9,16 +9,19 @@ class SubscriptionExpiring extends SubscriptionNotification
         return 'subscription_expiring';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return "Votre abonnement expire dans {$this->days()} jour(s)";
+        return 'Abonnement bientôt échu';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre abonnement {$this->plan()} arrive à échéance le {$this->date()}.",
-            'Pensez à le renouveler pour éviter le passage en consultation seule.',
+            'subject' => 'Votre abonnement expire dans {days} jour(s)',
+            'lines' => [
+                'Votre abonnement {plan} arrive à échéance le {date}.',
+                'Pensez à le renouveler pour éviter le passage en consultation seule.',
+            ],
         ];
     }
 }

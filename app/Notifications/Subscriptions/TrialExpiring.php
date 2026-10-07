@@ -9,16 +9,19 @@ class TrialExpiring extends SubscriptionNotification
         return 'trial_expiring';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return "Votre essai se termine dans {$this->days()} jour(s)";
+        return 'Fin d\'essai proche';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre essai de l'offre {$this->plan()} se termine le {$this->date()}.",
-            'Passez à un abonnement pour continuer à enregistrer des opérations ; vos données sont conservées dans tous les cas.',
+            'subject' => 'Votre essai se termine dans {days} jour(s)',
+            'lines' => [
+                'Votre essai de l\'offre {plan} se termine le {date}.',
+                'Passez à un abonnement pour continuer à enregistrer des opérations ; vos données sont conservées dans tous les cas.',
+            ],
         ];
     }
 }

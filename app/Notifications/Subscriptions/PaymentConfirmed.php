@@ -9,16 +9,19 @@ class PaymentConfirmed extends SubscriptionNotification
         return 'payment_confirmed';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
         return 'Paiement confirmé';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Nous avons bien reçu votre paiement de {$this->amount()} pour l'offre {$this->plan()}.",
-            "Votre abonnement est valable jusqu'au {$this->date()}.",
+            'subject' => 'Paiement confirmé',
+            'lines' => [
+                'Nous avons bien reçu votre paiement de {amount} pour l\'offre {plan}.',
+                'Votre abonnement est valable jusqu\'au {date}.',
+            ],
         ];
     }
 }

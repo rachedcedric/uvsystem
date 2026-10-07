@@ -44,10 +44,11 @@ class PlatformNavigationTest extends TestCase
         $menu = $this->menu();
 
         $this->assertArrayNotHasKey('', $menu, 'aucun élément ne doit rester hors groupe');
-        $this->assertSame(['Pilotage', 'Entreprises', 'Abonnements', 'Système'], array_keys($menu));
+        $this->assertSame(['Pilotage', 'Entreprises', 'Abonnements', 'CMS', 'Système'], array_keys($menu));
         $this->assertSame(['Tableau de bord'], $menu['Pilotage']);
         $this->assertSame(['Tenants'], $menu['Entreprises']);
         $this->assertSame(['Abonnements', 'Offres', 'Demandes de changement'], $menu['Abonnements']);
+        $this->assertSame(['Page d\'accueil', 'Pages publiques', 'E-mails et messages', 'Réglages du SaaS'], $menu['CMS']);
         $this->assertContains('Sauvegardes', $menu['Système']);
     }
 

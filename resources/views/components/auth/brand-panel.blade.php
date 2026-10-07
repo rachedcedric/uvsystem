@@ -4,7 +4,7 @@
     <div class="pf-aside__inner">
         <p class="pf-aside__brand">
             <span class="pf-aside__mark" aria-hidden="true">M</span>
-            <span>MODELEC CI <small>{{ $subtitle }}</small></span>
+            <span>{{ cms('settings.brand.name') }} <small>{{ $subtitle }}</small></span>
         </p>
 
         <div class="pf-aside__body">
@@ -21,7 +21,7 @@
             </ul>
         </div>
 
-        <p class="pf-aside__foot">© {{ date('Y') }} MODELEC CI · Côte d'Ivoire</p>
+        <p class="pf-aside__foot">© {{ date('Y') }} {{ cms('settings.brand.legal_name') }}</p>
     </div>
 </aside>
 

@@ -2,11 +2,11 @@
 @section('title', 'Confirmer')
 @section('content')
     <div class="card">
-        <h1>Confirmer la création</h1>
-        <p>Un dernier clic pour créer votre entreprise et démarrer votre essai gratuit.</p>
+        <h1>{{ cms('public.confirm.title') }}</h1>
+        <p>{{ cms('public.confirm.body') }}</p>
         <form method="POST" action="{{ request()->fullUrl() }}">
             @csrf
-            <button type="submit" onclick="this.disabled=true;this.form.submit()">Confirmer et démarrer mon essai</button>
+            <button type="submit" onclick="this.disabled=true;this.form.submit()">{{ cms('public.confirm.button') }}</button>
         </form>
     </div>
 @endsection

@@ -9,16 +9,19 @@ class SubscriptionRenewalDue extends SubscriptionNotification
         return 'subscription_renewal_due';
     }
 
-    protected function subject(): string
+    public static function label(): string
     {
-        return 'Votre renouvellement est à régler';
+        return 'Renouvellement à régler';
     }
 
-    protected function lines(): array
+    public static function defaults(): array
     {
         return [
-            "Votre abonnement {$this->plan()} est arrivé à échéance. Une facture de {$this->amount()} est en attente de règlement.",
-            'Dès réception du paiement, votre abonnement est prolongé. Vos données sont conservées et consultables en attendant.',
+            'subject' => 'Votre renouvellement est à régler',
+            'lines' => [
+                'Votre abonnement {plan} est arrivé à échéance. Une facture de {amount} est en attente de règlement.',
+                'Dès réception du paiement, votre abonnement est prolongé. Vos données sont conservées et consultables en attendant.',
+            ],
         ];
     }
 }

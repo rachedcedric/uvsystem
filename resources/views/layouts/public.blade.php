@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') — MODELEC CI</title>
+    <title>@yield('title') — {{ cms('settings.brand.name') }}</title>
     <style>
         :root{--bg:#f3f4f6;--card:#fff;--text:#111827;--muted:#4b5563;--line:#e5e7eb;--brand:#047857;--brand-d:#065f46;--accent:#eef6ff;--danger:#b91c1c}
         @media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#111a2e;--text:#f3f4f6;--muted:#9ca3af;--line:#233049;--brand:#10b981;--brand-d:#34d399;--accent:#12263f;--danger:#f87171}}
