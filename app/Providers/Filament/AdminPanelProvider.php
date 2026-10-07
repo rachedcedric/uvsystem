@@ -47,6 +47,15 @@ class AdminPanelProvider extends PanelProvider
                 Css::make('auth-ui', asset('css/filament-auth.css').'?v='.(@filemtime(public_path('css/filament-auth.css')) ?: 1)),
             ])
             ->font('Inter')
+            // Un compte lié à une fiche agent (master compris) retrouve son espace agent.
+            ->navigationItems([
+                \Filament\Navigation\NavigationItem::make('Mon espace agent')
+                    ->icon('heroicon-o-user-circle')
+                    ->group('Mon activité')
+                    ->sort(1)
+                    ->url('/agent') // chemin du panneau « agent » (AgentPanelProvider) ; pas de Filament::getPanel() ici : il relance la construction du menu
+                    ->visible(fn (): bool => auth()->user()?->agent()->exists() ?? false),
+            ])
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('Gestion Agents')

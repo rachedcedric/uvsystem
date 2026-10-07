@@ -2,11 +2,12 @@
 
 namespace App\Filament\Resources;
 
-use App\Tenancy\TenantContext;
 use App\Exports\AgentSituationExport;
 use App\Filament\Resources\AgentResource\Pages;
 use App\Filament\Resources\AgentResource\RelationManagers;
 use App\Models\Agent;
+use App\Models\User;
+use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -19,6 +20,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AgentResource extends Resource
@@ -114,6 +116,28 @@ class AgentResource extends Resource
                             ->native(false),
                     ])
                     ->columns(2),
+
+                // Le master peut lier une fiche agent à un compte de son entreprise (le sien compris) : le titulaire
+                // retrouve alors ses propres ventes et remboursements dans « Mon espace agent ». Réservé au master ;
+                // un champ masqué n'est jamais enregistré, un compte d'une autre entreprise n'est pas proposé ni accepté.
+                Forms\Components\Section::make('Compte de connexion')
+                    ->description('Facultatif : donne à un compte de votre entreprise l\'accès à son espace agent. Un master peut ainsi être aussi agent.')
+                    ->icon('heroicon-o-user-circle')
+                    ->schema([
+                        Forms\Components\Select::make('user_id')
+                            ->label('Compte lié')
+                            ->options(fn (): array => User::query()->orderBy('name')->pluck('name', 'id')->all())
+                            ->searchable()
+                            ->placeholder('Aucun compte')
+                            ->rules([
+                                // Uniquement un compte de CETTE entreprise (jamais un compte d'une autre).
+                                fn (): \Illuminate\Validation\Rules\In => Rule::in(User::query()->pluck('id')->all()),
+                                fn (?Agent $record) => Rule::unique('agents', 'user_id')->ignore($record?->getKey())->whereNull('deleted_at')->where('tenant_id', TenantContext::id()),
+                            ])
+                            ->validationMessages(['unique' => 'Ce compte est déjà lié à un autre agent.', 'in' => 'Ce compte n\'appartient pas à votre entreprise.']),
+                    ])
+                    ->visible(fn (): bool => auth()->user()?->isMaster() ?? false)
+                    ->collapsible(),
 
                 Forms\Components\Section::make('Notes & Observations')
                     ->description('Informations complémentaires')
@@ -272,8 +296,8 @@ class AgentResource extends Resource
                                 // Envoi SMS
                                 if (in_array($channel, ['sms', 'both'])) {
                                     $smsMessage = $customMessage ?: "Bonjour {$record->name}, vous avez une dette de ".
-                                        number_format($record->current_debt, 0, ',', ' ')." FCFA en attente. Merci de régulariser votre situation. - MODELEC CI";
-                                    
+                                        number_format($record->current_debt, 0, ',', ' ').' FCFA en attente. Merci de régulariser votre situation. - MODELEC CI';
+
                                     if ($smsService->sendToAgent($record, $smsMessage)) {
                                         $sentChannels[] = 'SMS';
                                     }
@@ -314,7 +338,7 @@ class AgentResource extends Resource
                             } catch (\Exception $e) {
                                 Notification::make()
                                     ->title('Erreur d\'envoi')
-                                    ->body("Erreur : ".$e->getMessage())
+                                    ->body('Erreur : '.$e->getMessage())
                                     ->danger()
                                     ->send();
                             }
