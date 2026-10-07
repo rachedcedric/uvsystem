@@ -305,7 +305,7 @@ class TenantIsolationTest extends TestCase
         Sanctum::actingAs($super);
         $this->getJson('/api/agents')->assertForbidden();
         $this->actingAs($super)->get('/m')->assertForbidden();
-        $this->actingAs($super)->get('/admin')->assertForbidden();
+        $this->actingAs($super)->get('/master')->assertForbidden();
     }
 
     public function test_tenant_users_cannot_enter_the_platform(): void

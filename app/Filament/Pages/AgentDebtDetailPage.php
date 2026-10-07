@@ -2,10 +2,10 @@
 
 namespace App\Filament\Pages;
 
-use App\Tenancy\TenantContext;
 use App\Exports\DettesExport;
 use App\Models\Agent;
 use App\Services\BusinessPeriodResolver;
+use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions;
 use Filament\Pages\Page;
@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
- * Page détail de la dette d'un agent (/admin/dettes/{agent}), distincte de
+ * Page détail de la dette d'un agent (/master/dettes/{agent}), distincte de
  * la page liste (DettesPage) : les 4 tuiles ici sont Dette du jour / Total
  * dette / Remboursé / Reste à payer, propres à CET agent — à ne jamais
  * confondre avec les 4 tuiles globales de la liste.
@@ -211,7 +211,7 @@ class AgentDebtDetailPage extends Page
                 ->label('Encaisser')
                 ->icon('heroicon-o-banknotes')
                 ->color('success')
-                ->url(fn () => "/admin/remboursements/create?agent_id={$this->agent->id}")
+                ->url(fn () => "/master/remboursements/create?agent_id={$this->agent->id}")
                 ->visible(fn () => $this->agent->current_debt > 0 && (Auth::user()?->can('create_remboursements') ?? false)),
 
             Actions\ActionGroup::make([

@@ -12,12 +12,11 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class AgentSoldeResource extends Resource
 {
     protected static ?string $model = AgentSolde::class;
-
-    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
@@ -27,9 +26,29 @@ class AgentSoldeResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Soldes Agents';
 
-    protected static ?string $navigationGroup = 'Gestion Financière';
+    protected static ?string $navigationGroup = 'Gestion Agents';
 
     protected static ?int $navigationSort = 3;
+
+    public static function canAccess(): bool
+    {
+        return (bool) Auth::user()?->can('view_soldes');
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) Auth::user()?->can('edit_soldes');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return (bool) Auth::user()?->can('edit_soldes');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return (bool) Auth::user()?->can('edit_soldes');
+    }
 
     public static function form(Form $form): Form
     {
@@ -186,6 +205,7 @@ class AgentSoldeResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Recalculer le solde')
                     ->modalDescription('Cette action recalculera automatiquement le solde en fonction des transactions et remboursements réels.')
+                    ->visible(fn (): bool => (bool) Auth::user()?->can('reconcile_accounts'))
                     ->action(function (AgentSolde $record) {
                         AgentSolde::recalculate($record->agent);
 
@@ -209,6 +229,7 @@ class AgentSoldeResource extends Resource
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
                         ->requiresConfirmation()
+                        ->visible(fn (): bool => (bool) Auth::user()?->can('reconcile_accounts'))
                         ->action(function ($records) {
                             foreach ($records as $record) {
                                 AgentSolde::recalculate($record->agent);

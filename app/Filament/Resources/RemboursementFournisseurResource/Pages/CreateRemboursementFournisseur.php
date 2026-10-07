@@ -98,7 +98,7 @@ class CreateRemboursementFournisseur extends CreateRecord
             \Filament\Actions\Action::make('backToDettesFournisseurs')
                 ->label('← Retour aux Dettes Fournisseurs')
                 ->color('gray')
-                ->url('/admin/dettes-fournisseurs'),
+                ->url('/master/dettes-fournisseurs'),
         ];
     }
 }

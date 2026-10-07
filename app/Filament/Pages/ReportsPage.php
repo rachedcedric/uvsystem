@@ -28,7 +28,7 @@ class ReportsPage extends Page implements HasForms
 
     protected static ?string $title = 'Rapports & Exports';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static ?string $navigationGroup = 'Gestion du tenant';
 
     protected static ?int $navigationSort = 10;
 

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Tenancy\TenantContext;
 use App\Filament\Resources\SousDistributeurResource\Pages;
 use App\Filament\Resources\SousDistributeurResource\RelationManagers;
 use App\Models\SousDistributeur;
+use App\Tenancy\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,12 +13,11 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class SousDistributeurResource extends Resource
 {
     protected static ?string $model = SousDistributeur::class;
-
-    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
@@ -29,6 +28,26 @@ class SousDistributeurResource extends Resource
     protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'nom';
+
+    public static function canAccess(): bool
+    {
+        return (bool) Auth::user()?->can('view_agents');
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) Auth::user()?->can('create_agents');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return (bool) Auth::user()?->can('edit_agents');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return (bool) Auth::user()?->can('delete_agents');
+    }
 
     public static function form(Form $form): Form
     {
@@ -231,7 +250,7 @@ class SousDistributeurResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('is_active', true)->count();
+        return static::getModel()::actif()->count();
     }
 
     public static function getNavigationBadgeColor(): ?string

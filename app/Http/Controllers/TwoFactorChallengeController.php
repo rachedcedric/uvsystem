@@ -93,6 +93,6 @@ class TwoFactorChallengeController extends Controller
 
     private function home(User $user): string
     {
-        return $user->isSuperAdmin() ? '/platform' : '/admin';
+        return $user->isSuperAdmin() ? '/platform' : '/master';
     }
 }

@@ -148,7 +148,7 @@
             </ul>
 
             <p style="text-align: center;">
-                <a href="{{ url('/admin') }}" class="btn">
+                <a href="{{ url('/master') }}" class="btn">
                     Accéder au tableau de bord
                 </a>
             </p>

@@ -21,7 +21,13 @@ class CaisseCategorieResource extends Resource
 
     protected static ?string $pluralModelLabel = 'catégories de caisse';
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
+
+    protected static ?string $navigationLabel = 'Catégories de caisse';
+
+    protected static ?string $navigationGroup = 'Paramètres du tenant';
+
+    protected static ?int $navigationSort = 102;
 
     public static function canViewAny(): bool
     {

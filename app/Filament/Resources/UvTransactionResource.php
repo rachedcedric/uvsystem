@@ -161,7 +161,7 @@ class UvTransactionResource extends Resource
                             // service UvDistributionService::processReturn()
                             // et tout le calcul de dette/solde associé
                             // restent intacts) : seule l'option ne s'affiche
-                            // plus dans /admin/uv-transactions/create. Une
+                            // plus dans /master/uv-transactions/create. Une
                             // transaction "retour" historique reste éditable
                             // normalement, l'option réapparaît alors ici.
                             ->options(fn (?UvTransaction $record): array => $record?->transaction_type === 'retour'

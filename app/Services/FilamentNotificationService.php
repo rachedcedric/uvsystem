@@ -68,11 +68,11 @@ class FilamentNotificationService
             ->actions([
                 Action::make('view')
                     ->label('Voir agent')
-                    ->url("/admin/agents/{$agent->id}")
+                    ->url("/master/agents/{$agent->id}")
                     ->color('primary'),
                 Action::make('reminder')
                     ->label('Envoyer rappel')
-                    ->url("/admin/agents/{$agent->id}/edit?action=reminder")
+                    ->url("/master/agents/{$agent->id}/edit?action=reminder")
                     ->color('warning'),
             ])
             ->sendToDatabase(Auth::user());

@@ -100,7 +100,7 @@ class TestWebhooksCommand extends Command
             'email.clicked' => array_merge($basePayload, [
                 'data' => array_merge($basePayload['data'], [
                     'clicked_at' => now()->toIso8601String(),
-                    'link' => 'https://uvsystem.pro/admin/agents/1',
+                    'link' => 'https://uvsystem.pro/master/agents/1',
                     'user_agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
                     'ip' => '192.168.1.1',
                 ]),

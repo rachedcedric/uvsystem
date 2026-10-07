@@ -23,6 +23,16 @@ class User extends Authenticatable implements FilamentUser
     /** Rôles métier d'un tenant (le rôle super_admin n'appartient à aucun tenant). */
     public const TENANT_ROLES = ['master', 'admin', 'comptable', 'commercial'];
 
+    /** Capacités globales ou protégées qu'aucun compte de tenant ne doit recevoir. */
+    public const FORBIDDEN_TENANT_PERMISSIONS = [
+        'view_roles',
+        'create_roles',
+        'edit_roles',
+        'delete_roles',
+        'delete_activity_log',
+        'manage_backups',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -141,7 +151,7 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
-     * Panneau /platform : super admin uniquement. Panneaux /admin et /agent : rôle métier
+     * Panneau /platform : super admin uniquement. Panneaux /master et /agent : rôle métier
      * dans un tenant actif. Fail closed : sans tenant (hors super admin) ou tenant suspendu => refus.
      */
     public function canAccessPanel(Panel $panel): bool

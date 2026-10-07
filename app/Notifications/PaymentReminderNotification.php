@@ -39,7 +39,7 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
             ->line("**Téléphone:** {$this->agent->phone}")
             ->line('**Dette en cours:** '.number_format($this->agent->current_debt, 0, ',', ' ').' FCFA')
             ->when($this->customMessage, fn ($mail) => $mail->line("**Message:** {$this->customMessage}"))
-            ->action('Voir la fiche agent', url("/admin/agents/{$this->agent->id}"))
+            ->action('Voir la fiche agent', url("/master/agents/{$this->agent->id}"))
             ->line("Le rappel a été enregistré dans l'historique.");
     }
 

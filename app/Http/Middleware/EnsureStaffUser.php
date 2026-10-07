@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Fail closed : un utilisateur authentifié sans rôle métier (compte orphelin,
  * ancien auto-enregistrement…) n'a accès à aucune route protégée de l'API.
- * Même règle que /admin et /m (User::canAccessPanel).
+ * Même règle que /master et /m (User::canAccessPanel).
  */
 class EnsureStaffUser
 {

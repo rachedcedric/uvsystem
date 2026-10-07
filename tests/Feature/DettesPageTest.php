@@ -172,7 +172,7 @@ class DettesPageTest extends TestCase
 
         $html = Livewire::test(DettesPage::class)->html();
 
-        $this->assertStringContainsString("/admin/remboursements/create?agent_id={$agent->id}", $html);
+        $this->assertStringContainsString("/master/remboursements/create?agent_id={$agent->id}", $html);
     }
 
     /** Bouton Détails : renvoie vers la page détail dette de cet agent */

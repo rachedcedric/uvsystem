@@ -203,7 +203,7 @@ COMPANY_PHONE="+225 XX XX XX XX XX"
 php artisan migrate --force
 
 # 3. Créer les données via Filament
-# Accéder à /admin et créer agents/fournisseurs manuellement
+# Accéder à /master et créer agents/fournisseurs manuellement
 ```
 
 ---

@@ -29,12 +29,12 @@ class RemboursementAgentPreselectionTest extends TestCase
         $this->actingAs($user);
     }
 
-    /** Depuis une notification de rappel : /admin/remboursements/create?agent_id=XX présélectionne l'agent */
+    /** Depuis une notification de rappel : /master/remboursements/create?agent_id=XX présélectionne l'agent */
     public function test_agent_id_query_param_preselects_the_agent(): void
     {
         $agent = Agent::factory()->create(['status' => 'active', 'name' => 'KOFFI Jean']);
 
-        $response = $this->get('/admin/remboursements/create?agent_id='.$agent->id);
+        $response = $this->get('/master/remboursements/create?agent_id='.$agent->id);
 
         $response->assertOk();
         $response->assertSee('KOFFI Jean');
@@ -48,7 +48,7 @@ class RemboursementAgentPreselectionTest extends TestCase
     /** Un agent_id invalide (inexistant) ne casse pas le formulaire */
     public function test_invalid_agent_id_query_param_is_ignored_safely(): void
     {
-        $response = $this->get('/admin/remboursements/create?agent_id=999999');
+        $response = $this->get('/master/remboursements/create?agent_id=999999');
 
         $response->assertOk();
         $this->assertStringNotContainsString('&quot;agent_id&quot;:999999', $response->getContent());
@@ -59,7 +59,7 @@ class RemboursementAgentPreselectionTest extends TestCase
     {
         $agent = Agent::factory()->create(['status' => 'inactive']);
 
-        $response = $this->get('/admin/remboursements/create?agent_id='.$agent->id);
+        $response = $this->get('/master/remboursements/create?agent_id='.$agent->id);
 
         $response->assertOk();
         $this->assertStringNotContainsString('&quot;agent_id&quot;:'.$agent->id, $response->getContent());
@@ -68,7 +68,7 @@ class RemboursementAgentPreselectionTest extends TestCase
     /** Sans le paramètre, comportement normal (aucun agent présélectionné) */
     public function test_no_query_param_means_no_preselection(): void
     {
-        $response = $this->get('/admin/remboursements/create');
+        $response = $this->get('/master/remboursements/create');
 
         $response->assertOk();
         $this->assertStringContainsString('&quot;agent_id&quot;:null', $response->getContent());

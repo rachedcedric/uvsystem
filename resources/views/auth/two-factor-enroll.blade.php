@@ -30,7 +30,7 @@
         <div class="alert ok">Double authentification activée.</div>
         <p><strong>Conservez ces codes de récupération</strong> en lieu sûr : chacun ne sert qu'une fois si vous perdez votre téléphone. Ils ne seront plus affichés.</p>
         <ul class="codes">@foreach ($recoveryCodes as $code)<li>{{ $code }}</li>@endforeach</ul>
-        <p><a href="{{ auth()->user()->isSuperAdmin() ? '/platform' : '/admin' }}">Continuer</a></p>
+        <p><a href="{{ auth()->user()->isSuperAdmin() ? '/platform' : '/master' }}">Continuer</a></p>
     @elseif ($enabled)
         <div class="alert ok">La double authentification est <strong>activée</strong> sur votre compte.</div>
         @if ($mayDisable)
@@ -43,7 +43,7 @@
         @else
             <p>Votre rôle impose la double authentification : elle ne peut pas être désactivée.</p>
         @endif
-        <p><a href="{{ auth()->user()->isSuperAdmin() ? '/platform' : '/admin' }}">Retour</a></p>
+        <p><a href="{{ auth()->user()->isSuperAdmin() ? '/platform' : '/master' }}">Retour</a></p>
     @else
         @if ($required)<div class="alert warn">Obligatoire pour votre rôle : activez-la pour accéder à l'application.</div>@endif
         <p>1. Installez une application d'authentification (Google Authenticator, Microsoft Authenticator, Authy…).<br>

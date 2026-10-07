@@ -70,7 +70,7 @@ class AssignMasterRole extends Command
         $this->line('Vous pouvez maintenant vous connecter:');
         $this->line("  Email    : {$email}");
         $this->line('  Password : Master@2025!');
-        $this->line('  URL      : http://localhost:8000/admin/login');
+        $this->line('  URL      : http://localhost:8000/master/login');
 
         return 0;
     }

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Applique la 2FA sur les surfaces web (Filament /admin /agent /platform, mobile /m) :
+ * Applique la 2FA sur les surfaces web (Filament /master /agent /platform, mobile /m) :
  *  - 2FA activée mais non prouvée dans cette session / sur cet appareil => écran du code ;
  *  - 2FA obligatoire mais non activée => écran d'activation (jamais de blocage sans issue :
  *    cet écran, le code et la déconnexion restent toujours accessibles).

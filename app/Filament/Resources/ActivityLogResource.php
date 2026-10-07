@@ -3,13 +3,13 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityLogResource\Pages;
+use App\Models\Activity;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Activity;
 
 class ActivityLogResource extends Resource
 {
@@ -23,7 +23,7 @@ class ActivityLogResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Activités';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static ?string $navigationGroup = 'Gestion du tenant';
 
     protected static ?int $navigationSort = 99;
 

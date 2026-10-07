@@ -100,7 +100,7 @@ class SetupDemoData extends Command
 
         $this->newLine();
         $this->info('✅ Données de démonstration créées avec succès!');
-        $this->info('🔗 Accédez à Filament: php artisan serve puis http://localhost:8000/admin');
+        $this->info('🔗 Accédez à Filament: php artisan serve puis http://localhost:8000/master');
 
         return self::SUCCESS;
     }

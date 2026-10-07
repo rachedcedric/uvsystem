@@ -17,7 +17,7 @@ Indépendamment du multi-tenant, l'audit révèle **des failles exploitables dè
 | Élément | Constat |
 |---|---|
 | Backend | Laravel 12, PHP ≥ 8.2 |
-| Admin web | Filament 3.2 sur `/admin` (panels `admin` + dossier `Filament/Agent`) |
+| Admin web | Filament 3.2 sur `/master` (panels `admin` + dossier `Filament/Agent`) |
 | Mobile | Capacitor 8 (WebView sur `https://uvsystem.pro/m`), UI Blade + Livewire (`routes/mobile.php`, `app/Livewire/Mobile/*`) ; pas de Laravel dans l'APK |
 | API REST | `routes/api.php`, Sanctum (`auth:sanctum`), 11 contrôleurs ; **non utilisée par l'APK** (qui passe par sessions web + Livewire) |
 | BDD | MySQL en prod, SQLite en test/dev ; ORM Eloquent ; ~40 migrations |
@@ -105,7 +105,7 @@ Limite honnête de cet audit : je n'ai pas encore lu en détail les 118 requête
 | V13 | ✅ corrigé | `/api/rate-limits` supprimé |
 | V14 | ❌ abandonné | `two_factor_*` doivent rester dans `$fillable` : `TwoFactorAuthService` les écrit par `update()`. Aucun chemin n'envoie `$request->all()` au modèle |
 
-Bugs hérités découverts en chemin (non corrigés) : validation API `Fournisseur.type` (`bank|premium_agent|other`) incompatible avec l'enum BDD (`AGENT_PREMIUM|BANQUE`) → création par l'API échoue ; un invité sur une route web protégée provoquait une erreur 500 (`Route [login] not defined`), maintenant redirigé vers `/admin/login`.
+Bugs hérités découverts en chemin (non corrigés) : validation API `Fournisseur.type` (`bank|premium_agent|other`) incompatible avec l'enum BDD (`AGENT_PREMIUM|BANQUE`) → création par l'API échoue ; un invité sur une route web protégée provoquait une erreur 500 (`Route [login] not defined`), maintenant redirigé vers `/master/login`.
 
 ## 7. Architecture cible proposée
 

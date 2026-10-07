@@ -32,7 +32,7 @@ class DettesPage extends Page implements HasTable
     protected static ?string $navigationLabel = 'Dettes';
 
     // Filament dérive par défaut un slug "dettes-page" du nom de la classe :
-    // forcé ici pour correspondre exactement à /admin/dettes.
+    // forcé ici pour correspondre exactement à /master/dettes.
     protected static ?string $slug = 'dettes';
 
     protected static ?string $title = 'Dettes en cours';
@@ -182,7 +182,7 @@ class DettesPage extends Page implements HasTable
                     ->label('Encaisser')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
-                    ->url(fn (Agent $record) => "/admin/remboursements/create?agent_id={$record->id}")
+                    ->url(fn (Agent $record) => "/master/remboursements/create?agent_id={$record->id}")
                     ->visible(fn (Agent $record) => $record->current_debt > 0 && Auth::user()?->can('create_remboursements')),
 
                 Tables\Actions\Action::make('details')

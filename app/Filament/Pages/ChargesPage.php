@@ -2,11 +2,11 @@
 
 namespace App\Filament\Pages;
 
-use App\Tenancy\TenantContext;
 use App\Exports\ChargesExport;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
 use App\Services\ChargeStatisticsService;
+use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Get;
@@ -17,8 +17,8 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Excel as ExcelFormat;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Gestion des Charges : suivi des charges d'exploitation et du revenu net
@@ -38,7 +38,7 @@ class ChargesPage extends Page implements HasTable
     protected static ?string $navigationLabel = 'Gestion des Charges';
 
     // Filament dérive par défaut "charges-page" du nom de la classe : forcé
-    // ici pour correspondre exactement à /admin/charges.
+    // ici pour correspondre exactement à /master/charges.
     protected static ?string $slug = 'charges';
 
     protected static ?string $title = 'Gestion des Charges';

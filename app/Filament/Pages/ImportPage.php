@@ -28,7 +28,7 @@ class ImportPage extends Page implements HasForms
 
     protected static ?string $title = 'Import de Données';
 
-    protected static ?string $navigationGroup = 'Données';
+    protected static ?string $navigationGroup = 'Données du tenant';
 
     protected static ?int $navigationSort = 20;
 

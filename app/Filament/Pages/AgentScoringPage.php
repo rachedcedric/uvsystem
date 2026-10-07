@@ -164,7 +164,7 @@ class AgentScoringPage extends Page implements HasTable
                     ->label('Fiche agent')
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->color('gray')
-                    ->url(fn ($record) => "/admin/agents/{$record->id}"),
+                    ->url(fn ($record) => "/master/agents/{$record->id}"),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('grade')

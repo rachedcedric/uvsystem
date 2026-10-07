@@ -2,12 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Activity;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use App\Models\Activity;
 
 class ActivityLogPage extends Page implements HasTable
 {
@@ -19,7 +19,9 @@ class ActivityLogPage extends Page implements HasTable
 
     protected static ?string $title = 'Journal d\'activité';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static ?string $navigationGroup = 'Gestion du tenant';
+
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static ?int $navigationSort = 99;
 

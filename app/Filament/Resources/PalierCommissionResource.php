@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class PalierCommissionResource extends Resource
 {
@@ -22,9 +23,29 @@ class PalierCommissionResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Paliers de commission';
 
-    protected static ?string $navigationGroup = 'Paramètres';
+    protected static ?string $navigationGroup = 'Paramètres du tenant';
 
     protected static ?int $navigationSort = 101;
+
+    public static function canAccess(): bool
+    {
+        return (bool) Auth::user()?->can('view_system_settings');
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) Auth::user()?->can('edit_system_settings');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return (bool) Auth::user()?->can('edit_system_settings');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return (bool) Auth::user()?->can('edit_system_settings');
+    }
 
     public static function form(Form $form): Form
     {

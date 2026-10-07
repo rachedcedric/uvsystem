@@ -1,7 +1,7 @@
 /*
  * Pont Capacitor pour l'application Android MODELEC CI.
  *
- * Chargé sur toutes les pages du panneau /admin, mais totalement inactif
+ * Chargé sur toutes les pages du panneau /master, mais totalement inactif
  * dans un navigateur classique (window.Capacitor n'existe que dans l'APK).
  *
  * Il couvre ce que la WebView Android ne fait pas seule :
@@ -209,7 +209,7 @@
 
     function atRoot() {
         var path = currentPath();
-        return path === '/' || path === '/m' || path === '/m/login' || path === '/admin' || path === '/admin/login';
+        return path === '/' || path === '/m' || path === '/m/login' || path === '/master' || path === '/master/login';
     }
 
     function goHome() {
@@ -243,8 +243,8 @@
     /* ---------- Retour vers l'interface mobile depuis les écrans Filament ---------- */
 
     function addAppLink() {
-        if (currentPath().indexOf('/admin') !== 0 || document.getElementById('modelec-app-link')) return;
-        if (currentPath() === '/admin/login') return;
+        if (currentPath().indexOf('/master') !== 0 || document.getElementById('modelec-app-link')) return;
+        if (currentPath() === '/master/login') return;
         var link = document.createElement('a');
         link.id = 'modelec-app-link';
         link.href = '/m';

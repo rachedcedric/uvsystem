@@ -225,7 +225,9 @@ class MobileEditDeleteTest extends TestCase
 
     public function test_notification_links_are_translated_to_mobile_screens(): void
     {
-        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), \App\Support\Mobile\AdminUrl::toMobile('https://uvsystem.pro/admin/remboursements/create?agent_id=12'));
+        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), \App\Support\Mobile\AdminUrl::toMobile('https://uvsystem.pro/master/remboursements/create?agent_id=12'));
+        $this->assertSame(route('m.dettes.agent', 7), \App\Support\Mobile\AdminUrl::toMobile('/master/dettes/7'));
+        $this->assertSame(route('m.home'), \App\Support\Mobile\AdminUrl::toMobile('/master'));
         $this->assertSame(route('m.dettes.agent', 7), \App\Support\Mobile\AdminUrl::toMobile('/admin/dettes/7'));
         $this->assertSame(route('m.home'), \App\Support\Mobile\AdminUrl::toMobile('/admin'));
         $this->assertSame('https://exemple.com/x', \App\Support\Mobile\AdminUrl::toMobile('https://exemple.com/x'));

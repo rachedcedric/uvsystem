@@ -27,7 +27,7 @@ class UvTransactionController extends Controller
      *
      * period=today + agent_id + type=distribution reuses
      * UvTransaction::scopeVentesAgentDuJour() (même source de vérité que la
-     * page /admin/uv-transactions/create) et ajoute un résumé
+     * page /master/uv-transactions/create) et ajoute un résumé
      * (total_transactions / total_amount) à la réponse.
      */
     public function index(Request $request): JsonResponse

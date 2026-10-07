@@ -20,7 +20,7 @@ use Tests\TestCase;
  * Régression : un remboursement dont le montant est EXACTEMENT égal au
  * reste à payer était refusé à tort ("... ne peut pas dépasser le reste à
  * payer.") lorsque l'agent arrivait présélectionné (bouton "Encaisser" sur
- * /admin/dettes, ?agent_id=X). Cause : la règle de validation lisait un
+ * /master/dettes, ?agent_id=X). Cause : la règle de validation lisait un
  * champ caché (_current_debt) alimenté uniquement par afterStateUpdated(),
  * qui ne se déclenche jamais lors d'un remplissage programmatique du
  * formulaire (fillForm()) — seulement sur une interaction live réelle.

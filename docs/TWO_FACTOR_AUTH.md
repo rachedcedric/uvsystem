@@ -97,7 +97,7 @@ php artisan route:list --path=2fa
 
 ### Étape 1 : Accéder à la page de sécurité
 
-1. Connectez-vous au panel admin : **https://www.uvsystem.pro/admin**
+1. Connectez-vous au panel admin : **https://www.uvsystem.pro/master**
 2. Dans le menu de gauche, section **"Mon Compte"**
 3. Cliquez sur **"Sécurité 2FA"** (icône bouclier 🛡️)
 

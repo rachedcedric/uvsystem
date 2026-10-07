@@ -28,7 +28,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('master')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->brandName('MODELEC CI')
             ->brandLogo(asset('images/logo.png'))
@@ -67,19 +67,19 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Mon Compte')
                     ->icon('heroicon-o-user-circle'),
                 NavigationGroup::make()
-                    ->label('Données')
+                    ->label('Données du tenant')
                     ->icon('heroicon-o-folder-open'),
                 NavigationGroup::make()
                     ->label('Gestion des Ventes')
                     ->icon('heroicon-o-shopping-cart'),
                 NavigationGroup::make()
-                    ->label('Système')
+                    ->label('Notifications du tenant')
                     ->icon('heroicon-o-cog-8-tooth'),
                 NavigationGroup::make()
-                    ->label('Paramètres')
+                    ->label('Paramètres du tenant')
                     ->icon('heroicon-o-cog-6-tooth'),
                 NavigationGroup::make()
-                    ->label('Administration')
+                    ->label('Gestion du tenant')
                     ->icon('heroicon-o-wrench-screwdriver'),
             ])
             ->sidebarCollapsibleOnDesktop()

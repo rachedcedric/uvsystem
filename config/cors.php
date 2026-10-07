@@ -20,7 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     // Origines autorisées : liste explicite par environnement (CORS_ALLOWED_ORIGINS, séparées par des virgules).
-    // L'APK et /admin sont same-origin et n'ont pas besoin de CORS ; ceci ne sert qu'aux clients API externes.
+    // L'APK et /master sont same-origin et n'ont pas besoin de CORS ; ceci ne sert qu'aux clients API externes.
     'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env(
         'CORS_ALLOWED_ORIGINS',
         'https://uv-system.com,https://app.uv-system.com'

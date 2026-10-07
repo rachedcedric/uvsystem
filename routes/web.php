@@ -28,6 +28,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/admin/{path?}', function (\Illuminate\Http\Request $request, ?string $path = null) {
+    $target = '/master'.($path ? '/'.$path : '');
+    $query = $request->getQueryString();
+
+    return redirect($query ? $target.'?'.$query : $target, 301);
+})->where('path', '.*');
+
 // 2FA Challenge Routes (accessible after login but before panel access)
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/2fa/challenge', [TwoFactorChallengeController::class, 'show'])

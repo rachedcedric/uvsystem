@@ -90,7 +90,7 @@ class DebtReminderTest extends TestCase
         $this->assertNotNull($notif);
         $this->assertStringContainsString('KOFFI Jean', $notif->data['title']);
         $this->assertStringContainsString('150 000 FCFA', $notif->data['title']);
-        $this->assertSame("/admin/remboursements/create?agent_id={$agent->id}", $notif->data['url']);
+        $this->assertSame("/master/remboursements/create?agent_id={$agent->id}", $notif->data['url']);
         $this->assertSame($agent->id, $notif->data['agent_id']);
         $this->assertSame('En cours', $notif->data['debt_status_label']);
         $this->assertSame($this->admin->id, $notif->notifiable_id);
@@ -114,7 +114,7 @@ class DebtReminderTest extends TestCase
         $this->service->checkAndSendDebtReminders();
 
         $this->actingAs($this->admin)
-            ->get('/admin/notifications')
+            ->get('/master/notifications')
             ->assertOk()
             ->assertSee($agent->name)
             ->assertSee('150 000 FCFA')

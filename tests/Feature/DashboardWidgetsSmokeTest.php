@@ -25,7 +25,7 @@ class DashboardWidgetsSmokeTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('master');
 
-        $response = $this->actingAs($user)->get('/admin');
+        $response = $this->actingAs($user)->get('/master');
 
         $response->assertOk()
             ->assertSee('css/filament-compact.css', false);
@@ -74,7 +74,7 @@ class DashboardWidgetsSmokeTest extends TestCase
         $this->assertSame('full', $columnSpan);
 
         $this->actingAs($user)
-            ->get('/admin/notifications')
+            ->get('/master/notifications')
             ->assertOk()
             ->assertSee('md:grid-cols-2', false)
             ->assertSee('xl:grid-cols-4', false);
@@ -121,7 +121,7 @@ class DashboardWidgetsSmokeTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->actingAs($user)->get('/admin');
+        $response = $this->actingAs($user)->get('/master');
         $response->assertOk();
 
         $this->actingAs($user);

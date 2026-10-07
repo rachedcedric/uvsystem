@@ -172,7 +172,7 @@ describe('CreateRemboursementFournisseur — preselection and reuse of registere
         $fournisseur = creditFournisseur('KOFFI Grossiste');
         approvisionnerFournisseur($fournisseur, $admin, 100_000);
 
-        $response = $this->get('/admin/remboursements-fournisseurs/create?fournisseur_id='.$fournisseur->id);
+        $response = $this->get('/master/remboursements-fournisseurs/create?fournisseur_id='.$fournisseur->id);
 
         $response->assertOk();
         $response->assertSee('KOFFI Grossiste');

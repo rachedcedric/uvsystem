@@ -30,7 +30,7 @@ function retourUvAdmin(): User
 }
 
 describe('Masquage UI de "Retour" à la création (backend intact)', function () {
-    it('does not offer the "Retour" option on /admin/uv-transactions/create, only "Distribution"', function () {
+    it('does not offer the "Retour" option on /master/uv-transactions/create, only "Distribution"', function () {
         $admin = retourUvAdmin();
         $this->actingAs($admin);
 

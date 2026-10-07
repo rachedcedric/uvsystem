@@ -132,8 +132,8 @@ class AlertesWidget extends BaseWidget
                             // Envoi SMS
                             if (in_array($channel, ['sms', 'both'])) {
                                 $smsMessage = "Bonjour {$record->name}, vous avez une dette de ".
-                                    number_format($record->current_debt, 0, ',', ' ')." FCFA. Merci de régulariser. - MODELEC CI";
-                                
+                                    number_format($record->current_debt, 0, ',', ' ').' FCFA. Merci de régulariser. - MODELEC CI';
+
                                 if ($smsService->sendToAgent($record, $smsMessage)) {
                                     $sentChannels[] = 'SMS';
                                 }
@@ -172,7 +172,7 @@ class AlertesWidget extends BaseWidget
                     ->icon('heroicon-o-eye')
                     ->color('primary')
                     ->size('sm')
-                    ->url(fn (Agent $record): string => "/admin/agents/{$record->id}"),
+                    ->url(fn (Agent $record): string => "/master/agents/{$record->id}"),
             ])
             ->emptyStateHeading('Aucune alerte 🎉')
             ->emptyStateDescription('Tous les agents sont en règle.')

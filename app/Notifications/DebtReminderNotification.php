@@ -70,7 +70,7 @@ class DebtReminderNotification extends Notification implements PushNotificationC
             // Champs métier propres, lus directement par
             // NotificationsRecentesWidget (data.title/data.url) et
             // NotificationsPage::lastReminderAt() (data->agent_id).
-            'url' => "/admin/remboursements/create?agent_id={$this->agent->id}",
+            'url' => "/master/remboursements/create?agent_id={$this->agent->id}",
             'type' => 'warning',
             'notification_kind' => 'debt_reminder',
             'agent_id' => $this->agent->id,

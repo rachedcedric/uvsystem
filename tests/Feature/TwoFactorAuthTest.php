@@ -198,6 +198,6 @@ describe('2FA Challenge Flow', function () {
     it('redirects to admin when 2FA is not enabled', function () {
         $response = $this->actingAs($this->user)->get('/2fa/challenge');
 
-        $response->assertRedirect('/admin');
+        $response->assertRedirect('/master');
     });
 });

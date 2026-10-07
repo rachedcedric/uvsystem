@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Protège l'interface mobile (/m) : il faut être connecté et avoir le droit
- * d'accéder au panneau admin (mêmes rôles que /admin).
+ * d'accéder au panneau admin (mêmes rôles que /master).
  */
 class MobileAccess
 {

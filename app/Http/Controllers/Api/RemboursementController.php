@@ -27,7 +27,7 @@ class RemboursementController extends Controller
      * List all remboursements with pagination.
      *
      * period=today + agent_id réutilise Remboursement::scopeAgentDuJour()
-     * (même source de vérité que la page /admin/remboursements/create) et
+     * (même source de vérité que la page /master/remboursements/create) et
      * ajoute un résumé (total_amount / total_transactions) à la réponse.
      */
     public function index(Request $request): JsonResponse

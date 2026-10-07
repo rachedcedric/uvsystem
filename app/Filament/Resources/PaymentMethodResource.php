@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources;
 
-use App\Tenancy\TenantContext;
 use App\Filament\Resources\PaymentMethodResource\Pages;
 use App\Models\PaymentMethod;
+use App\Tenancy\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentMethodResource extends Resource
 {
@@ -23,9 +24,29 @@ class PaymentMethodResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Modes de paiement';
 
-    protected static ?string $navigationGroup = 'Paramètres';
+    protected static ?string $navigationGroup = 'Paramètres du tenant';
 
     protected static ?int $navigationSort = 100;
+
+    public static function canAccess(): bool
+    {
+        return (bool) Auth::user()?->can('view_system_settings');
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) Auth::user()?->can('edit_system_settings');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return (bool) Auth::user()?->can('edit_system_settings');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return (bool) Auth::user()?->can('edit_system_settings');
+    }
 
     public static function form(Form $form): Form
     {

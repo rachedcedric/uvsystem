@@ -27,7 +27,7 @@ class NotificationsPage extends Page implements HasTable
 
     protected static ?string $title = 'Rappels des dettes';
 
-    protected static ?string $navigationGroup = 'Système';
+    protected static ?string $navigationGroup = 'Notifications du tenant';
 
     protected static ?int $navigationSort = 100;
 
@@ -95,7 +95,7 @@ class NotificationsPage extends Page implements HasTable
                     ->label('Encaisser')
                     ->icon('heroicon-o-banknotes')
                     ->color('success')
-                    ->url(fn (Agent $record) => "/admin/remboursements/create?agent_id={$record->id}")
+                    ->url(fn (Agent $record) => "/master/remboursements/create?agent_id={$record->id}")
                     ->visible(fn () => Auth::user()?->can('create_remboursements')),
             ])
             ->emptyStateHeading('Aucune dette active')

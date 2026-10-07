@@ -33,14 +33,14 @@ Règles : `tenant_id` n'est dans aucun `$fillable` ; une écriture avec un autre
 
 | Rôle | Portée | Accès |
 |---|---|---|
-| `super_admin` | Plateforme, `tenant_id` NULL | `/platform` uniquement (jamais `/admin`, `/m`, API ni données métier). Seul à pouvoir télécharger les sauvegardes |
+| `super_admin` | Plateforme, `tenant_id` NULL | `/platform` uniquement (jamais `/master`, `/m`, API ni données métier). Seul à pouvoir télécharger les sauvegardes |
 | `master` (= TENANT_ADMIN) | Son tenant | Toutes les permissions métier |
 | `admin` (= MANAGER) | Son tenant | Tout sauf gestion des rôles |
 | `comptable`, `commercial` (= USER) | Son tenant | Permissions du seeder `RolesAndPermissionsSeeder` |
 
 Les permissions Spatie existantes (`view_agents`, `create_uv_transactions`, …) sont conservées et toujours évaluées dans le tenant de l'utilisateur. `super_admin` n'a aucune permission métier. Un compte rattaché à un tenant qui recevrait le rôle `super_admin` n'obtient aucun pouvoir (`isSuperAdmin()` exige `tenant_id` NULL) ; les écrans de rôles n'offrent jamais `super_admin`.
 
-Tenant suspendu : `User::canAccessPanel()` refuse → blocage immédiat du web (`/admin`), du mobile (`/m`, y compris les actions Livewire) et de l'API (token inclus), sans suppression de données.
+Tenant suspendu : `User::canAccessPanel()` refuse → blocage immédiat du web (`/master`), du mobile (`/m`, y compris les actions Livewire) et de l'API (token inclus), sans suppression de données.
 
 ## Tables modifiées
 
@@ -107,7 +107,7 @@ L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
 
 | Population | Règle |
 |---|---|
-| Tout utilisateur qui a activé la 2FA | Code exigé à chaque nouvelle session sur `/admin`, `/agent`, `/platform`, `/m` (y compris actions Livewire) et à la connexion API (`otp`). Option « faire confiance à cet appareil » 30 jours (liée au secret : réinitialiser la 2FA invalide les appareils) |
+| Tout utilisateur qui a activé la 2FA | Code exigé à chaque nouvelle session sur `/master`, `/agent`, `/platform`, `/m` (y compris actions Livewire) et à la connexion API (`otp`). Option « faire confiance à cet appareil » 30 jours (liée au secret : réinitialiser la 2FA invalide les appareils) |
 | `master`, `admin` | Bandeau de rappel tant que `SECURITY_2FA_ENFORCE_FROM` est vide ou dans le futur ; **obligatoire** (redirection vers l'activation) à partir de cette date |
 | `super_admin` | Toujours obligatoire, sans délai |
 | `comptable`, `commercial` | Facultative |

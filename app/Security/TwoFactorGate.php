@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Cookie;
  * session / l'appareil courant a déjà prouvé le second facteur.
  *
  * Verrouillage évité par construction :
- *  - maîtres/admins : bandeau de rappel tant que `security.authentication.2fa_enforce_from`
+ *  - maîtres/masters : bandeau de rappel tant que `security.authentication.2fa_enforce_from`
  *    n'est pas atteinte (vide = jamais bloquant) ;
  *  - jamais de blocage pour qui n'a pas la 2FA avant la date ; la page d'activation reste toujours
  *    accessible ; codes de récupération et réinitialisation par la plateforme en secours.

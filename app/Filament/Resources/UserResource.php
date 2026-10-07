@@ -19,9 +19,13 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Utilisateurs';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static ?string $navigationGroup = 'Gestion du tenant';
 
     protected static ?int $navigationSort = 100;
+
+    protected static ?string $modelLabel = 'utilisateur';
+
+    protected static ?string $pluralModelLabel = 'utilisateurs';
 
     public static function getNavigationBadge(): ?string
     {
@@ -70,7 +74,8 @@ class UserResource extends Resource
                             ->relationship('roles', 'name', fn ($query) => $query->whereIn('name', User::assignableRoleNames()))
                             ->preload()
                             ->searchable()
-                            ->helperText('master = accès total, admin = tout sauf gestion rôles, comptable = finances, commercial = agents/transactions'),
+                            ->visible(fn (): bool => auth()->user()?->isMaster() && auth()->user()?->can('assign_roles'))
+                            ->helperText('master = administration complète du tenant, admin = tout sauf attribution des rôles, comptable = finances, commercial = agents/transactions'),
                     ]),
             ]);
     }
@@ -122,12 +127,7 @@ class UserResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
-                    ->hidden(fn (User $record): bool => $record->hasRole('master')),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    ->visible(fn (User $record): bool => static::canDelete($record)),
             ]);
     }
 
@@ -147,6 +147,25 @@ class UserResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['master', 'admin']) ?? false;
+        return auth()->user()?->can('view_users') ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('create_users') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->can('edit_users') ?? false;
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = auth()->user();
+
+        return ($user?->can('delete_users') ?? false)
+            && $user->getKey() !== $record->getKey()
+            && ! $record->hasRole('master');
     }
 }

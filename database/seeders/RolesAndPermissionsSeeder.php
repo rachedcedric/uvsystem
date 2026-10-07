@@ -134,20 +134,21 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 0. SUPER_ADMIN - administrateur de la plateforme SaaS (hors de tout tenant).
         // Aucune permission métier : il gère les tenants dans /platform, jamais leurs données.
-        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web'])
+            ->syncPermissions([]);
 
-        // 1. MASTER - Accès Total (toutes les permissions)
+        // 1. MASTER - toutes les permissions du tenant, jamais les capacités globales/protégées.
         $master = Role::firstOrCreate(['name' => 'master', 'guard_name' => 'web']);
-        $master->syncPermissions(Permission::all());
-        $this->command->info('✅ MASTER : '.Permission::count().' permissions (ACCÈS TOTAL)');
+        $tenantPermissions = Permission::query()
+            ->whereNotIn('name', User::FORBIDDEN_TENANT_PERMISSIONS)
+            ->get();
+        $master->syncPermissions($tenantPermissions);
+        $this->command->info('✅ MASTER : '.$tenantPermissions->count().' permissions (administration complète du tenant)');
 
         // 2. ADMIN - Tout sauf gestion des rôles
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         $adminPermissions = Permission::whereNotIn('name', [
-            'view_roles',
-            'create_roles',
-            'edit_roles',
-            'delete_roles',
+            ...User::FORBIDDEN_TENANT_PERMISSIONS,
             'assign_roles',
         ])->pluck('name')->toArray();
         $admin->syncPermissions($adminPermissions);

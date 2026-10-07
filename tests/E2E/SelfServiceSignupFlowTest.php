@@ -137,7 +137,7 @@ class SelfServiceSignupFlowTest extends TestCase
         Livewire::test(Login::class)->set('email', 'gerant1@prospect.example')->set('password', 'Un-Mot-De-Passe-12')
             ->call('login')->assertHasNoErrors()->assertRedirect(route('m.home'));
         $this->get('/m')->assertOk();
-        $this->get('/admin')->assertOk();
+        $this->get('/master')->assertOk();
         $this->get('/m/abonnement')->assertOk()->assertSee('Offre Pro')->assertSee('Essai');
         $this->get('/platform')->assertForbidden(); // jamais le panneau plateforme
 

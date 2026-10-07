@@ -52,7 +52,7 @@ class CreateRemboursement extends CreateRecord
 
         // Au tout premier chargement (rien à préserver encore), une
         // notification de dette peut présélectionner l'agent via
-        // ?agent_id=XX (ex: /admin/remboursements/create?agent_id=12). On
+        // ?agent_id=XX (ex: /master/remboursements/create?agent_id=12). On
         // ne fait jamais confiance à cette valeur sans vérifier qu'il s'agit
         // bien d'un agent actif réel.
         $agentIdToApply = $preservedAgentId ?: $this->resolvePreselectedAgentId();
@@ -138,7 +138,7 @@ class CreateRemboursement extends CreateRecord
             \Filament\Actions\Action::make('backToDettes')
                 ->label('← Retour aux Dettes')
                 ->color('gray')
-                ->url('/admin/dettes'),
+                ->url('/master/dettes'),
         ];
     }
 

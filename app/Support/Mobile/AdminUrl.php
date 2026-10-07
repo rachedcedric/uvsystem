@@ -16,17 +16,21 @@ class AdminUrl
         $path = rtrim($parts['path'] ?? '', '/');
         parse_str($parts['query'] ?? '', $query);
 
+        if ($path === '/admin' || str_starts_with($path, '/admin/')) {
+            $path = '/master'.substr($path, strlen('/admin'));
+        }
+
         $mobile = match (true) {
-            $path === '/admin/remboursements/create' && isset($query['agent_id']) => self::route('m.remboursements.create', ['agent' => (int) $query['agent_id']]),
-            (bool) preg_match('#^/admin/dettes/(\d+)$#', $path, $m) => self::route('m.dettes.agent', [(int) $m[1]]),
-            $path === '/admin/dettes' => self::route('m.dettes'),
-            (bool) preg_match('#^/admin/agents/(\d+)$#', $path, $m) => self::route('m.agents.show', [(int) $m[1]]),
-            $path === '/admin/agents' => self::route('m.agents'),
-            $path === '/admin/uv-transactions' => self::route('m.ventes'),
-            $path === '/admin/remboursements' => self::route('m.remboursements'),
-            $path === '/admin/commissions' => self::route('m.commissions'),
-            $path === '/admin/dettes-fournisseurs' => self::route('m.dettes', ['v' => 'fournisseurs']),
-            $path === '/admin' || $path === '' => self::route('m.home'),
+            $path === '/master/remboursements/create' && isset($query['agent_id']) => self::route('m.remboursements.create', ['agent' => (int) $query['agent_id']]),
+            (bool) preg_match('#^/master/dettes/(\d+)$#', $path, $m) => self::route('m.dettes.agent', [(int) $m[1]]),
+            $path === '/master/dettes' => self::route('m.dettes'),
+            (bool) preg_match('#^/master/agents/(\d+)$#', $path, $m) => self::route('m.agents.show', [(int) $m[1]]),
+            $path === '/master/agents' => self::route('m.agents'),
+            $path === '/master/uv-transactions' => self::route('m.ventes'),
+            $path === '/master/remboursements' => self::route('m.remboursements'),
+            $path === '/master/commissions' => self::route('m.commissions'),
+            $path === '/master/dettes-fournisseurs' => self::route('m.dettes', ['v' => 'fournisseurs']),
+            $path === '/master' || $path === '' => self::route('m.home'),
             default => null,
         };
 

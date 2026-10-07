@@ -43,7 +43,7 @@ class AgentScoringWidget extends BaseWidget
         return $table
             ->query(function () {
                 // Utiliser la récupération des agents pour l'utiliser en closure lors du tri en mémoire
-                 return Agent::query()->whereIn('id', $this->getScoring()->pluck('id'));
+                return Agent::query()->whereIn('id', $this->getScoring()->pluck('id'));
             })
             ->columns([
                 Tables\Columns\TextColumn::make('rank')
@@ -51,14 +51,15 @@ class AgentScoringWidget extends BaseWidget
                     ->getStateUsing(function ($record) {
                         $scoring = $this->getScoring();
                         $index = $scoring->search(fn ($s) => $s['id'] === $record->id);
+
                         return $index !== false ? $index + 1 : '-';
                     })
                     ->badge()
                     ->color(fn ($state) => match ((int) $state) {
-                         1 => 'warning', // Gold
-                         2 => 'gray', // Silver
-                         3 => 'danger', // Bronze (utilisé comme third ici pour l'exemple visuel)
-                         default => 'gray',
+                        1 => 'warning', // Gold
+                        2 => 'gray', // Silver
+                        3 => 'danger', // Bronze (utilisé comme third ici pour l'exemple visuel)
+                        default => 'gray',
                     })
                     ->width('50px')
                     ->alignCenter(),
@@ -136,7 +137,7 @@ class AgentScoringWidget extends BaseWidget
                     ->icon('heroicon-o-eye')
                     ->color('primary')
                     ->size('sm')
-                    ->url(fn ($record) => "/admin/agents/{$record->id}"),
+                    ->url(fn ($record) => "/master/agents/{$record->id}"),
             ])
             ->striped()
             ->paginated(false)
