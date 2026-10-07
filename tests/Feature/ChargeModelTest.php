@@ -1,10 +1,10 @@
 <?php
 
+use App\Models\Activity;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\Activity;
 
 uses(RefreshDatabase::class);
 
