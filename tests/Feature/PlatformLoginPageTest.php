@@ -41,11 +41,11 @@ class PlatformLoginPageTest extends TestCase
             ->assertSee('MODELEC CI')
             ->assertSee('Pilotez toutes vos entreprises clientes')
             ->assertSee('images/logo-wide.png', false)
-            ->assertSee('css/filament-platform.css', false)
+            ->assertSee('css/filament-auth.css', false)
             ->assertSee('Mot de passe oublié ?')
             ->getContent();
 
-        $this->assertFileExists(public_path('css/filament-platform.css'));
+        $this->assertFileExists(public_path('css/filament-auth.css'));
         $this->assertFileExists(public_path('images/logo-wide.png'));
         $this->assertStringContainsString('class="pf-aside"', $html);
         // Le formulaire est celui de Filament : mêmes champs, même action.
@@ -101,7 +101,7 @@ class PlatformLoginPageTest extends TestCase
 
     public function test_the_login_page_stays_usable_on_small_screens(): void
     {
-        $css = file_get_contents(public_path('css/filament-platform.css'));
+        $css = file_get_contents(public_path('css/filament-auth.css'));
 
         // Le panneau de marque n'existe qu'à partir de 1024 px ; en dessous, seule la carte est affichée.
         $this->assertMatchesRegularExpression('/\.pf-aside\s*\{\s*display:\s*none;/', $css);

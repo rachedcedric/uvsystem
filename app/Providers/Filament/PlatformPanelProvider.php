@@ -42,6 +42,7 @@ class PlatformPanelProvider extends PanelProvider
             ->favicon(asset('favicon-32.png'))
             ->font('Inter')
             ->assets([
+                Css::make('auth-ui', asset('css/filament-auth.css').'?v='.(@filemtime(public_path('css/filament-auth.css')) ?: 1)),
                 Css::make('platform-ui', asset('css/filament-platform.css').'?v='.(@filemtime(public_path('css/filament-platform.css')) ?: 1)),
             ])
             // Panneau de marque de la connexion : visiteurs non connectés seulement (jamais sur les pages de la console).

@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             ->brandName('MODELEC CI')
             ->brandLogo(asset('images/logo.png'))
             ->darkModeBrandLogo(asset('images/logo-dark.png'))
@@ -44,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->assets([
                 Css::make('compact-ui', asset('css/filament-compact.css')),
+                Css::make('auth-ui', asset('css/filament-auth.css').'?v='.(@filemtime(public_path('css/filament-auth.css')) ?: 1)),
             ])
             ->font('Inter')
             ->navigationGroups([
@@ -98,9 +99,22 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
+            // Connexion : panneau de marque (visiteurs non connectés) et logo au-dessus du titre (page de connexion seulement).
+            ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn () => \Filament\Facades\Filament::auth()->guest() ? view('filament.admin.login-brand') : '',
+            )
+            ->renderHook(
+                PanelsRenderHook::SIMPLE_PAGE_START,
+                fn () => '<img class="pf-logo" src="'.e(asset('images/logo-wide.png')).'" alt="MODELEC CI">',
+                scopes: \App\Filament\Pages\Auth\Login::class,
+            )
             ->renderHook(
                 'panels::auth.login.form.after',
-                fn () => '<p style="text-align:center;margin-top:12px"><a href="'.route('password.request').'" class="text-sm text-primary-600 hover:underline">Mot de passe oublié ?</a></p>',
+                fn () => '<p class="pf-help"><a href="'.e(route('password.request')).'">Mot de passe oublié ?</a></p>'
+                    .'<p class="pf-note">Pas encore de compte ? <a class="pf-link" href="'.e(route('offres', [], false)).'">Commencer gratuitement</a><br>'
+                    .'<a href="'.e(route('m.login', [], false)).'" style="color:inherit;text-decoration:underline">Accès mobile</a> · '
+                    .'<a href="/" style="color:inherit;text-decoration:underline">Retour au site</a></p>',
             )
             ->renderHook(
                 PanelsRenderHook::BODY_START,
