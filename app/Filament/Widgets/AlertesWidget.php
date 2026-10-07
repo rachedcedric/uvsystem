@@ -6,12 +6,13 @@ use App\Models\Agent;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Support\Carbon;
 
 class AlertesWidget extends BaseWidget
 {
-    protected static ?string $heading = '🚨 Alertes & Actions Requises';
+    protected static ?string $heading = 'Alertes et actions requises';
 
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 7;
 
     protected int|string|array $columnSpan = 'full';
 
@@ -27,29 +28,32 @@ class AlertesWidget extends BaseWidget
                     ->where('debt_limit', '>', 0)
                     ->whereRaw('(current_debt / debt_limit * 100) >= 70')
                     ->orderByRaw('(current_debt / debt_limit) DESC')
+                    // Dernier paiement chargé en UNE requête avec la liste (évite 2 requêtes par ligne).
+                    ->withMax('remboursements as last_payment_at', 'created_at')
                     ->limit(10)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('priority')
-                    ->label('')
+                    ->label('Niveau')
+                    ->badge()
                     ->getStateUsing(function (Agent $record): string {
                         $ratio = $record->debt_limit > 0
                             ? ($record->current_debt / $record->debt_limit) * 100
                             : 0;
 
-                        if ($ratio >= 100) {
-                            return '🔴';
-                        }
-                        if ($ratio >= 90) {
-                            return '🟠';
-                        }
-                        if ($ratio >= 80) {
-                            return '🟡';
-                        }
-
-                        return '🟢';
+                        return match (true) {
+                            $ratio >= 100 => 'Critique',
+                            $ratio >= 90 => 'Élevé',
+                            $ratio >= 80 => 'Attention',
+                            default => 'À surveiller',
+                        };
                     })
-                    ->width('40px'),
+                    ->color(fn (string $state): string => match ($state) {
+                        'Critique' => 'danger',
+                        'Élevé' => 'warning',
+                        'Attention' => 'info',
+                        default => 'gray',
+                    }),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Agent')
@@ -82,12 +86,11 @@ class AlertesWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('days_since_last_payment')
                     ->label('Dernier paiement')
                     ->getStateUsing(function (Agent $record): string {
-                        $lastPayment = $record->remboursements()->latest()->first();
-                        if (! $lastPayment) {
+                        if (! $record->last_payment_at) {
                             return 'Jamais';
                         }
 
-                        $days = $lastPayment->created_at->diffInDays(now());
+                        $days = (int) Carbon::parse($record->last_payment_at)->diffInDays(now());
                         if ($days == 0) {
                             return "Aujourd'hui";
                         }
@@ -97,7 +100,7 @@ class AlertesWidget extends BaseWidget
 
                         return "Il y a {$days}j";
                     })
-                    ->color(fn (Agent $record): string => $record->remboursements()->where('created_at', '>=', now()->subDays(7))->exists()
+                    ->color(fn (Agent $record): string => $record->last_payment_at && Carbon::parse($record->last_payment_at)->gte(now()->subDays(7))
                             ? 'success'
                             : 'warning'
                     ),
@@ -112,9 +115,9 @@ class AlertesWidget extends BaseWidget
                         \Filament\Forms\Components\Select::make('channel')
                             ->label('Canal')
                             ->options([
-                                'sms' => '📱 SMS',
-                                'email' => '📧 Email',
-                                'both' => '📱📧 Les deux',
+                                'sms' => 'SMS',
+                                'email' => 'E-mail',
+                                'both' => 'SMS et e-mail',
                             ])
                             ->default('sms')
                             ->required(),
@@ -147,7 +150,7 @@ class AlertesWidget extends BaseWidget
 
                             if (count($sentChannels) > 0) {
                                 \Filament\Notifications\Notification::make()
-                                    ->title('Rappel envoyé ✅')
+                                    ->title('Rappel envoyé')
                                     ->body(implode(' + ', $sentChannels)." à {$record->name}")
                                     ->success()
                                     ->send();
@@ -174,10 +177,9 @@ class AlertesWidget extends BaseWidget
                     ->size('sm')
                     ->url(fn (Agent $record): string => "/master/agents/{$record->id}"),
             ])
-            ->emptyStateHeading('Aucune alerte 🎉')
+            ->emptyStateHeading('Aucune alerte')
             ->emptyStateDescription('Tous les agents sont en règle.')
             ->emptyStateIcon('heroicon-o-check-circle')
-            ->striped()
             ->paginated(false);
     }
 

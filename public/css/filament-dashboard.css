@@ -1,0 +1,315 @@
+/*
+ * Tableau de bord de l'espace entreprise (/master) — mise en forme uniquement.
+ * Portée : .fi-dashboard-page (cette page seulement ; les autres écrans gardent la densité de filament-compact.css).
+ * Aucune donnée, aucune règle d'accès ni aucun comportement n'est touché ici. Thème clair et sombre, sans animation
+ * décorative (seule une transition de 150 ms au survol des cartes cliquables, désactivée si l'utilisateur le demande).
+ */
+
+.fi-dashboard-page {
+    --db-radius: 0.875rem;
+    --db-card-bg: #fff;
+    --db-card-border: rgba(16, 24, 40, 0.07);
+    --db-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    --db-card-shadow-hover: 0 6px 16px -6px rgba(16, 24, 40, 0.14);
+    --db-text: #101828;
+    --db-muted: #667085;
+    --db-line: rgba(16, 24, 40, 0.08);
+    --db-hover-row: rgba(16, 24, 40, 0.03);
+}
+
+.dark .fi-dashboard-page {
+    --db-card-bg: rgb(17 24 39); /* gray-900 */
+    --db-card-border: rgba(255, 255, 255, 0.09);
+    --db-card-shadow: none;
+    --db-card-shadow-hover: 0 6px 16px -6px rgba(0, 0, 0, 0.6);
+    --db-text: #f2f4f7;
+    --db-muted: #98a2b3;
+    --db-line: rgba(255, 255, 255, 0.08);
+    --db-hover-row: rgba(255, 255, 255, 0.04);
+}
+
+/* ---------- en-tête de page ----------------------------------------------------------------------------------- */
+.fi-dashboard-page .fi-header-heading {
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+}
+
+.fi-dashboard-page .fi-header-subheading {
+    margin-top: 0.125rem;
+    color: var(--db-muted);
+    font-size: 0.875rem;
+}
+
+/* ---------- rythme vertical : un espace régulier entre les blocs ---------------------------------------------- */
+.fi-dashboard-page .fi-wi {
+    gap: 1.25rem !important;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview {
+    row-gap: 0.75rem !important;
+}
+
+/* Titre d'un bloc de statistiques (« Vue d'ensemble », « Résultat du mois », « Performance mensuelle ») */
+.fi-dashboard-page .fi-wi-stats-overview-header-heading {
+    color: var(--db-text);
+    font-size: 0.9375rem !important;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-header-description {
+    color: var(--db-muted);
+    font-size: 0.8125rem !important;
+}
+
+/* ---------- cartes KPI ----------------------------------------------------------------------------------------- */
+.fi-dashboard-page .fi-wi-stats-overview-stats-ctn {
+    gap: 1rem !important;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat {
+    padding: 1.125rem 1.25rem !important;
+    border-radius: var(--db-radius) !important;
+    background: var(--db-card-bg);
+    box-shadow: var(--db-card-shadow) !important;
+    --tw-ring-color: var(--db-card-border) !important;
+    transition: box-shadow 0.15s ease, --tw-ring-color 0.15s ease;
+}
+
+.fi-dashboard-page a.fi-wi-stats-overview-stat:hover {
+    box-shadow: var(--db-card-shadow-hover) !important;
+}
+
+.fi-dashboard-page a.fi-wi-stats-overview-stat:focus-visible {
+    outline: 2px solid rgb(var(--primary-500));
+    outline-offset: 2px;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat > .grid {
+    row-gap: 0.625rem !important;
+    justify-items: stretch !important;
+    text-align: start !important;
+}
+
+/* Ligne « libellé + icône » : libellé à gauche, icône dans une pastille à droite */
+.fi-dashboard-page .fi-wi-stats-overview-stat > .grid > .flex:first-child {
+    flex-direction: row-reverse;
+    justify-content: space-between !important;
+    align-items: center;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat-icon {
+    box-sizing: content-box;
+    height: 1.125rem !important;
+    width: 1.125rem !important;
+    padding: 0.5rem;
+    border-radius: 0.625rem;
+    background: rgba(var(--primary-500), 0.1);
+    color: rgb(var(--primary-600)) !important;
+}
+
+.dark .fi-dashboard-page .fi-wi-stats-overview-stat-icon {
+    background: rgba(var(--primary-400), 0.14);
+    color: rgb(var(--primary-400)) !important;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat-label {
+    color: var(--db-muted) !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat-value {
+    color: var(--db-text) !important;
+    font-size: 1.625rem !important;
+    line-height: 2rem !important;
+    font-weight: 650;
+    letter-spacing: -0.02em !important;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Évolution : pastille discrète, colorée seulement quand il y a une tendance (vert / rouge / orange / bleu) */
+.fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-custom) {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat-description {
+    font-size: 0.75rem !important;
+    font-weight: 500;
+    line-height: 1.125rem !important;
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-success) {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-danger) {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-warning) {
+    background: rgba(245, 158, 11, 0.12);
+}
+
+.fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-info) {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.dark .fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-success) {
+    background: rgba(52, 211, 153, 0.14);
+}
+
+.dark .fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-danger) {
+    background: rgba(248, 113, 113, 0.14);
+}
+
+.dark .fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-warning) {
+    background: rgba(251, 191, 36, 0.14);
+}
+
+.dark .fi-dashboard-page .fi-wi-stats-overview-stat div:has(> .fi-wi-stats-overview-stat-description.fi-color-info) {
+    background: rgba(96, 165, 250, 0.14);
+}
+
+/* ---------- blocs (graphiques, tableaux) ----------------------------------------------------------------------- */
+.fi-dashboard-page .fi-section,
+.fi-dashboard-page .fi-ta-ctn {
+    border-radius: var(--db-radius) !important;
+    background: var(--db-card-bg);
+    box-shadow: var(--db-card-shadow) !important;
+    --tw-ring-color: var(--db-card-border) !important;
+}
+
+.fi-dashboard-page .fi-wi .fi-section-header {
+    padding: 1rem 1.25rem 0.5rem !important;
+}
+
+.fi-dashboard-page .fi-wi .fi-section-content {
+    padding: 0.75rem 1.25rem 1.25rem !important;
+}
+
+.fi-dashboard-page .fi-wi .fi-section-header-heading,
+.fi-dashboard-page .fi-ta-header-heading {
+    color: var(--db-text);
+    font-size: 0.9375rem !important;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+}
+
+.fi-dashboard-page .fi-wi .fi-section-header-description,
+.fi-dashboard-page .fi-ta-header-description {
+    color: var(--db-muted);
+    font-size: 0.8125rem !important;
+    line-height: 1.25rem !important;
+}
+
+.fi-dashboard-page .fi-wi-chart canvas {
+    max-height: 260px !important;
+}
+
+/* ---------- tableaux ------------------------------------------------------------------------------------------- */
+.fi-dashboard-page .fi-ta-table thead tr,
+.fi-dashboard-page table.fi-ta-table thead tr {
+    background: transparent !important;
+}
+
+.fi-dashboard-page .fi-ta-header-cell-label,
+.fi-dashboard-page table.fi-ta-table thead th {
+    color: var(--db-muted) !important;
+    font-size: 0.6875rem !important;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.fi-dashboard-page .fi-ta-table tbody tr:hover,
+.fi-dashboard-page table.fi-ta-table tbody tr:hover {
+    background: var(--db-hover-row);
+}
+
+.fi-dashboard-page .fi-ta-table tbody tr,
+.fi-dashboard-page table.fi-ta-table tbody tr {
+    border-color: var(--db-line) !important;
+}
+
+/* Tableau « Activité récente » : ses classes `dark:text-*` ne sont pas toutes dans le CSS compilé de Filament,
+   le texte restait gris foncé sur fond sombre. On fixe ici des gris lisibles. */
+.dark .fi-dashboard-page .fi-wi table td.text-gray-700 {
+    color: #d0d5dd;
+}
+
+.dark .fi-dashboard-page .fi-wi table td .text-gray-500,
+.dark .fi-dashboard-page .fi-wi table td.text-gray-500 {
+    color: var(--db-muted);
+}
+
+/* ---------- actions rapides ------------------------------------------------------------------------------------ */
+.fi-dashboard-page .fi-quick-actions__bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 0.875rem 1.25rem;
+    border-radius: var(--db-radius);
+    background: var(--db-card-bg);
+    box-shadow: 0 0 0 1px var(--db-card-border), var(--db-card-shadow);
+}
+
+.fi-dashboard-page .fi-quick-actions__title {
+    color: var(--db-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.fi-dashboard-page .fi-quick-actions__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+    .fi-dashboard-page .fi-quick-actions__bar {
+        flex-direction: row;
+        align-items: center;
+        gap: 1.25rem;
+    }
+
+    .fi-dashboard-page .fi-quick-actions__title {
+        flex: none;
+    }
+}
+
+/* Tactile : zones d'appui d'au moins 44 px, deux boutons par ligne */
+@media (max-width: 640px) {
+    .fi-dashboard-page .fi-quick-actions__list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .fi-dashboard-page .fi-quick-actions__list .fi-btn {
+        min-height: 2.75rem;
+        justify-content: center;
+    }
+
+    .fi-dashboard-page .fi-wi-stats-overview-stat {
+        padding: 1rem !important;
+    }
+
+    .fi-dashboard-page .fi-wi-stats-overview-stat-value {
+        font-size: 1.5rem !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fi-dashboard-page .fi-wi-stats-overview-stat {
+        transition: none;
+    }
+}

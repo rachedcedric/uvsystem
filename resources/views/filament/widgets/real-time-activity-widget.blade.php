@@ -17,7 +17,7 @@
 
 <x-filament-widgets::widget>
     <x-filament::section
-        heading="⚡ Activité en temps réel"
+        heading="Activité récente"
         description="Dernières ventes, approvisionnements et remboursements enregistrés"
     >
         <div class="overflow-x-auto">
@@ -26,7 +26,7 @@
                     <tr class="border-b border-gray-200 dark:border-white/10">
                         <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Type</th>
                         <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Référence</th>
-                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Tenant / Utilisateur</th>
+                        <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Agent / Utilisateur</th>
                         <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-end">Montant</th>
                         <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Date et heure</th>
                         <th class="px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 text-start">Statut</th>

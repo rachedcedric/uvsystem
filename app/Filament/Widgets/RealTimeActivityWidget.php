@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-use App\Tenancy\TenantContext;
 use App\Models\Agent;
 use App\Models\User;
+use App\Tenancy\TenantContext;
 use Filament\Widgets\Widget;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +12,7 @@ class RealTimeActivityWidget extends Widget
 {
     protected static string $view = 'filament.widgets.real-time-activity-widget';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 8;
 
     protected static ?string $pollingInterval = '15s';
 

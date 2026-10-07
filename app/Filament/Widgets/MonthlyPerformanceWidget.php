@@ -13,13 +13,18 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class MonthlyPerformanceWidget extends BaseWidget
 {
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected static ?string $pollingInterval = '60s';
 
     protected function getHeading(): ?string
     {
-        return '📆 Performance Mensuelle';
+        return 'Performance mensuelle';
+    }
+
+    protected function getDescription(): ?string
+    {
+        return 'Mois en cours comparé au mois précédent';
     }
 
     protected function getColumns(): int

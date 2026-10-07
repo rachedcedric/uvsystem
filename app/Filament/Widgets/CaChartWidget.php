@@ -10,13 +10,16 @@ use Filament\Widgets\ChartWidget;
 
 class CaChartWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Chiffre d\'Affaires — 7 derniers jours';
+    protected static ?string $heading = 'Chiffre d\'affaires — 7 derniers jours';
 
     protected static ?int $sort = 3;
 
     protected static ?string $pollingInterval = '30s';
 
-    protected int|string|array $columnSpan = 'full';
+    protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 2];
+
+    /** Calculé une seule fois par rendu (le graphique et sa description en ont tous deux besoin). */
+    private ?array $dailyRevenueCache = null;
 
     protected static ?string $maxHeight = '280px';
 
@@ -26,6 +29,11 @@ class CaChartWidget extends ChartWidget
      *                           sans vente valent explicitement 0 (jamais omis).
      */
     private function getDailyRevenue(): array
+    {
+        return $this->dailyRevenueCache ??= $this->computeDailyRevenue();
+    }
+
+    private function computeDailyRevenue(): array
     {
         $rows = UvTransaction::where('transaction_type', 'distribution')
             ->where('transaction_date', '>=', Carbon::today()->subDays(6))
@@ -98,11 +106,10 @@ class CaChartWidget extends ChartWidget
         $indicators = DailyBarChart::indicators($labels, $revenue);
 
         return sprintf(
-            'Total : %s FCFA · Moyenne/jour : %s FCFA · %s%% %s vs 7 jours précédents · %s',
+            'Total : %s FCFA · Moyenne/jour : %s FCFA · %s%% vs 7 jours précédents · %s',
             number_format($total, 0, ',', ' '),
             number_format($moyenne, 0, ',', ' '),
             $sign.number_format($variation, 1, ',', ' '),
-            $variation >= 0 ? '📈' : '📉',
             $indicators,
         );
     }

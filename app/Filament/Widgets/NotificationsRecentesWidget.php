@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationsRecentesWidget extends BaseWidget
 {
-    protected static ?string $heading = '🔔 Notifications Récentes';
+    protected static ?string $heading = 'Notifications récentes';
 
-    protected static ?int $sort = 14;
+    protected static ?int $sort = 9;
 
     protected int|string|array $columnSpan = 'full';
 

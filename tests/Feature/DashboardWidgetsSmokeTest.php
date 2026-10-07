@@ -132,14 +132,14 @@ class DashboardWidgetsSmokeTest extends TestCase
             ->assertSee('Commission prévisionnelle');
 
         Livewire::test(\App\Filament\Widgets\RealTimeActivityWidget::class)
-            ->assertSee('Activité en temps réel')
+            ->assertSee('Activité récente')
             ->assertSee($uvTransaction->reference);
 
         Livewire::test(\App\Filament\Widgets\CaChartWidget::class)
-            ->assertSee('Chiffre d\'Affaires');
+            ->assertSee('Chiffre d\'affaires');
 
         Livewire::test(\App\Filament\Widgets\MonthlyPerformanceWidget::class)
-            ->assertSee('Performance Mensuelle');
+            ->assertSee('Performance mensuelle');
 
         Livewire::test(\App\Filament\Widgets\MonthlyChartWidget::class)
             ->assertSee('Évolution du CA');

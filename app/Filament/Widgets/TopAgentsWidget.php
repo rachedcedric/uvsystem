@@ -10,11 +10,20 @@ use Illuminate\Support\Facades\DB;
 
 class TopAgentsWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Top 5 Agents (CA du mois)';
+    protected static ?string $heading = 'Top 5 agents — CA du mois';
 
-    protected static ?int $sort = 10;
+    protected int|string|array $columnSpan = ['default' => 'full', 'xl' => 1];
+
+    private ?array $dataCache = null;
+
+    protected static ?int $sort = 4;
 
     protected function getData(): array
+    {
+        return $this->dataCache ??= $this->computeData();
+    }
+
+    private function computeData(): array
     {
         $topAgents = UvTransaction::query()
             ->select('agent_id', DB::raw('SUM(amount) as total_ca'))

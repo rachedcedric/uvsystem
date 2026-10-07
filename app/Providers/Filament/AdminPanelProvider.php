@@ -44,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->assets([
                 Css::make('compact-ui', asset('css/filament-compact.css')),
+                Css::make('dashboard-ui', asset('css/filament-dashboard.css').'?v='.(@filemtime(public_path('css/filament-dashboard.css')) ?: 1)),
                 Css::make('auth-ui', asset('css/filament-auth.css').'?v='.(@filemtime(public_path('css/filament-auth.css')) ?: 1)),
             ])
             ->font('Inter')

@@ -173,6 +173,11 @@ class MainKpisWidget extends BaseWidget
 
     protected function getHeading(): ?string
     {
-        return '📊 Vue d\'ensemble — '.now()->translatedFormat('l d F Y');
+        return 'Vue d\'ensemble';
+    }
+
+    protected function getDescription(): ?string
+    {
+        return ucfirst(now()->translatedFormat('l d F Y')).' · évolution par rapport à la veille';
     }
 }

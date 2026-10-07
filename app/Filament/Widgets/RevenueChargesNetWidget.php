@@ -25,6 +25,16 @@ class RevenueChargesNetWidget extends BaseWidget
         return 3;
     }
 
+    protected function getHeading(): ?string
+    {
+        return 'Résultat du mois';
+    }
+
+    protected function getDescription(): ?string
+    {
+        return 'Revenus, charges et revenu net du mois en cours';
+    }
+
     protected function getStats(): array
     {
         $summary = app(ChargeStatisticsService::class)->summary(ChargeStatisticsService::PERIOD_THIS_MONTH);

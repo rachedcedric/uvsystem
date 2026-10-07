@@ -10,9 +10,9 @@ use Filament\Widgets\ChartWidget;
 
 class MonthlyChartWidget extends ChartWidget
 {
-    protected static ?string $heading = '📈 Évolution du CA — Mois en cours';
+    protected static ?string $heading = 'Évolution du CA — mois en cours';
 
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 6;
 
     protected static ?string $pollingInterval = '60s';
 
@@ -20,7 +20,14 @@ class MonthlyChartWidget extends ChartWidget
 
     protected static ?string $maxHeight = '280px';
 
+    private ?array $dataCache = null;
+
     protected function getData(): array
+    {
+        return $this->dataCache ??= $this->computeData();
+    }
+
+    private function computeData(): array
     {
         $debutMois = Carbon::now()->startOfMonth();
         $aujourdhui = Carbon::today();
