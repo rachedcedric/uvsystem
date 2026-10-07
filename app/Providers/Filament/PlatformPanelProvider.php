@@ -9,7 +9,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Assets\Css;
@@ -61,7 +60,8 @@ class PlatformPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Platform/Resources'), for: 'App\\Filament\\Platform\\Resources')
             ->discoverPages(in: app_path('Filament/Platform/Pages'), for: 'App\\Filament\\Platform\\Pages')
             ->discoverWidgets(in: app_path('Filament/Platform/Widgets'), for: 'App\\Filament\\Platform\\Widgets')
-            ->pages([Pages\Dashboard::class])
+            // Ordre des groupes du menu : tout est rangé dans un groupe (aucun élément isolé).
+            ->navigationGroups(['Gestion du SaaS', 'Abonnements', 'Système'])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
