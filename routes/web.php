@@ -4,6 +4,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ChargeJustificatifController;
 use App\Http\Controllers\ExportDownloadController;
 use App\Http\Controllers\RemboursementReceiptController;
+use App\Http\Controllers\TenantBrandingLogoController;
 use App\Http\Controllers\TwoFactorChallengeController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,9 @@ Route::get('/admin/{path?}', function (\Illuminate\Http\Request $request, ?strin
 
 // 2FA Challenge Routes (accessible after login but before panel access)
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/tenant-branding/logo', TenantBrandingLogoController::class)
+        ->name('tenant.branding.logo');
+
     Route::get('/2fa/challenge', [TwoFactorChallengeController::class, 'show'])
         ->name('2fa.challenge');
 

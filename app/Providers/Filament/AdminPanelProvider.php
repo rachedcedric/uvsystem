@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\TriggerDebtReminderCycle;
+use App\Services\TenantDocumentBranding;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -19,6 +20,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -30,9 +32,9 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('master')
             ->login(\App\Filament\Pages\Auth\Login::class)
-            ->brandName('MODELEC CI')
-            ->brandLogo(asset('images/logo.png'))
-            ->darkModeBrandLogo(asset('images/logo-dark.png'))
+            ->brandName(fn (): string => auth()->user()?->tenant?->name ?: 'MODELEC CI')
+            ->brandLogo(fn (): string => $this->tenantLogoUrl(false))
+            ->darkModeBrandLogo(fn (): string => $this->tenantLogoUrl(true))
             ->brandLogoHeight('2.5rem')
             ->favicon(asset('favicon-32.png'))
             ->colors([
@@ -45,6 +47,7 @@ class AdminPanelProvider extends PanelProvider
             ->assets([
                 Css::make('compact-ui', asset('css/filament-compact.css')),
                 Css::make('dashboard-ui', asset('css/filament-dashboard.css').'?v='.(@filemtime(public_path('css/filament-dashboard.css')) ?: 1)),
+                Css::make('account-ui', asset('css/filament-account.css').'?v='.(@filemtime(public_path('css/filament-account.css')) ?: 1)),
                 Css::make('auth-ui', asset('css/filament-auth.css').'?v='.(@filemtime(public_path('css/filament-auth.css')) ?: 1)),
             ])
             ->font('Inter')
@@ -156,5 +159,21 @@ class AdminPanelProvider extends PanelProvider
                 TriggerDebtReminderCycle::class,
                 EnforceTwoFactor::class,
             ]);
+    }
+
+    private function tenantLogoUrl(bool $dark): string
+    {
+        $tenant = auth()->user()?->tenant;
+        $path = $tenant ? app(TenantDocumentBranding::class)->storedLogoPath($tenant) : null;
+
+        if (
+            $tenant
+            && $path !== null
+            && Storage::disk('public')->exists($path)
+        ) {
+            return route('tenant.branding.logo', ['v' => $tenant->updated_at?->timestamp]);
+        }
+
+        return asset($dark ? 'images/logo-dark.png' : 'images/logo.png');
     }
 }

@@ -9,6 +9,7 @@ use App\Filament\Platform\Resources\SubscriptionPlanResource\Pages\EditSubscript
 use App\Filament\Platform\Resources\SubscriptionPlanResource\Pages\ListSubscriptionPlans;
 use App\Filament\Platform\Resources\TenantSubscriptionResource\Pages\ListTenantSubscriptions;
 use App\Filament\Platform\Widgets\SubscriptionStatsOverview;
+use App\Filament\Platform\Widgets\TenantHealthOverview;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Services\Subscriptions\SubscriptionManager;
@@ -246,9 +247,12 @@ class SubscriptionPlatformTest extends SubscriptionTestCase
         $super = $this->superAdmin();
         $this->actingAs($this->userIn($this->tenant(), 'master'));
         $this->assertFalse(SubscriptionStatsOverview::canView());
+        $this->assertFalse(TenantHealthOverview::canView());
 
         $this->actingAs($super);
         $this->assertTrue(SubscriptionStatsOverview::canView());
+        $this->assertTrue(TenantHealthOverview::canView());
         Livewire::test(SubscriptionStatsOverview::class)->assertSuccessful();
+        Livewire::test(TenantHealthOverview::class)->assertSuccessful();
     }
 }
