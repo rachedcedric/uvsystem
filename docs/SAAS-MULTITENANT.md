@@ -37,6 +37,7 @@ Règles : `tenant_id` n'est dans aucun `$fillable` ; une écriture avec un autre
 | `master` (= TENANT_ADMIN) | Son tenant | Toutes les permissions métier |
 | `admin` (= MANAGER) | Son tenant | **Mêmes permissions que le master** : chaque compte client a son admin. Ne peut ni créer ni promouvoir un master, ni modifier le compte d'un master (`App\Security\RoleAssignmentGuard`, `UserPolicy`) |
 | comptable, commercial | Son tenant | Périmètre limité ; n'attribuent aucun rôle |
+| `lecture_seule` | Son tenant | Consultation uniquement ; toute écriture refusée côté serveur (`ReadOnlyGuard`). Détail, permissions retirées et mise à jour d'une base : voir [ROLES.md](ROLES.md) |
 
 Règles d'attribution des rôles (web **et** mobile, toujours côté serveur) : le master attribue tous les rôles de l'entreprise ; l'admin attribue `admin`, `comptable`, `commercial` mais jamais `master` ; aucun rôle de plateforme n'est attribuable ; l'entreprise garde toujours au moins un master ; aucun compte master ne se supprime. Les permissions protégées (`FORBIDDEN_TENANT_PERMISSIONS` : gestion de la définition des rôles, suppression du journal, sauvegardes globales) ne sont données à aucun compte client. **Sur une base existante, relancer** `php artisan db:seed --class=RolesAndPermissionsSeeder --force` pour que les admins reçoivent leurs nouvelles permissions.
 | `comptable`, `commercial` (= USER) | Son tenant | Permissions du seeder `RolesAndPermissionsSeeder` |
@@ -105,6 +106,8 @@ L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
 - Un `insert()` de masse via le query builder ne passe par aucun modèle : la colonne NOT NULL le fait échouer (fail closed), mais le code doit créer ses lignes via les modèles.
 - Pas de contrainte composite SQL `(tenant_id, parent_id)` (décision maintenue) : la cohérence parent/enfant est garantie par le contrôle applicatif de `BelongsToTenant` (section suivante). Il ne couvre pas les écritures qui contournent les modèles (`insert()`/`update()` du query builder, `Model::where()->update()`, SQL brut) : le code ne doit pas en faire pour des tables tenantisées.
 - Pas d'impersonation (super admin → tenant) volontairement.
+- Comptes et instance de **démonstration** : voir [DEMO.md](DEMO.md) (développement uniquement, jamais en production).
+- Une écriture par le query builder (`DB::table()`, `->update()` de masse) échappe aussi à `ReadOnlyGuard` : même règle que ci-dessus, le code passe par les modèles.
 
 ## Double authentification (2FA)
 
