@@ -17,6 +17,16 @@ class RemboursementAgentResource extends Resource
 
     protected static bool $shouldRegisterNavigation = false;
 
+    /**
+     * Ancienne ressource « partenaires » : sa table (remboursement_agents) n'existe plus dans le schéma actuel, ses pages
+     * plantaient en 500. Le code est conservé (modèles, exports et observateurs l'importent encore) mais l'accès
+     * est fermé : réponse 403 au lieu d'une erreur serveur.
+     */
+    public static function canAccess(): bool
+    {
+        return false;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
     protected static ?string $navigationLabel = 'Remboursements (Partenaires)';

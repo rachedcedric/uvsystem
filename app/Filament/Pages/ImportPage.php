@@ -40,8 +40,15 @@ class ImportPage extends Page implements HasForms
 
     public ?array $importResults = null;
 
+    /** Import en masse : master et admin uniquement (même règle que l'écran mobile `Import::allowed()`). */
+    public static function canAccess(): bool
+    {
+        return (bool) auth()->user()?->hasAnyRole(['master', 'admin']);
+    }
+
     public function mount(): void
     {
+        abort_unless(static::canAccess(), 403);
         app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
         $this->form->fill();
     }
@@ -126,6 +133,7 @@ class ImportPage extends Page implements HasForms
 
     public function import(): void
     {
+        abort_unless(static::canAccess(), 403);
         app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
         $data = $this->form->getState();
 
@@ -208,6 +216,7 @@ class ImportPage extends Page implements HasForms
 
     public function downloadTemplate(): void
     {
+        abort_unless(static::canAccess(), 403);
         $type = $this->data['import_type'] ?? null;
 
         if (! $type) {

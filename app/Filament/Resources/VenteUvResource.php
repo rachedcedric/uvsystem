@@ -20,6 +20,16 @@ class VenteUvResource extends Resource
     // Caché du menu - Fonctionnalité pour partenaires externes (non utilisée actuellement)
     protected static bool $shouldRegisterNavigation = false;
 
+    /**
+     * Ancienne ressource « partenaires » : sa table (vente_uvs) n'existe plus dans le schéma actuel, ses pages
+     * plantaient en 500. Le code est conservé (modèles, exports et observateurs l'importent encore) mais l'accès
+     * est fermé : réponse 403 au lieu d'une erreur serveur.
+     */
+    public static function canAccess(): bool
+    {
+        return false;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
 
     protected static ?string $navigationLabel = 'Ventes Partenaires';

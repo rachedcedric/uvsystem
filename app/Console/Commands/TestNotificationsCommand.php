@@ -54,7 +54,8 @@ class TestNotificationsCommand extends Command
             ['email' => $email],
             [
                 'name' => 'Test User',
-                'password' => bcrypt('password'),
+                // Compte de test : aucun mot de passe connu (il ne sert qu'à recevoir la notification, jamais à se connecter).
+                'password' => \Illuminate\Support\Str::random(64),
             ]
         );
 

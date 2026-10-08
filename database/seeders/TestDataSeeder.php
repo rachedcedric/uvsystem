@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Console\Commands\Concerns\GuardsDemoCommands;
 use App\Models\Agent;
 use App\Models\Fournisseur;
 use App\Models\Remboursement;
@@ -10,11 +11,19 @@ use Illuminate\Database\Seeder;
 
 class TestDataSeeder extends Seeder
 {
+    use GuardsDemoCommands;
+
     /**
      * Générer des données de test réalistes pour le système UV
      */
     public function run(): void
     {
+        if ($refusal = $this->demoRefusal()) {
+            $this->command->error('Seeder refusé : '.$refusal);
+
+            return;
+        }
+
         $this->command->info('🚀 Génération des données de test...');
 
         // Vérifier qu'on a des agents
