@@ -41,6 +41,13 @@ class Index extends Component
         $this->limit = self::PAGE;
     }
 
+    /** Retour aux filtres par défaut (période de 7 jours, sans recherche). */
+    public function resetFilters(): void
+    {
+        $this->reset('search', 'period');
+        $this->limit = self::PAGE;
+    }
+
     public function loadMore(): void
     {
         $this->limit += self::PAGE;
@@ -93,6 +100,7 @@ class Index extends Component
             'hasMore' => $hasMore,
             'count' => (int) $summary->n,
             'total' => (float) $summary->total,
+            'filtersActive' => trim($this->search) !== '' || $this->period !== 'week',
             'canCreate' => auth()->user()->can('create', UvTransaction::class),
             'stats' => app(PeriodStats::class)->summary('ventes'),
             'topToday' => app(MonthOverview::class)->topAgentsToday(),

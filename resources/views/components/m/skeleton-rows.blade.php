@@ -1,5 +1,5 @@
 @props(['rows' => 3])
-<div class="m-group" aria-busy="true">
+<div {{ $attributes->class(['m-group']) }} aria-busy="true" role="status" aria-label="Chargement">
     @for ($i = 0; $i < $rows; $i++)
         <div class="m-row">
             <span class="m-skel" style="width:40px;height:40px;border-radius:12px"></span>

@@ -7,7 +7,7 @@
         </x-m.field>
 
         @if ($this->agent)
-            <div class="m-callout">
+            <x-m.callout>
                 <dl>
                     <dt>Dette actuelle</dt>
                     <dd>{{ \App\Support\Mobile\Fcfa::format($this->agent->current_debt) }}</dd>
@@ -16,7 +16,7 @@
                     <dt>Solde UV disponible</dt>
                     <dd>{{ \App\Support\Mobile\Fcfa::format($this->masterBalance) }}</dd>
                 </dl>
-            </div>
+            </x-m.callout>
         @endif
 
         <x-m.field label="Montant" :error="$errors->first('amount')">
@@ -24,10 +24,7 @@
         </x-m.field>
 
         @if ($this->warning)
-            <div class="m-callout m-callout--danger">
-                <x-m.icon name="exclamation-triangle" class="m-ico-sm" />
-                <span>{{ $this->warning }}</span>
-            </div>
+            <x-m.callout tone="danger" icon="exclamation-triangle"><span>{{ $this->warning }}</span></x-m.callout>
         @endif
 
         <x-m.operation-date-time />

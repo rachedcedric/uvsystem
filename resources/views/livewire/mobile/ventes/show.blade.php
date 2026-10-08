@@ -10,15 +10,17 @@
         @endif
     </x-m.appbar>
 
+    <x-m.access-note />
+
     <div class="m-hero" style="margin-top:6px">
         <div class="m-hero__label">{{ $isSale ? 'Montant vendu' : 'Montant repris' }}</div>
-        <div class="m-hero__amount m-num" style="{{ $cancelled ? 'text-decoration:line-through;opacity:.6' : '' }}">
+        <div class="m-hero__amount m-num {{ $cancelled ? 'is-cancelled' : '' }}">
             {{ \App\Support\Mobile\Fcfa::number($t->amount) }}
             <span class="m-hero__unit">FCFA</span>
         </div>
         <div class="m-hero__foot">
             <span>{{ $t->transaction_date->translatedFormat('l j F Y, H:i') }}</span>
-            @if ($cancelled) <span class="m-badge m-badge--danger">Annulée</span> @endif
+            @if ($cancelled) <x-m.status-badge tone="danger" label="Annulée" /> @endif
         </div>
     </div>
 
@@ -30,16 +32,12 @@
     </div>
 
     <div class="m-section">
-        <dl class="m-group" style="margin-bottom:0">
-            <div class="m-kv"><dt>Solde UV avant</dt><dd>{{ $t->solde_uv_avant !== null ? \App\Support\Mobile\Fcfa::format($t->solde_uv_avant) : 'Non disponible' }}</dd></div>
-            <div class="m-kv"><dt>Solde UV après</dt><dd>{{ $t->solde_uv_apres !== null ? \App\Support\Mobile\Fcfa::format($t->solde_uv_apres) : 'Non disponible' }}</dd></div>
-            @if ($t->fournisseur)
-                <div class="m-kv"><dt>Fournisseur</dt><dd>{{ $t->fournisseur->name }}</dd></div>
-            @endif
-            @if ($t->notes)
-                <div class="m-kv"><dt>Notes</dt><dd>{{ $t->notes }}</dd></div>
-            @endif
-        </dl>
+        <x-m.kv-list style="margin-bottom:0" :items="[
+            ['Solde UV avant', $t->solde_uv_avant !== null ? \App\Support\Mobile\Fcfa::format($t->solde_uv_avant) : 'Non disponible'],
+            ['Solde UV après', $t->solde_uv_apres !== null ? \App\Support\Mobile\Fcfa::format($t->solde_uv_apres) : 'Non disponible'],
+            ['Fournisseur', $t->fournisseur?->name],
+            ['Notes', $t->notes],
+        ]" />
     </div>
 
     @if ($canDuplicate)
@@ -49,36 +47,16 @@
     @endif
 
     @if ($canCancel)
-        <button type="button" class="m-danger-link" data-sheet-open="cancel-sheet">
-            <x-m.icon name="x-circle" class="m-ico-sm" /> Annuler cette vente
-        </button>
-
-        <div id="cancel-sheet" class="m-sheet" role="dialog" aria-label="Confirmer l'annulation">
-            <div class="m-sheet__grip"></div>
-            <div class="m-sheet__title">Annuler cette vente ?</div>
-            <p style="margin:0 20px 16px;color:var(--fg-2)">
-                Les UV sont restitués au solde UV disponible. À utiliser seulement si les UV n'ont finalement pas été distribués.
-            </p>
-            <div style="padding:0 16px;display:grid;gap:10px">
-                <button type="button" class="m-btn" style="background:var(--danger)"
-                        wire:click="cancel" @click="MobileUI.closeSheets()">Oui, annuler la vente</button>
-                <button type="button" class="m-btn m-btn--ghost" data-sheet-close>Non, garder</button>
-            </div>
-        </div>
+        <x-m.sheet-action sheet="cancel-sheet" icon="x-circle">Annuler cette vente</x-m.sheet-action>
+        <x-m.confirm-sheet id="cancel-sheet" title="Annuler cette vente ?" confirm="Oui, annuler la vente" cancel="Non, garder"
+                           text="Les UV sont restitués au solde UV disponible. À utiliser seulement si les UV n'ont finalement pas été distribués."
+                           wire:click="cancel" />
     @endif
 
     @if ($canDelete)
-        <button type="button" class="m-danger-link" style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--danger-soft)" data-sheet-open="delete-sheet">
-            <x-m.icon name="trash" class="m-ico-sm" /> Supprimer la vente
-        </button>
-        <div id="delete-sheet" class="m-sheet" role="dialog" aria-label="Confirmer la suppression">
-            <div class="m-sheet__grip"></div>
-            <div class="m-sheet__title">Supprimer {{ $t->reference }} ?</div>
-            <p style="margin:0 20px 16px;color:var(--fg-2)">La vente est supprimée et les soldes (UV et dette de l'agent) sont recalculés. Pour une vente non livrée, préférez « Annuler cette vente ».</p>
-            <div style="padding:0 16px;display:grid;gap:10px">
-                <button type="button" class="m-btn" style="background:var(--danger)" wire:click="delete" @click="MobileUI.closeSheets()">Oui, supprimer</button>
-                <button type="button" class="m-btn m-btn--ghost" data-sheet-close>Annuler</button>
-            </div>
-        </div>
+        <x-m.sheet-action sheet="delete-sheet" icon="trash" outline>Supprimer la vente</x-m.sheet-action>
+        <x-m.confirm-sheet id="delete-sheet" :title="'Supprimer '.$t->reference.' ?'" confirm="Oui, supprimer" cancel="Annuler"
+                           text="La vente est supprimée et les soldes (UV et dette de l'agent) sont recalculés. Pour une vente non livrée, préférez « Annuler cette vente »."
+                           wire:click="delete" />
     @endif
 </div>

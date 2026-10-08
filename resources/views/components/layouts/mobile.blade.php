@@ -57,20 +57,23 @@
             </nav>
 
             <div id="m-backdrop" class="m-backdrop"></div>
-            <div id="m-quick" class="m-sheet" role="dialog" aria-label="Actions rapides">
-                <div class="m-sheet__grip"></div>
-                <div class="m-sheet__title">Que voulez-vous faire ?</div>
-                @foreach ($quick as $action)
-                    <a href="{{ route($action['route']) }}" wire:navigate class="m-row" data-sheet-close>
-                        <span class="m-row__lead"><x-m.icon :name="$action['icon']" class="m-ico-sm" /></span>
-                        <span class="m-row__body">
-                            <span class="m-row__title" style="display:block">{{ $action['label'] }}</span>
-                            <span class="m-row__sub" style="display:block">{{ $action['hint'] }}</span>
-                        </span>
-                        <x-m.icon name="chevron-right" class="m-row__chev" />
-                    </a>
-                @endforeach
-            </div>
+            @if ($quick)
+                <div id="m-quick" class="m-sheet" role="dialog" aria-label="Actions rapides">
+                    <div class="m-sheet__grip"></div>
+                    <div class="m-sheet__title">Que voulez-vous faire ?</div>
+                    @foreach ($quick as $action)
+                        <a href="{{ route($action['route']) }}" wire:navigate class="m-row" data-sheet-close>
+                            <span class="m-row__lead"><x-m.icon :name="$action['icon']" class="m-ico-sm" /></span>
+                            <span class="m-row__body">
+                                <span class="m-row__title" style="display:block">{{ $action['label'] }}</span>
+                                <span class="m-row__sub" style="display:block">{{ $action['hint'] }}</span>
+                            </span>
+                            <x-m.icon name="chevron-right" class="m-row__chev" />
+                        </a>
+                    @endforeach
+                </div>
+
+            @endif
 
             <div id="m-toast" class="m-toast" role="status">
                 <x-m.icon name="check-circle" solid class="m-ico-sm" />

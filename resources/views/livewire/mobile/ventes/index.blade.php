@@ -17,39 +17,45 @@
         </x-m.section>
     @endif
 
-    <x-m.search wire:model.live.debounce.300ms="search" placeholder="Agent ou référence" />
-    <x-m.chips model="period" :current="$period"
-               :options="['today' => 'Aujourd\'hui', 'week' => '7 jours', 'month' => 'Ce mois', 'all' => 'Tout']" />
+    <x-m.access-note />
 
-    <div class="m-summary">
-        <span>{{ $count }} {{ $count > 1 ? 'ventes' : 'vente' }}</span>
-        <strong>{{ \App\Support\Mobile\Fcfa::format($total) }}</strong>
+    <x-m.filter-bar placeholder="Agent ou référence" :period="$period"
+                    :periods="['today' => 'Aujourd\'hui', 'week' => '7 jours', 'month' => 'Ce mois', 'all' => 'Tout']"
+                    :count="$count" noun="vente" nouns="ventes" :total="\App\Support\Mobile\Fcfa::format($total)" :active="$filtersActive" />
+
+    <div wire:loading.class="m-dim" wire:target="search,period">
+        @forelse ($groups as $date => $items)
+            <x-m.day :date="$date" :total="$dayTotals[$date] ?? 0" />
+            <div class="m-group">
+                @foreach ($items as $t)
+                    @php($cancelled = $t->status === 'cancelled')
+                    <x-m.row :href="route('m.ventes.show', $t)" wire:key="v{{ $t->id }}"
+                             :icon="$t->transaction_type === 'distribution' ? 'arrow-up-right' : 'arrow-down-left'"
+                             :tone="$cancelled ? 'muted' : ($t->transaction_type === 'distribution' ? null : 'ok')"
+                             :title="$t->agent?->name ?? 'Agent supprimé'"
+                             :sub="$t->reference.' · '.$t->transaction_date->format('H:i')">
+                        <x-slot:end>
+                            <x-m.amount class="m-row__amount" style="display:block" :value="$t->amount"
+                                        :sign="$t->transaction_type === 'distribution' ? '−' : '+'" :cancelled="$cancelled" />
+                            @if ($cancelled) <x-m.status-badge tone="danger" label="Annulée" /> @endif
+                        </x-slot:end>
+                    </x-m.row>
+                @endforeach
+            </div>
+        @empty
+            <div class="m-group" style="margin-top:18px">
+                <x-m.empty icon="banknotes" :title="$filtersActive ? 'Aucune vente pour ces filtres' : 'Aucune vente'"
+                           :text="$filtersActive ? 'Aucune vente ne correspond à ces filtres.' : 'Les ventes enregistrées apparaîtront ici.'">
+                    @if ($filtersActive || $canCreate)
+                        <div class="m-empty__actions">
+                            @if ($filtersActive)<button type="button" class="m-btn m-btn--ghost" wire:click="resetFilters">Réinitialiser les filtres</button>@endif
+                            @if ($canCreate)<a href="{{ route('m.ventes.create') }}" wire:navigate class="m-btn">Nouvelle vente</a>@endif
+                        </div>
+                    @endif
+                </x-m.empty>
+            </div>
+        @endforelse
     </div>
-
-    @forelse ($groups as $date => $items)
-        <x-m.day :date="$date" :total="$dayTotals[$date] ?? 0" />
-        <div class="m-group">
-            @foreach ($items as $t)
-                @php($cancelled = $t->status === 'cancelled')
-                <x-m.row :href="route('m.ventes.show', $t)" wire:key="v{{ $t->id }}"
-                         :icon="$t->transaction_type === 'distribution' ? 'arrow-up-right' : 'arrow-down-left'"
-                         :tone="$cancelled ? 'muted' : ($t->transaction_type === 'distribution' ? null : 'ok')"
-                         :title="$t->agent?->name ?? 'Agent supprimé'"
-                         :sub="$t->reference.' · '.$t->transaction_date->format('H:i')">
-                    <x-slot:end>
-                        <span class="m-row__amount" style="display:block;{{ $cancelled ? 'text-decoration:line-through;color:var(--fg-3)' : '' }}">
-                            {{ $t->transaction_type === 'distribution' ? '−' : '+' }}{{ \App\Support\Mobile\Fcfa::number($t->amount) }}
-                        </span>
-                        @if ($cancelled) <span class="m-badge m-badge--danger">Annulée</span> @endif
-                    </x-slot:end>
-                </x-m.row>
-            @endforeach
-        </div>
-    @empty
-        <div class="m-group" style="margin-top:18px">
-            <x-m.empty icon="banknotes" title="Aucune vente" text="Aucune vente ne correspond à ces filtres." />
-        </div>
-    @endforelse
 
     @if ($hasMore)
         <div wire:intersect="loadMore"></div>
