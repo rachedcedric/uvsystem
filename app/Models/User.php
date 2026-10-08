@@ -20,8 +20,11 @@ class User extends Authenticatable implements FilamentUser
 
     public const ROLE_SUPER_ADMIN = 'super_admin';
 
+    /** Rôle de consultation : voit les données autorisées, ne peut jamais rien modifier (voir App\Security\ReadOnlyGuard). */
+    public const ROLE_READ_ONLY = 'lecture_seule';
+
     /** Rôles métier d'un tenant (le rôle super_admin n'appartient à aucun tenant). */
-    public const TENANT_ROLES = ['master', 'admin', 'comptable', 'commercial'];
+    public const TENANT_ROLES = ['master', 'admin', 'comptable', 'commercial', self::ROLE_READ_ONLY];
 
     /** Capacités globales ou protégées qu'aucun compte de tenant ne doit recevoir. */
     public const FORBIDDEN_TENANT_PERMISSIONS = [
@@ -177,6 +180,12 @@ class User extends Authenticatable implements FilamentUser
     public function isMaster(): bool
     {
         return $this->hasRole('master');
+    }
+
+    /** Compte en lecture seule : refus d'écriture côté serveur, quel que soit le chemin (web, mobile, API). */
+    public function isReadOnly(): bool
+    {
+        return $this->hasRole(self::ROLE_READ_ONLY);
     }
 
     /**

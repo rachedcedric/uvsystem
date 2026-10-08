@@ -27,6 +27,12 @@ class ActivityLogResource extends Resource
 
     protected static ?int $navigationSort = 99;
 
+    /** Journal d'activité : réservé aux comptes qui ont la permission (aucune politique n'était définie : tout compte l'ouvrait). */
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('view_activity_log') ?? false;
+    }
+
     // Read-only resource
     public static function canCreate(): bool
     {

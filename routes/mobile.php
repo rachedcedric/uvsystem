@@ -73,30 +73,30 @@ Route::prefix('m')->name('m.')->group(function () {
             return redirect('/agent');
         })->name('espace-agent');
         Route::get('diagnostic-notifications', Admin\NotificationsDiagnostic::class)->name('diagnostic-notifications');
-        Route::get('exports/caisse/historique', [ExportController::class, 'caisseHistorique'])->name('exports.caisse-historique');
-        Route::get('exports/caisse/{date}', [ExportController::class, 'caisseJour'])->name('exports.caisse-jour')->where('date', '\d{4}-\d{2}-\d{2}');
-        Route::get('exports/fiche-agent/{agent}', [ExportController::class, 'ficheAgent'])->name('exports.fiche-agent');
-        Route::get('exports/charges/{period}/{format}', [ExportController::class, 'charges'])->name('exports.charges')
+        Route::get('exports/caisse/historique', [ExportController::class, 'caisseHistorique'])->name('exports.caisse-historique')->middleware('not.read-only');
+        Route::get('exports/caisse/{date}', [ExportController::class, 'caisseJour'])->name('exports.caisse-jour')->middleware('not.read-only')->where('date', '\d{4}-\d{2}-\d{2}');
+        Route::get('exports/fiche-agent/{agent}', [ExportController::class, 'ficheAgent'])->name('exports.fiche-agent')->middleware('not.read-only');
+        Route::get('exports/charges/{period}/{format}', [ExportController::class, 'charges'])->name('exports.charges')->middleware('not.read-only')
             ->where(['period' => 'today|week|month|last|all', 'format' => 'pdf|xlsx|csv']);
-        Route::get('exports/periode/{module}/{period}/{format}', [ExportController::class, 'period'])->name('exports.period')
+        Route::get('exports/periode/{module}/{period}/{format}', [ExportController::class, 'period'])->name('exports.period')->middleware('not.read-only')
             ->where(['module' => 'ventes|remboursements|approvisionnements', 'period' => 'today|week|month|all', 'format' => 'pdf|xlsx']);
 
         Route::get('statistiques', Analytics\Statistics::class)->name('statistiques');
         Route::get('scoring', Analytics\Scoring::class)->name('scoring');
         Route::get('scoring/{agent}', Analytics\ScoringAgent::class)->name('scoring.agent');
         Route::get('rapports', Analytics\Reports::class)->name('rapports');
-        Route::get('exports/rapport/{type}/{format}', [ExportController::class, 'report'])->name('exports.report');
+        Route::get('exports/rapport/{type}/{format}', [ExportController::class, 'report'])->name('exports.report')->middleware('not.read-only');
 
         Route::get('commissions', Commissions\Index::class)->name('commissions');
         Route::get('commissions/{commission}', Commissions\Show::class)->name('commissions.show');
-        Route::get('exports/commissions/{format}', [ExportController::class, 'commissions'])->name('exports.commissions');
+        Route::get('exports/commissions/{format}', [ExportController::class, 'commissions'])->name('exports.commissions')->middleware('not.read-only');
 
         Route::get('dettes', Dettes\Index::class)->name('dettes');
         Route::get('dettes/agent/{agent}', Dettes\AgentDetail::class)->name('dettes.agent');
         Route::get('dettes/fournisseur/{fournisseur}/payer', Dettes\PayFournisseur::class)->name('dettes.fournisseur');
         Route::get('paiements-fournisseurs', RemboursementsFournisseurs\Index::class)->name('remboursements-fournisseurs');
 
-        Route::get('exports/dette-agent/{agent}/{format}', [ExportController::class, 'detteAgent'])->name('exports.dette-agent');
+        Route::get('exports/dette-agent/{agent}/{format}', [ExportController::class, 'detteAgent'])->name('exports.dette-agent')->middleware('not.read-only');
 
         Route::get('agents', Agents\Index::class)->name('agents');
         Route::get('agents/{agent}', Agents\Show::class)->name('agents.show');

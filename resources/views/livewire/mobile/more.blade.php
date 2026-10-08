@@ -15,7 +15,7 @@
     <div class="m-group" style="margin-top:{{ $company ? '10px' : '4px' }}">
         <x-m.row :lead="mb_strtoupper(mb_substr($user->name, 0, 2))" :title="$user->name" :sub="$user->email" :chevron="false">
             @if ($role)
-                <x-slot:end><span class="m-badge m-badge--brand">{{ ucfirst($role) }}</span></x-slot:end>
+                <x-slot:end><span class="m-badge m-badge--brand">{{ ucfirst(str_replace('_', ' ', $role)) }}</span></x-slot:end>
             @endif
         </x-m.row>
     </div>

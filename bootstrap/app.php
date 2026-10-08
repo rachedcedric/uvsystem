@@ -37,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'transaction.security' => \App\Http\Middleware\CheckTransactionSecurity::class,
             'mobile.access' => \App\Http\Middleware\MobileAccess::class,
             'staff' => \App\Http\Middleware\EnsureStaffUser::class,
+            'not.read-only' => \App\Http\Middleware\DenyReadOnly::class,
             '2fa' => \App\Http\Middleware\EnforceTwoFactor::class,
         ]);
 

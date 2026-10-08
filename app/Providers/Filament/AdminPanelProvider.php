@@ -162,6 +162,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
                 TriggerDebtReminderCycle::class,
                 EnforceTwoFactor::class,
+                \App\Http\Middleware\BlockReadOnlyFormPages::class,
             ]);
     }
 

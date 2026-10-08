@@ -25,6 +25,11 @@ class ActivityLogPage extends Page implements HasTable
 
     protected static ?int $navigationSort = 99;
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->can('view_activity_log') ?? false;
+    }
+
     protected static string $view = 'filament.pages.activity-log-page';
 
     public function table(Table $table): Table

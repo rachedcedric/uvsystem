@@ -14,6 +14,32 @@ class AgentPartenaireResource extends Resource
 {
     protected static ?string $model = AgentPartenaire::class;
 
+    // Même correspondance que l'écran mobile (Crud\Resources\AgentsPartenaires) : la ressource n'avait aucun contrôle.
+    public static function canAccess(): bool
+    {
+        return (bool) auth()->user()?->can('view_agents');
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) auth()->user()?->can('create_agents');
+    }
+
+    public static function canEdit($record): bool
+    {
+        return (bool) auth()->user()?->can('edit_agents');
+    }
+
+    public static function canDelete($record): bool
+    {
+        return (bool) auth()->user()?->can('delete_agents');
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return (bool) auth()->user()?->can('delete_agents');
+    }
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office';

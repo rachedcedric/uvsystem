@@ -3,6 +3,7 @@
 namespace App\Tenancy;
 
 use App\Models\Tenant;
+use App\Security\ReadOnlyGuard;
 use App\Services\Subscriptions\SubscriptionAccessPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,6 +64,10 @@ trait BelongsToTenant
 
     protected function assertSubscriptionAllowsWrite(): void
     {
+        // Rôle lecture seule : refus d'écriture sur tout modèle (sauf écritures système), même quand l'abonnement
+        // tolère l'écriture et même pour les modèles exemptés du contrôle d'abonnement.
+        ReadOnlyGuard::assertWritable($this);
+
         if (! static::tenantWritesAlwaysAllowed()) {
             SubscriptionAccessPolicy::assertWritable($this);
         }

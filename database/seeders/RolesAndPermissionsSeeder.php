@@ -274,6 +274,29 @@ class RolesAndPermissionsSeeder extends Seeder
         $commercial->syncPermissions($commercialPermissions);
         $this->command->info('✅ COMMERCIAL : '.count($commercialPermissions).' permissions (agents/transactions)');
 
+        // 5. LECTURE SEULE - consultation uniquement. Aucune permission de création, modification, suppression,
+        // export, rapport, utilisateur, paramètre, journal d'activité ni API ; en plus, ReadOnlyGuard refuse toute
+        // écriture côté serveur (même si une permission était ajoutée par erreur).
+        $readOnly = Role::firstOrCreate(['name' => User::ROLE_READ_ONLY, 'guard_name' => 'web']);
+        $readOnlyPermissions = [
+            'view_dashboard',
+            'view_notifications',
+            'view_agents',
+            'view_uv_transactions',
+            'view_remboursements',
+            'view_remboursements_fournisseurs',
+            'view_approvisionnements',
+            'view_fournisseurs',
+            'view_commissions',
+            'view_soldes',
+            'view_statistics',
+            'view_caisse',
+            'view_charges',
+            'view_finances',
+        ];
+        $readOnly->syncPermissions($readOnlyPermissions);
+        $this->command->info('✅ LECTURE SEULE : '.count($readOnlyPermissions).' permissions (consultation)');
+
         // ============================================
         // ASSIGNER MASTER AU PREMIER UTILISATEUR D'UN TENANT
         // ============================================
@@ -304,6 +327,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 ['ADMIN', $admin->permissions->count(), '✅ Comme le master (ne nomme pas de master)'],
                 ['COMPTABLE', $comptable->permissions->count(), '💰 Finances, remboursements, commissions'],
                 ['COMMERCIAL', $commercial->permissions->count(), '👥 Agents, transactions UV, fournisseurs'],
+                ['LECTURE SEULE', $readOnly->permissions->count(), '👁 Consultation uniquement (aucune écriture)'],
             ]
         );
 

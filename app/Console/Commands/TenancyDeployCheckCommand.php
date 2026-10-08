@@ -142,7 +142,7 @@ class TenancyDeployCheckCommand extends Command
             ? $this->add('OK', 'Rôle super_admin', 'présent')
             : $this->add('ERREUR', 'Rôle super_admin', 'absent', 'php artisan db:seed --class=RolesAndPermissionsSeeder --force');
 
-        $tenantRoles = ['master', 'admin', 'comptable', 'commercial'];
+        $tenantRoles = User::TENANT_ROLES;
         $missingTenantRoles = collect($tenantRoles)
             ->diff(Role::query()->whereIn('name', $tenantRoles)->pluck('name'));
 

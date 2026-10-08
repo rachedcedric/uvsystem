@@ -41,8 +41,15 @@ class ReportsPage extends Page implements HasForms
 
     public ?array $agentsData = [];
 
+    /** Rapports : consultation (view_reports) ; chaque génération exige en plus export_reports. */
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->can('view_reports') ?? false;
+    }
+
     public function mount(): void
     {
+        abort_unless(static::canAccess(), 403);
         $this->transactionsData = [
             'agent_id' => null,
             'start_date' => now()->startOfMonth()->format('Y-m-d'),
@@ -152,6 +159,7 @@ class ReportsPage extends Page implements HasForms
 
     public function exportTransactionsExcel()
     {
+        abort_unless(auth()->user()?->can('export_reports'), 403);
         $filename = 'transactions_'.now()->format('Y-m-d_His').'.xlsx';
 
         Notification::make()
@@ -172,6 +180,7 @@ class ReportsPage extends Page implements HasForms
 
     public function exportRemboursementsExcel()
     {
+        abort_unless(auth()->user()?->can('export_reports'), 403);
         $filename = 'remboursements_'.now()->format('Y-m-d_His').'.xlsx';
 
         return Excel::download(
@@ -187,6 +196,7 @@ class ReportsPage extends Page implements HasForms
 
     public function exportAgentsExcel()
     {
+        abort_unless(auth()->user()?->can('export_reports'), 403);
         $filename = 'situation_agents_'.now()->format('Y-m-d_His').'.xlsx';
 
         return Excel::download(
@@ -202,6 +212,7 @@ class ReportsPage extends Page implements HasForms
 
     public function exportTransactionsPdf()
     {
+        abort_unless(auth()->user()?->can('export_reports'), 403);
         $filename = 'transactions_'.now()->format('Y-m-d_His').'.pdf';
 
         $query = UvTransaction::query()
@@ -248,6 +259,7 @@ class ReportsPage extends Page implements HasForms
 
     public function exportAgentsPdf()
     {
+        abort_unless(auth()->user()?->can('export_reports'), 403);
         $filename = 'situation_agents_'.now()->format('Y-m-d_His').'.pdf';
 
         $query = Agent::query();

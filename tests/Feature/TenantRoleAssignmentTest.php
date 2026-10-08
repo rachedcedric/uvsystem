@@ -87,8 +87,8 @@ class TenantRoleAssignmentTest extends TestCase
 
     public function test_who_can_hand_out_which_roles(): void
     {
-        $this->assertSame(['master', 'admin', 'comptable', 'commercial'], RoleAssignmentGuard::assignableFor($this->master));
-        $this->assertSame(['admin', 'comptable', 'commercial'], RoleAssignmentGuard::assignableFor($this->admin));
+        $this->assertSame(['master', 'admin', 'comptable', 'commercial', 'lecture_seule'], RoleAssignmentGuard::assignableFor($this->master));
+        $this->assertSame(['admin', 'comptable', 'commercial', 'lecture_seule'], RoleAssignmentGuard::assignableFor($this->admin));
         $this->assertSame([], RoleAssignmentGuard::assignableFor($this->userIn($this->tenant, 'comptable')));
         $this->assertSame([], RoleAssignmentGuard::assignableFor($this->userIn($this->tenant, 'commercial')));
         $this->assertSame([], RoleAssignmentGuard::assignableFor(null));

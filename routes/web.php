@@ -76,15 +76,15 @@ Route::middleware(['web', 'auth'])->group(function () {
 });
 
 // Export complet des données du tenant (master) : 3 par 10 minutes, c'est une opération lourde
-Route::middleware(['web', 'auth', '2fa', 'staff', 'throttle:3,10'])->get('/exports/mes-donnees', [\App\Http\Controllers\TenantDataExportController::class, 'download'])
+Route::middleware(['web', 'auth', '2fa', 'staff', 'not.read-only', 'throttle:3,10'])->get('/exports/mes-donnees', [\App\Http\Controllers\TenantDataExportController::class, 'download'])
     ->name('exports.tenant-data');
 
 // Sauvegardes dédiées du tenant (offre avec « sauvegardes_dediees »)
-Route::middleware(['web', 'auth', '2fa', 'staff', 'throttle:10,10'])->get('/exports/mes-sauvegardes/{file}', [\App\Http\Controllers\TenantBackupController::class, 'download'])
+Route::middleware(['web', 'auth', '2fa', 'staff', 'not.read-only', 'throttle:10,10'])->get('/exports/mes-sauvegardes/{file}', [\App\Http\Controllers\TenantBackupController::class, 'download'])
     ->name('exports.tenant-backup');
 
 // Export Download Route (protected)
-Route::middleware(['web', 'auth', 'staff'])->group(function () {
+Route::middleware(['web', 'auth', 'staff', 'not.read-only'])->group(function () {
     Route::get('/exports/download/{filename}', [ExportDownloadController::class, 'download'])
         ->name('exports.download')
         ->where('filename', '.*\.xlsx');

@@ -54,6 +54,10 @@ class RoleAssignmentGuard
             throw self::refuse('Rôle non autorisé.');
         }
 
+        if (in_array(User::ROLE_READ_ONLY, $roles, true) && count($roles) > 1) {
+            throw self::refuse('Le rôle « lecture seule » ne se combine avec aucun autre rôle.');
+        }
+
         if (array_diff($roles, $allowed) !== []) {
             throw self::refuse('Seul un master peut attribuer le rôle master.');
         }
