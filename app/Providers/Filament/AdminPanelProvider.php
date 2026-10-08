@@ -134,6 +134,10 @@ class AdminPanelProvider extends PanelProvider
                 fn () => view('components.two-factor-reminder'),
             )
             ->renderHook(
+                PanelsRenderHook::BODY_START,
+                fn () => \Filament\Facades\Filament::auth()->check() ? view('components.subscription-banner') : '',
+            )
+            ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): string => view('filament.hooks.notification-sound')->render(),
             )
