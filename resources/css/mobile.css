@@ -1465,6 +1465,12 @@ button.m-row:active {
     font-weight: 600;
 }
 
+.m-form .m-input,
+.m-form textarea {
+    /* scrollIntoView() garde de la marge au-dessus et au-dessous : ni sous l'en-tête, ni sous la barre d'envoi */
+    scroll-margin-block: 96px;
+}
+
 .m-submit {
     position: sticky;
     bottom: calc(var(--tab-h) + var(--sab));

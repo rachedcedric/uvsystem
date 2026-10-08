@@ -477,6 +477,98 @@ import { PushNotifications } from '@capacitor/push-notifications';
         });
     }
 
+    /* ---------------------------------------------------------------- saisie / clavier */
+
+    // Champs de saisie texte (hors cases, fichiers, boutons, curseurs, couleurs).
+    var FIELD_SELECTOR = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=file]):not([type=submit]):not([type=button]):not([type=range]):not([type=color]), textarea';
+
+    function formFields(form) {
+        return Array.prototype.filter.call(form.querySelectorAll(FIELD_SELECTOR), function (el) {
+            return !el.disabled && !el.readOnly && el.type !== 'date' && el.type !== 'time' && el.type !== 'datetime-local' && el.getClientRects().length > 0;
+        });
+    }
+
+    /**
+     * Touche d'action du clavier : « Suivant » tant qu'il reste un champ, « OK » sur le dernier, « Rechercher » sur
+     * une recherche, retour à la ligne dans un champ multiligne. Calculé ici (et pas champ par champ dans les vues)
+     * pour couvrir aussi les formulaires générés (CRUD) et rester juste après chaque rendu Livewire.
+     */
+    function syncEnterKeyHints() {
+        Array.prototype.forEach.call(document.querySelectorAll('form'), function (form) {
+            var fields = formFields(form);
+            fields.forEach(function (el, i) {
+                if (el.hasAttribute('enterkeyhint') && el.getAttribute('data-ekh') !== 'auto') return; // choix explicite d'une vue
+                var hint = el.tagName === 'TEXTAREA' ? 'enter' : (el.type === 'search' ? 'search' : (i < fields.length - 1 ? 'next' : 'done'));
+                if (el.getAttribute('enterkeyhint') !== hint) el.setAttribute('enterkeyhint', hint);
+                el.setAttribute('data-ekh', 'auto');
+            });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('input[type=search]:not([enterkeyhint])'), function (el) {
+            el.setAttribute('enterkeyhint', 'search');
+            el.setAttribute('data-ekh', 'auto');
+        });
+    }
+
+    // « Suivant » : Entrée passe au champ suivant au lieu d'envoyer le formulaire ; sur le dernier champ on laisse
+    // l'envoi normal (Livewire) puis on ferme le clavier. Recherche : Entrée ferme simplement le clavier.
+    document.addEventListener('keydown', function (event) {
+        var el = event.target;
+        if (event.key !== 'Enter' || event.isComposing || !el || !el.matches || !el.matches(FIELD_SELECTOR) || el.tagName === 'TEXTAREA') return;
+
+        if (el.type === 'search') { event.preventDefault(); el.blur(); return; }
+
+        var form = el.form;
+        if (!form) return;
+        var fields = formFields(form);
+        var index = fields.indexOf(el);
+
+        if (index !== -1 && index < fields.length - 1) {
+            event.preventDefault();
+            fields[index + 1].focus();
+        } else {
+            setTimeout(function () { if (document.activeElement === el) el.blur(); }, 50);
+        }
+    });
+
+    // Champ actif toujours visible : on le centre dans la zone laissée libre par le clavier (visualViewport) et par
+    // la barre d'enregistrement. Deux passes : le clavier met un instant à s'ouvrir et à redimensionner la page.
+    function revealField(el) {
+        var run = function () {
+            if (document.activeElement !== el || !el.scrollIntoView) return;
+            var viewport = window.visualViewport;
+            var top = viewport ? viewport.offsetTop : 0;
+            var height = viewport ? viewport.height : window.innerHeight;
+            var submit = document.querySelector('.m-submit');
+            var reserved = submit ? submit.getBoundingClientRect().height : 0;
+            var rect = el.getBoundingClientRect();
+            if (rect.top < top + 64 || rect.bottom > top + height - reserved - 12) {
+                el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+        };
+        setTimeout(run, 150);
+        setTimeout(run, 400);
+    }
+
+    document.addEventListener('focusin', function (event) {
+        if (event.target && event.target.matches && event.target.matches(FIELD_SELECTOR) && event.target.closest('.m-main')) revealField(event.target);
+    });
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', function () {
+            var active = document.activeElement;
+            if (active && active.matches && active.matches(FIELD_SELECTOR) && active.closest('.m-main')) revealField(active);
+        });
+    }
+
+    // Livewire remplace des morceaux de page : on recalcule les touches d'action après chaque changement de structure.
+    var hintTimer = null;
+    if (window.MutationObserver) {
+        new MutationObserver(function () {
+            clearTimeout(hintTimer);
+            hintTimer = setTimeout(syncEnterKeyHints, 80);
+        }).observe(document.documentElement, { childList: true, subtree: true });
+    }
+
     /* ---------------------------------------------------------------- init */
 
     document.addEventListener('livewire:navigated', function () {
@@ -487,6 +579,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
         syncPrefs();
         syncDeviceStatus();
         syncPushNotifications();
+        syncEnterKeyHints();
         showFlash();
         var main = document.querySelector('.m-main');
         if (main) {
@@ -512,6 +605,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
         syncPrefs();
         syncDeviceStatus();
         syncPushNotifications();
+        syncEnterKeyHints();
         bootSplash();
     }
 
