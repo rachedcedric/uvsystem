@@ -52,7 +52,7 @@ Route::get('/health', function () {
 // Protected Routes (Authentication Required)
 // ============================================
 
-Route::middleware(['auth:sanctum', 'staff', 'throttle:api'])->group(function () {
+Route::middleware(['auth:sanctum', 'staff', 'can:access_api', 'throttle:api'])->group(function () {
 
     // Authentication (standard API rate limit)
     Route::prefix('auth')->group(function () {

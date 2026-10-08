@@ -163,7 +163,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_finances',
             'manage_finances',
             'view_soldes',
-            'edit_soldes',
             'reconcile_accounts',
 
             // Ma caisse (gestion complète)
@@ -215,8 +214,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_statistics',
             'export_reports',
 
-            // Journal d'activité
-            'view_activity_log',
+            // Pas de journal d'activité (réservé à master/admin : il révèle les actions de tous les comptes)
         ];
         $comptable->syncPermissions($comptablePermissions);
         $this->command->info('✅ COMPTABLE : '.count($comptablePermissions).' permissions (finances)');
@@ -232,7 +230,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_agents',
             'create_agents',
             'edit_agents',
-            'delete_agents',
             'export_agents',
 
             // Transactions UV (gestion complète)
@@ -268,8 +265,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_statistics',
             'export_reports',
 
-            // Journal d'activité
-            'view_activity_log',
+            // Ni suppression d'agents (historique financier), ni journal d'activité (réservés à master/admin)
         ];
         $commercial->syncPermissions($commercialPermissions);
         $this->command->info('✅ COMMERCIAL : '.count($commercialPermissions).' permissions (agents/transactions)');

@@ -29,7 +29,8 @@ class AuthController extends Controller
         // Fail closed : mot de passe faux, compte inconnu OU compte sans rôle métier => même message.
         if (! $user
             || ! Hash::check($validated['password'], $user->password)
-            || ! $user->canAccessPanel(Filament::getPanel('admin'))) {
+            || ! $user->canAccessPanel(Filament::getPanel('admin'))
+            || ! $user->can('access_api')) {
             throw ValidationException::withMessages([
                 'email' => ['Les informations d\'identification fournies sont incorrectes.'],
             ]);

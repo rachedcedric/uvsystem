@@ -40,7 +40,8 @@ class ApiSecurityTest extends TestCase
     private function userWithOnly(array $permissions): User
     {
         $role = Role::findByName('commercial', 'web');
-        $role->syncPermissions(Permission::whereIn('name', $permissions)->get());
+        // L'API exige d'abord access_api (réservé à master/admin) ; ces tests vérifient ensuite chaque point d'accès.
+        $role->syncPermissions(Permission::whereIn('name', array_merge(['access_api'], $permissions))->get());
 
         return $this->userWithRole('commercial');
     }
