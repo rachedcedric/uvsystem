@@ -17,6 +17,22 @@ push, ni le bouton retour matériel, ni le téléchargement/partage de fichiers.
 | Comptes | `master@demo.test`, `lecture@demo.test`, `superadmin@demo.test` (mots de passe transmis hors dépôt). Pour comptable/commercial/admin : les créer depuis l'écran Utilisateurs du master |
 | Noter | Modèle, version Android, clavier utilisé (Gboard / Samsung Keyboard), taille de police système, thème clair/sombre |
 
+### APK de validation reconstruit (2026-10-08)
+
+| Élément | Valeur |
+|---|---|
+| Fichier | `android/app/build/outputs/apk/debug/app-debug.apk` (≈ 10,6 Mo, build **local**, non versionné par git) |
+| Empreinte SHA-256 (début) | `cd89ea3b7fc05815…` |
+| Identité | `pro.uvsystem.app`, versionCode 14, versionName 4.0 (inchangés : un build de debug ne change pas la version) |
+| Clavier | `windowSoftInputMode = adjustResize` **présent** (vérifié dans le manifeste compilé) |
+| Adresse embarquée | `http://localhost:8770/m`, HTTP autorisé : **réservé à la validation via `adb reverse`** ; fichier `assets/capacitor.config.json` ignoré par git |
+| Réseau | configuration de debug : HTTP autorisé vers `localhost` et `10.0.2.2` uniquement |
+| Release signée | **non reconstruite** (clé de signature et numéro de version à décider avant publication ; l'APK de release existant est périmé) |
+| Installation | **non faite** : aucun appareil connecté (`adb devices` vide) |
+
+Installation : `adb reverse tcp:8770 tcp:8770` puis `adb install -r android/app/build/outputs/apk/debug/app-debug.apk`.
+Le serveur de démonstration doit tourner sur ce poste (voir [DEMO.md](DEMO.md)).
+
 Légende résultat : ☐ à faire · ✅ OK · ❌ échec (décrire) · ➖ sans objet.
 
 ## 1. Installation et lancement
@@ -117,6 +133,50 @@ Formulaires à parcourir : **Profil de l'entreprise** (11 champs), **Nouvelle ve
 | H2 | Petit écran (≈ 320 px) et grand écran | Aucun défilement horizontal | ☐ |
 | H3 | Zones tactiles | Boutons/lignes faciles à toucher, pas d'appui accidentel | ☐ |
 | H4 | Lecteur d'écran (TalkBack) sur la connexion | Libellés des champs annoncés | ☐ |
+
+## 9. Conditions réelles et affichage 320 / 390 px (exigences du cadrage)
+
+Un émulateur **ne remplace pas** ces essais : ils se font sur un téléphone physique.
+
+| ID | Étapes | Attendu | Résultat |
+|---|---|---|---|
+| R1 | Largeur 390 px : Réglages → Affichage → Taille d'affichage (ou `adb shell wm size 780x1688` + `adb shell wm density 400`) ; remettre ensuite `adb shell wm size reset` et `adb shell wm density reset` | Ventes UV (liste, fiche, création) lisible, aucun défilement horizontal, cibles tactiles confortables | ☐ |
+| R2 | Largeur 320 px : `adb shell wm size 640x1280` + `adb shell wm density 320` (puis reset) | Idem ; puces de période, bandeau d'abonnement et feuilles de confirmation non coupés | ☐ |
+| R3 | Réseau faible (3G/Edge) pendant une recherche et un enregistrement | Liste estompée pendant le chargement, aucun double envoi, message clair en cas d'échec | ☐ |
+| R4 | Mode avion en plein formulaire, puis retour du réseau | Bandeau « Hors connexion » ; valeurs saisies conservées ; l'enregistrement aboutit une seule fois | ☐ |
+| R5 | Passage Wi-Fi → 4G pendant l'usage | Session conservée, aucune déconnexion | ☐ |
+| R6 | Écran verrouillé 2 min puis reprise ; app en arrière-plan 10 min | Reprise sur le même écran, pas d'écran blanc ; session conservée | ☐ |
+| R7 | Appel entrant ou notification pendant la saisie | Retour au formulaire intact | ☐ |
+| R8 | Économiseur de batterie activé | Navigation fluide, sons et vibrations conformes aux réglages | ☐ |
+| R9 | Autorisation caméra refusée puis accordée (logo, justificatif) | Message clair si refus ; fonctionne après autorisation | ☐ |
+| R10 | Heure du téléphone décalée de +2 jours | Aucune faille d'accès : l'abonnement est jugé côté serveur (bandeau inchangé) | ☐ |
+| R11 | Luminosité maximale en extérieur | Textes discrets et pastilles lisibles (contrastes AA calculés, à confirmer à l'œil) | ☐ |
+
+## 10. Critères de passage (règle de décision)
+
+| Statut | Quand |
+|---|---|
+| 🔴 **BLOQUANT** | Champ masqué par le clavier sans pouvoir l'atteindre ; feuille de confirmation qui ne s'ouvre pas, ne se ferme pas ou dont le bouton retour matériel quitte l'app ; compte lecture seule qui voit un bouton d'écriture ou accède à un écran interdit ; **données d'une autre entreprise visibles** ; perte de données saisies ; crash |
+| 🟠 **À VALIDER** | Écart d'ergonomie sans perte ni risque (libellé de touche différent selon le clavier, animation saccadée) ; à noter et à trancher |
+| 🟢 **VALIDÉ** | Scénario exécuté sur appareil physique, résultat conforme, appareil et clavier notés |
+| ⚪ **NON DÉTERMINÉ** | Non exécuté, ou résultat ambigu. **Jamais compté comme réussi** |
+
+Rattachement aux exigences : clavier réel = §3 ; tactile = H3, R1, R2 ; bouton retour matériel = F1 + C13 ; feuilles de confirmation =
+F1 + scénarios « Ventes » ci-dessous ; navigation = F2, F6 ; lecture seule = B2, B3, F4 ; Master = B1, D1 à D5 ; 320/390 px = R1, R2 ;
+conditions réelles = R3 à R11.
+
+## 11. Pilote « Ventes UV » (liste, fiche, création) à passer sur l'appareil
+
+| ID | Étapes | Attendu | Résultat |
+|---|---|---|---|
+| V1 | Master : Ventes → liste | Cartes de période, top 5, filtres ; chaque ligne ≥ 44 px ; bouton « Nouvelle vente » présent | ☐ |
+| V2 | Rechercher un nom inexistant | « Aucune vente pour ces filtres » + « Réinitialiser les filtres » ; le bouton remet « 7 jours » et vide la recherche | ☐ |
+| V3 | Ouvrir une vente → « Annuler cette vente » | Feuille de confirmation ; touche retour matériel **ferme la feuille** sans quitter la page ; « Non, garder » ne modifie rien | ☐ |
+| V4 | Confirmer l'annulation d'une vente de test | Message de succès ; montant barré + pastille « Annulée » ; plus d'action d'annulation | ☐ |
+| V5 | Nouvelle vente : choisir un agent, saisir un montant (touches « Suivant »), enregistrer | Clavier numérique pour le montant ; champ jamais masqué ; une seule vente créée | ☐ |
+| V6 | Lecture seule : liste puis fiche | Mention « Consultation seule », aucun bouton d'écriture ; `/m/ventes/nouvelle` à la main = refus | ☐ |
+| V7 | Commercial : fiche d'une vente | Peut annuler/modifier selon ses droits, ne peut pas supprimer | ☐ |
+| V8 | Compte d'une autre entreprise : saisir l'adresse d'une vente de la première | Page introuvable, aucune donnée | ☐ |
 
 ## Fiche de synthèse (à remplir)
 

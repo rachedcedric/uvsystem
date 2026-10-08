@@ -4,8 +4,9 @@ Le design system **formalise l'existant** (`resources/css/mobile.css`, `resource
 là où l'audit a trouvé des manques. Il ne remplace rien et ne touche à aucune règle métier : les écrans appellent les
 mêmes services, les mêmes `Gate` et la même isolation par entreprise qu'avant.
 
-> **Périmètre.** Écran pilote : **Ventes UV** (liste, fiche, création, modification). L'inventaire « 24 écrans » attend la
-> liste du demandeur : voir « Inventaire » en fin de document. Rien n'est généralisé avant validation complète du pilote.
+> **Périmètre.** Écran pilote officiel : **Ventes UV** (liste, fiche, création). Les **24 écrans Phase 3 ne sont pas encore
+> déterminés** (⚪) : voir [MOBILE-INVENTORY-86.md](MOBILE-INVENTORY-86.md). Rien n'est généralisé avant la validation du pilote
+> sur appareil Android physique.
 
 ## 1. Principes
 
@@ -82,7 +83,7 @@ Légende : ✅ fait · 🧪 testé automatiquement · 👁 vérifié dans un nav
 
 | Critère | Écrans | Preuve | Reste |
 |---|---|---|---|
-| Droits par rôle (master, admin, comptable, commercial, lecture seule) : accès, boutons visibles, actions Livewire forgées refusées | liste, fiche, création, modification | 🧪 `MobileVentesPilotTest` (28 cas) | — |
+| Droits par rôle (master, admin, comptable, commercial, lecture seule) : accès, boutons visibles, actions Livewire forgées refusées | liste, fiche, création (la modification est testée mais hors pilote) | 🧪 `MobileVentesPilotTest` (28 cas) | — |
 | Isolation entre entreprises (fiche, modification, recherche d'une vente étrangère) | liste, fiche, modification | 🧪 `MobileVentesPilotTest`, `TenantBoundaryRegressionTest` | — |
 | États : vide, vide filtré, annulé, consultation seule, réinitialisation | liste, fiche | 🧪 + 👁 (320, 390 px ; lecture seule et master) | — |
 | Pas de N+1 sur la liste | liste | 🧪 nombre de requêtes constant (8 lignes de plus), SQLite **et** MariaDB 12.3 | — |
@@ -96,10 +97,9 @@ Légende : ✅ fait · 🧪 testé automatiquement · 👁 vérifié dans un nav
 
 ## 7. Inventaire des écrans mobiles
 
-**Réel (extrait du code, 2026-10-08)** : 42 types de pages Livewire sous `/m` (dont 4 génériques `m/g/{resource}` qui servent
-14 ressources : agents, ventes, remboursements, approvisionnements, charges, fournisseurs, paliers, modes de paiement,
-catégories de charges et de caisse, mouvements de caisse, utilisateurs, sous-distributeurs, agents partenaires) et
-9 routes d'export. **Aucun module « Commandes » n'existe.**
+Voir **[MOBILE-INVENTORY-86.md](MOBILE-INVENTORY-86.md)** (inventaire factuel : nom, route, composant, rôles mesurés, permissions,
+statut mobile, priorité, dépendances) et [`mobile-inventory.csv`](mobile-inventory.csv).
 
-**« 24 écrans » : liste attendue du demandeur.** Elle sera rapprochée du code (absents, doublons, hors périmètre) puis figée
-ici. Pilote retenu : **Ventes UV**. Tant que cette liste n'est pas fournie, aucun écran supplémentaire n'est migré.
+Cadrage : 78 écrans Master entreprise + 3 Espace Agent + 5 sécurité partagés = 86 ; Super Admin hors périmètre. Les chiffres
+techniques (42 pages Livewire, 14 ressources CRUD, 9 exports) ne sont pas les « 24 écrans » : **ceux-ci ne sont pas encore
+déterminés** et ne seront pas déduits. Aucun écran autre que Ventes UV n'est migré.
