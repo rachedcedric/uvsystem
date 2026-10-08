@@ -8,6 +8,7 @@ use App\Models\Fournisseur;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AgentSoldeTest extends TestCase
@@ -32,7 +33,7 @@ class AgentSoldeTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function solde_is_created_automatically_when_transaction_is_created()
     {
         // Vérifier qu'il n'y a pas de solde initialement
@@ -60,7 +61,7 @@ class AgentSoldeTest extends TestCase
         $this->assertEquals(100000, (float) $solde->solde_restant); // Montant FCFA
     }
 
-    /** @test */
+    #[Test]
     public function solde_is_updated_when_remboursement_is_created()
     {
         // Créer une transaction initiale
@@ -87,7 +88,7 @@ class AgentSoldeTest extends TestCase
         $this->assertEquals(50000, (float) $solde->solde_restant); // Montant FCFA
     }
 
-    /** @test */
+    #[Test]
     public function solde_handles_multiple_transactions_correctly()
     {
         // Transaction 1
@@ -126,7 +127,7 @@ class AgentSoldeTest extends TestCase
         $this->assertEquals(130000, (float) $solde->solde_restant); // Montant FCFA
     }
 
-    /** @test */
+    #[Test]
     public function solde_recalculate_method_works_correctly()
     {
         // Créer des transactions
@@ -153,7 +154,7 @@ class AgentSoldeTest extends TestCase
         $this->assertEquals(100000, (float) $newSolde->solde_restant);
     }
 
-    /** @test */
+    #[Test]
     public function solde_with_zero_debt_shows_no_debt()
     {
         // Créer une transaction
@@ -178,7 +179,7 @@ class AgentSoldeTest extends TestCase
         $this->assertEquals(0, (float) $solde->solde_restant);
     }
 
-    /** @test */
+    #[Test]
     public function solde_handles_multiple_remboursements()
     {
         // Créer une transaction
@@ -220,7 +221,7 @@ class AgentSoldeTest extends TestCase
         $this->assertEquals(40000, (float) $solde->solde_restant); // Montant FCFA
     }
 
-    /** @test */
+    #[Test]
     public function solde_calculation_is_accurate_with_complex_scenario()
     {
         // Distribution 1: 200,000 FCFA
@@ -281,7 +282,7 @@ class AgentSoldeTest extends TestCase
         $this->assertEquals(170000, (float) $solde->solde_restant); // Montant FCFA
     }
 
-    /** @test */
+    #[Test]
     public function each_agent_has_only_one_solde_record()
     {
         // Créer plusieurs transactions

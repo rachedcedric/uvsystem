@@ -6,6 +6,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AuthenticationFlowTest extends TestCase
@@ -26,7 +27,7 @@ class AuthenticationFlowTest extends TestCase
         return $user;
     }
 
-    /** @test */
+    #[Test]
     public function complete_auth_flow_with_sanctum(): void
     {
         // 1. Un compte métier (l'inscription publique n'existe plus)
@@ -56,7 +57,7 @@ class AuthenticationFlowTest extends TestCase
         $this->withHeader('Authorization', "Bearer $token")->getJson('/api/auth/user')->assertStatus(401);
     }
 
-    /** @test */
+    #[Test]
     public function invalid_credentials_rejected(): void
     {
         $this->master(['email' => 'user@example.com', 'password' => bcrypt('correctpassword')]);
@@ -67,7 +68,7 @@ class AuthenticationFlowTest extends TestCase
             ->assertJsonValidationErrors('email');
     }
 
-    /** @test */
+    #[Test]
     public function an_account_without_a_business_role_cannot_log_in(): void
     {
         User::factory()->create(['email' => 'orphelin@example.com', 'password' => bcrypt('password123')]);
@@ -75,7 +76,7 @@ class AuthenticationFlowTest extends TestCase
         $this->postJson('/api/auth/login', ['email' => 'orphelin@example.com', 'password' => 'password123'])->assertStatus(422);
     }
 
-    /** @test */
+    #[Test]
     public function protected_routes_require_authentication(): void
     {
         $this->getJson('/api/agents')->assertStatus(401);
@@ -83,7 +84,7 @@ class AuthenticationFlowTest extends TestCase
         $this->getJson('/api/dashboard')->assertStatus(401);
     }
 
-    /** @test */
+    #[Test]
     public function token_refresh_flow(): void
     {
         $user = $this->master();
@@ -97,7 +98,7 @@ class AuthenticationFlowTest extends TestCase
         $this->assertNull($old->accessToken->fresh(), 'L\'ancien token est révoqué par le renouvellement.');
     }
 
-    /** @test */
+    #[Test]
     public function role_based_access_control(): void
     {
         Sanctum::actingAs($this->master());

@@ -11,6 +11,7 @@ use App\Models\UvTransaction;
 use App\Services\MasterSoldeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class MasterSoldeValidationTest extends TestCase
@@ -45,7 +46,7 @@ class MasterSoldeValidationTest extends TestCase
         $this->actingAs($this->user);
     }
 
-    /** @test */
+    #[Test]
     public function test_1_validation_bloque_distribution_si_solde_insuffisant()
     {
         echo "\n🧪 TEST 1: Validation bloque distribution si solde insuffisant\n";
@@ -73,7 +74,7 @@ class MasterSoldeValidationTest extends TestCase
         echo "❌ Ce message ne devrait pas apparaître\n";
     }
 
-    /** @test */
+    #[Test]
     public function test_2_distribution_autorisee_si_solde_suffisant()
     {
         echo "\n🧪 TEST 2: Distribution autorisée si solde suffisant\n";
@@ -112,7 +113,7 @@ class MasterSoldeValidationTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function test_3_notification_envoyee_si_solde_bas()
     {
         echo "\n🧪 TEST 3: Notification envoyée si solde < seuil\n";
@@ -142,7 +143,7 @@ class MasterSoldeValidationTest extends TestCase
         echo "✅ Alerte déclenchée\n";
     }
 
-    /** @test */
+    #[Test]
     public function test_4_audit_log_enregistre_modifications()
     {
         echo "\n🧪 TEST 4: ActivityLog enregistre les modifications\n";

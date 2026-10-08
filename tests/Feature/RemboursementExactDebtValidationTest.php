@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\UvDistributionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -93,9 +94,7 @@ class RemboursementExactDebtValidationTest extends TestCase
         $this->assertEqualsWithDelta(0, $this->agent->fresh()->current_debt, 0.01);
     }
 
-    /**
-     * @dataProvider amountScenarios
-     */
+    #[DataProvider('amountScenarios')]
     public function test_amount_scenarios_against_a_million_debt(string $amountInput, bool $shouldBeAccepted): void
     {
         $component = Livewire::test(CreateRemboursement::class)

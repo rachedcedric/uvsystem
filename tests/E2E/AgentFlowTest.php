@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AgentFlowTest extends TestCase
@@ -35,7 +36,7 @@ class AgentFlowTest extends TestCase
         Sanctum::actingAs($this->master);
     }
 
-    /** @test */
+    #[Test]
     public function complete_agent_lifecycle_flow(): void
     {
         // 1. Master se connecte
@@ -113,7 +114,7 @@ class AgentFlowTest extends TestCase
         $this->assertEquals(0, $agent->solde->solde_restant ?? 0);
     }
 
-    /** @test */
+    #[Test]
     public function debt_limit_enforcement_flow(): void
     {
         $this->login();
@@ -153,7 +154,7 @@ class AgentFlowTest extends TestCase
         $this->assertTrue(in_array($response->status(), [201, 422]));
     }
 
-    /** @test */
+    #[Test]
     public function multi_agent_distribution_flow(): void
     {
         $this->login();

@@ -117,7 +117,9 @@ class TenantExportAndBackupTest extends TestCase
         $super = $this->superAdmin();
 
         $this->withSession([TwoFactorGate::SESSION_KEY => $super->id])->actingAs($super)
-            ->get('/platform/backup-page')->assertOk()->assertSee('backup-1.zip');
+            ->get('/platform/backup-page')->assertOk()->assertSee('backup-1.zip')
+            ->assertSeeInOrder(['<h1', 'Sauvegardes', '</h1>'], false)
+            ->assertDontSee('Backup Page');
 
         Filament::setCurrentPanel(Filament::getPanel('platform'));
         $this->actingAs($this->userIn($this->a, 'master'))->get('/platform/backup-page')->assertForbidden();

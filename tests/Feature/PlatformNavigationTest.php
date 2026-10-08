@@ -46,7 +46,7 @@ class PlatformNavigationTest extends TestCase
         $this->assertArrayNotHasKey('', $menu, 'aucun élément ne doit rester hors groupe');
         $this->assertSame(['Pilotage', 'Entreprises', 'Abonnements', 'CMS', 'Système'], array_keys($menu));
         $this->assertSame(['Tableau de bord'], $menu['Pilotage']);
-        $this->assertSame(['Tenants'], $menu['Entreprises']);
+        $this->assertSame(['Entreprises'], $menu['Entreprises']);
         $this->assertSame(['Abonnements', 'Offres', 'Demandes de changement'], $menu['Abonnements']);
         $this->assertSame(['Page d\'accueil', 'Pages publiques', 'E-mails et messages', 'Réglages du SaaS'], $menu['CMS']);
         $this->assertContains('Sauvegardes', $menu['Système']);
@@ -58,7 +58,8 @@ class PlatformNavigationTest extends TestCase
         $this->actingAs($this->superAdmin());
 
         $this->get('/platform')->assertOk()->assertSee('Tableau de bord');
-        $this->get('/platform/tenants')->assertOk();
+        $this->get('/platform/tenants')->assertOk()
+            ->assertSeeInOrder(['<h1', 'Entreprises', '</h1>'], false);
         $this->assertSame(url('/platform'), Filament::getPanel('platform')->getUrl());
     }
 

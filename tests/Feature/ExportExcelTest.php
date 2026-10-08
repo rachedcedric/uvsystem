@@ -7,13 +7,14 @@ use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ExportExcelTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function test_export_excel_fonctionne()
     {
         echo "\n📊 TEST 5: Export Excel des approvisionnements\n";

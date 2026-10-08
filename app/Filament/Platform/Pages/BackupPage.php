@@ -15,6 +15,8 @@ class BackupPage extends Page
 
     protected static ?string $navigationLabel = 'Sauvegardes';
 
+    protected static ?string $title = 'Sauvegardes';
+
     protected static ?string $navigationGroup = 'Système';
 
     protected static ?int $navigationSort = 90;
