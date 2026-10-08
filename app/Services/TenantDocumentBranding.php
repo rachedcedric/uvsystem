@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Storage;
 
 class TenantDocumentBranding
 {
+    /** Côté maximal (px) d'un logo enregistré ou intégré aux PDF : DomPDF est très gourmand en mémoire (hébergement 128 Mo). */
+    public const LOGO_MAX_SIDE = 320;
+
+    /** Au-delà de cette taille (octets), un logo est réduit à la volée avant d'être intégré à un PDF (anciens envois). */
+    private const LOGO_EMBED_LIMIT = 120_000;
+
     /**
      * @return array{
      *     name: string,
@@ -65,7 +71,80 @@ class TenantDocumentBranding
             return null;
         }
 
-        return 'data:'.$mime.';base64,'.base64_encode($disk->get($path));
+        $binary = $disk->get($path);
+
+        if (strlen($binary) > self::LOGO_EMBED_LIMIT) {
+            $compact = $this->compactLogo($binary);
+
+            if ($compact !== null) {
+                [$mime, $binary] = $compact;
+            }
+        }
+
+        return 'data:'.$mime.';base64,'.base64_encode($binary);
+    }
+
+    /**
+     * Réduit un logo (PNG, JPEG ou WebP) à LOGO_MAX_SIDE px au plus, en gardant la transparence et le rapport.
+     *
+     * @return array{0: string, 1: string}|null [mime, contenu], null si l'image est illisible
+     */
+    public function compactLogo(string $binary): ?array
+    {
+        $info = @getimagesizefromstring($binary);
+
+        if ($info === false || ! in_array($info['mime'], ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return null;
+        }
+
+        [$width, $height] = $info;
+
+        // Refuse de décoder une image démesurée (le décodage GD occupe ~4 octets par pixel).
+        if ($width * $height > 6_250_000) {
+            return null;
+        }
+
+        $source = @imagecreatefromstring($binary);
+
+        if ($source === false) {
+            return null;
+        }
+
+        $ratio = min(1, self::LOGO_MAX_SIDE / max($width, $height));
+        $targetWidth = max(1, (int) round($width * $ratio));
+        $targetHeight = max(1, (int) round($height * $ratio));
+
+        $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
+        imagealphablending($canvas, false);
+        imagesavealpha($canvas, true);
+        imagefill($canvas, 0, 0, imagecolorallocatealpha($canvas, 255, 255, 255, 127));
+        imagecopyresampled($canvas, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height);
+
+        ob_start();
+        match ($info['mime']) {
+            'image/jpeg' => imagejpeg($canvas, null, 85),
+            'image/webp' => imagewebp($canvas, null, 85),
+            default => imagepng($canvas, null, 9),
+        };
+        $output = (string) ob_get_clean();
+
+        return [$info['mime'], $output];
+    }
+
+    /** Remplace, sur le disque, un logo envoyé par sa version réduite (même chemin, même format). */
+    public function normalizeStoredLogo(Tenant $tenant, string $path): void
+    {
+        $disk = Storage::disk('public');
+
+        if (! $this->isTenantLogoPath($tenant, $path) || ! $disk->exists($path)) {
+            return;
+        }
+
+        $compact = $this->compactLogo($disk->get($path));
+
+        if ($compact !== null) {
+            $disk->put($path, $compact[1]);
+        }
     }
 
     public function storedLogoPath(Tenant $tenant): ?string

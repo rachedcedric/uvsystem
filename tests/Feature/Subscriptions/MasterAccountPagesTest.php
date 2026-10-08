@@ -330,4 +330,58 @@ class MasterAccountPagesTest extends SubscriptionTestCase
         }
         $this->assertStringContainsString('<div class="acct ', file_get_contents(resource_path('views/filament/pages/subscription-page.blade.php')));
     }
+
+    public function test_an_uploaded_logo_is_reduced_to_a_small_file(): void
+    {
+        $tenant = $this->tenant();
+        $this->actingAs($this->userIn($tenant));
+
+        Livewire::test(TenantProfilePage::class)
+            ->fillForm(['logo_path' => UploadedFile::fake()->image('logo.png', 1800, 900)])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $path = data_get($tenant->fresh()->settings, 'branding.logo_path');
+        [$width, $height] = getimagesizefromstring(Storage::disk('public')->get($path));
+
+        $this->assertSame(TenantDocumentBranding::LOGO_MAX_SIDE, $width);
+        $this->assertSame(TenantDocumentBranding::LOGO_MAX_SIDE / 2, $height);
+    }
+
+    public function test_a_logo_with_absurd_dimensions_is_refused(): void
+    {
+        $tenant = $this->tenant();
+        $this->actingAs($this->userIn($tenant));
+
+        Livewire::test(TenantProfilePage::class)
+            ->fillForm(['logo_path' => UploadedFile::fake()->image('large.png', 2600, 10)])
+            ->call('save')
+            ->assertHasFormErrors(['logo_path']);
+    }
+
+    public function test_an_old_oversized_logo_is_reduced_before_being_embedded_in_a_pdf(): void
+    {
+        $tenant = $this->tenant();
+        $image = imagecreatetruecolor(900, 900);
+        for ($i = 0; $i < 900; $i++) {
+            for ($j = 0; $j < 900; $j += 3) {
+                imagesetpixel($image, $i, $j, random_int(0, 0xFFFFFF));
+            }
+        }
+        ob_start();
+        imagejpeg($image, null, 95);
+        $heavy = (string) ob_get_clean();
+        $this->assertGreaterThan(120_000, strlen($heavy));
+
+        $path = $tenant->storagePath('branding/ancien.jpg');
+        Storage::disk('public')->put($path, $heavy);
+        $tenant->update(['settings' => ['branding' => ['logo_path' => $path]]]);
+
+        $branding = TenantContext::runAs($tenant->id, fn () => app(TenantDocumentBranding::class)->current());
+        $embedded = base64_decode(substr($branding['logo_data_uri'], strpos($branding['logo_data_uri'], ',') + 1));
+        [$width] = getimagesizefromstring($embedded);
+
+        $this->assertLessThanOrEqual(TenantDocumentBranding::LOGO_MAX_SIDE, $width);
+        $this->assertLessThan(strlen($heavy) / 3, strlen($embedded));
+    }
 }

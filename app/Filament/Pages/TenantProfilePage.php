@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Tenant;
 use App\Services\TenantDocumentBranding;
+use App\Services\TenantProfileUpdater;
 use App\Tenancy\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
@@ -12,8 +13,6 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class TenantProfilePage extends Page implements HasForms
 {
@@ -81,7 +80,8 @@ class TenantProfilePage extends Page implements HasForms
                         ->getUploadedFileUsing(fn (BaseFileUpload $component, string $file, string|array|null $storedFileNames): ?array => $this->uploadedLogo($component, $file, $storedFileNames))
                         ->imageEditor()
                         ->maxSize(2048)
-                        ->helperText('PNG, JPG ou WebP, 2 Mo maximum. Le logo apparaît dans le panneau Master.')
+                        ->rules(['dimensions:max_width=2500,max_height=2500'])
+                        ->helperText('PNG, JPG ou WebP, 2 Mo et 2 500 px maximum (il est réduit automatiquement). Le logo apparaît dans le panneau et sur vos documents.')
                         ->columnSpanFull(),
                 ])->columns(2),
             Forms\Components\Section::make('Coordonnées')
@@ -109,41 +109,8 @@ class TenantProfilePage extends Page implements HasForms
     public function save(): void
     {
         abort_unless(auth()->user()?->can('edit_system_settings'), 403);
-        $tenant = $this->tenant();
-        $state = $this->form->getState();
-        $oldLogo = data_get($tenant->settings, 'branding.logo_path');
 
-        DB::transaction(function () use ($tenant, $state) {
-            $settings = $tenant->settings ?? [];
-            $settings['profile'] = [
-                'legal_name' => $state['legal_name'] ?? null,
-                'address' => $state['address'] ?? null,
-                'city' => $state['city'] ?? null,
-                'country' => $state['country'] ?? null,
-                'website' => $state['website'] ?? null,
-                'document_footer' => $state['document_footer'] ?? null,
-            ];
-            $settings['branding'] = ['logo_path' => $state['logo_path'] ?? null];
-
-            $tenant->forceFill([
-                'name' => $state['name'],
-                'contact_name' => $state['contact_name'] ?? null,
-                'contact_email' => $state['contact_email'] ?? null,
-                'contact_phone' => $state['contact_phone'] ?? null,
-                'settings' => $settings,
-            ])->save();
-        });
-
-        $newLogo = $state['logo_path'] ?? null;
-        $branding = app(TenantDocumentBranding::class);
-        if (is_string($oldLogo) && $oldLogo !== $newLogo && $branding->isTenantLogoPath($tenant, $oldLogo)) {
-            Storage::disk('public')->delete($oldLogo);
-        }
-
-        activity('tenant-profile')
-            ->causedBy(auth()->user())
-            ->withProperties(['tenant_id' => $tenant->getKey()])
-            ->log('Profil de l’entreprise mis à jour');
+        app(TenantProfileUpdater::class)->update($this->tenant(), $this->form->getState());
 
         Notification::make()->title('Profil enregistré')->body('Les informations de votre entreprise sont à jour.')->success()->send();
     }
