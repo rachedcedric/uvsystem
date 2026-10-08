@@ -64,6 +64,14 @@ Route::prefix('m')->name('m.')->group(function () {
         Route::get('securite', Admin\TwoFactor::class)->name('securite');
         // Abonnement du tenant courant (master/admin) : reste accessible quand l'abonnement est expiré.
         Route::get('abonnement', SubscriptionShow::class)->name('abonnement');
+        // Profil de l'entreprise (nom, coordonnées, logo, pied de page des documents).
+        Route::get('profil-entreprise', \App\Livewire\Mobile\Account\Profile::class)->name('profil');
+        // Un compte lié à une fiche agent (master compris) retrouve son espace agent (autre panneau : navigation complète).
+        Route::get('espace-agent', function () {
+            abort_unless(auth()->user()?->agent()->exists(), 403);
+
+            return redirect('/agent');
+        })->name('espace-agent');
         Route::get('diagnostic-notifications', Admin\NotificationsDiagnostic::class)->name('diagnostic-notifications');
         Route::get('exports/caisse/historique', [ExportController::class, 'caisseHistorique'])->name('exports.caisse-historique');
         Route::get('exports/caisse/{date}', [ExportController::class, 'caisseJour'])->name('exports.caisse-jour')->where('date', '\d{4}-\d{2}-\d{2}');

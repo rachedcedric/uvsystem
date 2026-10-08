@@ -53,6 +53,9 @@ class More extends Component
                 \App\Filament\Pages\ImportPage::getUrl(),
                 \App\Filament\Pages\TwoFactorAuthPage::getUrl(),
                 \App\Filament\Pages\ActivityLogPage::getUrl(),
+                \App\Filament\Pages\SubscriptionPage::getUrl(),
+                \App\Filament\Pages\TenantProfilePage::getUrl(),
+                '/agent', // « Mon espace agent » : déjà proposé en natif
             ];
 
             return collect(Filament::getNavigation())
@@ -78,8 +81,13 @@ class More extends Component
     {
         $user = auth()->user();
 
+        $company = $user->tenant;
+        $hasLogo = $company && app(\App\Services\TenantDocumentBranding::class)->storedLogoPath($company) !== null;
+
         return view('livewire.mobile.more', [
             'user' => $user,
+            'company' => $company,
+            'companyLogo' => $hasLogo ? route('tenant.branding.logo', ['v' => $company->updated_at?->timestamp], false) : null,
             'role' => $user->getRoleNames()->first(),
             'native' => \App\Support\Mobile\Nav::moreItems($user),
             'resourceGroups' => \App\Support\Mobile\Crud\Registry::menuFor($user),

@@ -1,7 +1,18 @@
 <div>
     <x-m.appbar title="Plus" />
 
-    <div class="m-group" style="margin-top:4px">
+    @if ($company)
+        <div class="m-group" style="margin-top:4px">
+            @php
+                $leadHtml = $companyLogo
+                    ? new \Illuminate\Support\HtmlString('<img src="'.e($companyLogo).'" alt="" style="max-width:100%;max-height:100%;object-fit:contain">')
+                    : mb_strtoupper(mb_substr($company->name, 0, 2));
+            @endphp
+            <x-m.row :lead="$leadHtml" :title="$company->name" sub="Entreprise" :chevron="false" />
+        </div>
+    @endif
+
+    <div class="m-group" style="margin-top:{{ $company ? '10px' : '4px' }}">
         <x-m.row :lead="mb_strtoupper(mb_substr($user->name, 0, 2))" :title="$user->name" :sub="$user->email" :chevron="false">
             @if ($role)
                 <x-slot:end><span class="m-badge m-badge--brand">{{ ucfirst($role) }}</span></x-slot:end>
@@ -39,7 +50,7 @@
         <x-m.section title="Opérations">
             <div class="m-group">
                 @foreach ($native as $item)
-                    <x-m.row :href="route($item['route'])" :icon="$item['icon']" :title="$item['label']" />
+                    <x-m.row :href="route($item['route'])" :icon="$item['icon']" :title="$item['label']" :external="! empty($item['external'])" />
                 @endforeach
             </div>
         </x-m.section>

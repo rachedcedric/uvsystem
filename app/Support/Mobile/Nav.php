@@ -55,7 +55,7 @@ class Nav
     /**
      * Rubriques natives du menu « Plus » (hors onglets).
      *
-     * @return list<array{label:string, route:string, icon:string}>
+     * @return list<array{label:string, route:string, icon:string, external?:bool}>
      */
     public static function moreItems(?User $user): array
     {
@@ -73,6 +73,8 @@ class Nav
             ['label' => 'Sauvegardes', 'route' => 'm.sauvegardes', 'icon' => 'cloud-arrow-up', 'can' => null, 'roles' => ['super_admin']],
             ['label' => 'Diagnostic des notifications', 'route' => 'm.diagnostic-notifications', 'icon' => 'bell-alert', 'can' => null, 'roles' => ['master', 'admin']],
             ['label' => 'Mon abonnement', 'route' => 'm.abonnement', 'icon' => 'credit-card', 'can' => null, 'roles' => ['master', 'admin']],
+            ['label' => 'Profil de l\'entreprise', 'route' => 'm.profil', 'icon' => 'building-office', 'can' => 'view_system_settings'],
+            ['label' => 'Mon espace agent', 'route' => 'm.espace-agent', 'icon' => 'user-circle', 'can' => null, 'external' => true, 'when' => fn (?User $user): bool => $user?->agent()->exists() ?? false],
             ['label' => 'Sécurité du compte', 'route' => 'm.securite', 'icon' => 'shield-check', 'can' => null],
             ['label' => 'Notifications', 'route' => 'm.notifications', 'icon' => 'bell', 'can' => null],
         ];
@@ -88,6 +90,10 @@ class Nav
     {
         return array_values(array_filter($items, function (array $item) use ($user): bool {
             if (! Route::has($item['route'])) {
+                return false;
+            }
+
+            if (isset($item['when']) && ! $item['when']($user)) {
                 return false;
             }
 

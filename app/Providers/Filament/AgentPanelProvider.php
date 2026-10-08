@@ -37,6 +37,12 @@ class AgentPanelProvider extends PanelProvider
             ->darkModeBrandLogo(asset('images/logo-dark.png'))
             ->brandLogoHeight('2.5rem')
             ->favicon(asset('favicon-32.png'))
+            // Pont Capacitor (APK Android) : bouton retour natif et lien « ← Application » ; inactif dans un navigateur classique.
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::BODY_END,
+                fn (): string => '<script src="'.e(asset('js/capacitor-bridge.js')).'?v='
+                    .(@filemtime(public_path('js/capacitor-bridge.js')) ?: 1).'"></script>',
+            )
             ->discoverResources(in: app_path('Filament/Agent/Resources'), for: 'App\\Filament\\Agent\\Resources')
             ->discoverPages(in: app_path('Filament/Agent/Pages'), for: 'App\\Filament\\Agent\\Pages')
             ->pages([

@@ -1,9 +1,9 @@
-@props(['href' => null, 'title', 'sub' => null, 'lead' => null, 'icon' => null, 'tone' => null, 'chevron' => null])
+@props(['href' => null, 'title', 'sub' => null, 'lead' => null, 'icon' => null, 'tone' => null, 'chevron' => null, 'external' => false])
 @php
     $tag = $href ? 'a' : 'div';
     $showChevron = $chevron ?? (bool) $href;
 @endphp
-<{{ $tag }} @if ($href) href="{{ $href }}" wire:navigate @endif {{ $attributes->class(['m-row']) }}>
+<{{ $tag }} @if ($href) href="{{ $href }}" @unless ($external) wire:navigate @endunless @endif {{ $attributes->class(['m-row']) }}>
     @if ($icon || $lead)
         <span class="m-row__lead {{ $tone ? 'm-row__lead--'.$tone : '' }}">
             @if ($icon)

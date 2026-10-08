@@ -1,5 +1,5 @@
 <div wire:poll.30s.visible>
-    <x-m.appbar :title="$greeting.', '.$firstName" :sub="now()->translatedFormat('l j F')">
+    <x-m.appbar :title="$greeting.', '.$firstName" :sub="collect([now()->translatedFormat('l j F'), auth()->user()->tenant?->name])->filter()->implode(' · ')">
         @if (\Illuminate\Support\Facades\Route::has('m.notifications'))
             <a href="{{ route('m.notifications') }}" wire:navigate class="m-iconbtn" aria-label="Notifications" data-haptic>
                 <x-m.icon name="bell" />
