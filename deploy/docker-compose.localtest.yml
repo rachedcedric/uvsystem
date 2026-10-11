@@ -1,0 +1,6 @@
+# Surcharge d'ESSAI LOCAL : ports 8080/8443 au lieu de 80/443 (ne jamais utiliser en production).
+services:
+  caddy:
+    ports: !override
+      - "8080:80"
+      - "8443:443"

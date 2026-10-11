@@ -1,0 +1,125 @@
+# UVMASTER — pile de production (VPS). À lancer depuis le dossier deploy/ :
+#   docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+# Seul le reverse proxy (Caddy) publie des ports (80/443). Base de données, application, worker et planificateur
+# restent sur un réseau privé Docker.
+name: uvmaster
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: Dockerfile
+  image: uvmaster-app:${APP_VERSION:-latest}
+  env_file: .env.production
+  restart: unless-stopped
+  depends_on:
+    db:
+      condition: service_healthy
+  networks: [private]
+  logging: &logging
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-uvmaster.ci}
+      ACME_EMAIL: ${ACME_EMAIL:?définir ACME_EMAIL dans .env.production}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    networks: [private, edge]
+    logging: *logging
+
+  app:
+    <<: *app
+    command: ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+    volumes:
+      - storage_data:/var/www/html/storage
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    mem_limit: 1g
+
+  queue:
+    <<: *app
+    user: "82:82"   # www-data : jamais root pour un worker
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+    volumes:
+      - storage_data:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'artisan queue:work' >/dev/null || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    mem_limit: 512m
+
+  scheduler:
+    <<: *app
+    user: "82:82"
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - storage_data:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'artisan schedule:work' >/dev/null || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    mem_limit: 512m
+
+  db:
+    image: ${MYSQL_IMAGE:-mysql:8.0}
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:?}
+      MYSQL_USER: ${DB_USERNAME:?}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?}
+      TZ: Africa/Abidjan
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-name-resolve
+      - --max-connections=120
+      - --innodb-buffer-pool-size=${INNODB_BUFFER_POOL:-512M}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks: [private]   # aucun port publié : la base n'est joignable que par les services ci-dessus
+    logging: *logging
+    mem_limit: 1536m
+
+networks:
+  private:
+    internal: false
+  edge: {}
+
+volumes:
+  db_data:
+  storage_data:
+  caddy_data:
+  caddy_config:

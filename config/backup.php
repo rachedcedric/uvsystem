@@ -29,8 +29,10 @@ return [
                 'relative_path' => base_path(),
             ],
 
+            // Connexion réellement utilisée par l'application (mysql en production, sqlite en développement).
+            // Elle était figée sur « sqlite » : une base MySQL n'était donc pas sauvegardée par backup:run.
             'databases' => [
-                'sqlite',
+                env('DB_CONNECTION', 'mysql'),
             ],
         ],
 
@@ -78,11 +80,11 @@ return [
         'notifiable' => \Spatie\Backup\Notifications\Notifiable::class,
 
         'mail' => [
-            'to' => env('BACKUP_NOTIFICATION_EMAIL', 'admin@uv-system.com'),
+            'to' => env('BACKUP_NOTIFICATION_EMAIL', 'admin@uvmaster.ci'),
 
             'from' => [
-                'address' => env('MAIL_FROM_ADDRESS', 'backup@uv-system.com'),
-                'name' => env('MAIL_FROM_NAME', 'MODELEC CI Backup'),
+                'address' => env('MAIL_FROM_ADDRESS', 'backup@uvmaster.ci'),
+                'name' => env('MAIL_FROM_NAME', 'UVMASTER Backup'),
             ],
         ],
 
@@ -95,7 +97,7 @@ return [
 
         'discord' => [
             'webhook_url' => env('BACKUP_DISCORD_WEBHOOK_URL', ''),
-            'username' => 'MODELEC CI Backup',
+            'username' => 'UVMASTER Backup',
             'avatar_url' => '',
         ],
     ],

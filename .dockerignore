@@ -1,0 +1,36 @@
+.git
+.github
+.engram
+**/.engram
+.claude
+.idea
+.vscode
+node_modules
+vendor
+android
+capacitor-www
+capacitor.config.json
+docs
+tests
+deploy
+backups
+*.sqlite
+.env
+.env.*
+!.env.production.example
+public/hot
+public/build
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/app/private/*
+storage/app/public/*
+storage/app/MODELEC CI
+storage/*.key
+# Résidus à la racine nommés d'après l'ancienne infrastructure (vides) et fichiers inutiles en production
+c2723058c_uvsystem
+uvsystem.pro
+scripts
+phpunit.xml
+README.md
