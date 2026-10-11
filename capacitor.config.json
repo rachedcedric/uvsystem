@@ -1,10 +1,10 @@
 {
   "appId": "pro.uvsystem.app",
-  "appName": "MODELEC CI",
+  "appName": "UVMASTER",
   "webDir": "capacitor-www",
-  "appendUserAgent": "ModelecCIApp",
+  "appendUserAgent": "UvmasterApp",
   "server": {
-    "url": "https://uvsystem.pro/m",
+    "url": "https://uvmaster.ci/m",
     "cleartext": false,
     "errorPath": "index.html"
   },

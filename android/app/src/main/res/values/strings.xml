@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MODELEC CI</string>
-    <string name="title_activity_main">MODELEC CI</string>
+    <string name="app_name">UVMASTER</string>
+    <string name="title_activity_main">UVMASTER</string>
     <string name="package_name">pro.uvsystem.app</string>
     <string name="custom_url_scheme">pro.uvsystem.app</string>
 </resources>
