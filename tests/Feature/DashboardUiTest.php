@@ -233,7 +233,7 @@ class DashboardUiTest extends TestCase
         $emoji = '/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]/u';
         $quick = Livewire::test(QuickActionsWidget::class)->assertSee('Actions rapides')->html();
         $kpis = Livewire::test(MainKpisWidget::class)->assertSee("Vue d'ensemble")->html();
-        $alerts = Livewire::test(AlertesWidget::class)->loadTable()->assertSee('Alertes et actions requises')->html();
+        $alerts = Livewire::test(AlertesWidget::class)->assertSee('Alertes et actions requises')->html();
 
         foreach ([$quick, $kpis, $alerts] as $html) {
             $this->assertDoesNotMatchRegularExpression($emoji, strip_tags($html));
