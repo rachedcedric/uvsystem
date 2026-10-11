@@ -30,7 +30,7 @@ class AnalyticsCommand extends Command
         $type = $this->argument('type');
 
         $this->info('');
-        $this->info('📊 Analytics MODELEC CI');
+        $this->info('📊 Analytics '.config('branding.name'));
         $this->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->info('');
 

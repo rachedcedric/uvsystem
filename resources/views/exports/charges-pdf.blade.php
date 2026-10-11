@@ -182,7 +182,7 @@
 
 <body>
     <div class="page-header">
-        <div class="page-header-title">💰 MODELEC CI - Rapport des Charges</div>
+        <div class="page-header-title">💰 {{ config('branding.name') }} - Rapport des Charges</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -190,14 +190,14 @@
 
     <div class="page-footer">
         <div class="page-footer-left">
-            MODELEC CI &copy; {{ date('Y') }} - Document confidentiel
+            {{ config('branding.name') }} &copy; {{ date('Y') }} - Document confidentiel
         </div>
         <div class="page-footer-right">
             <span class="page-number"></span>
         </div>
     </div>
 
-    <div class="watermark">MODELEC CI</div>
+    <div class="watermark">{{ config('branding.name') }}</div>
 
     <div class="header">
         <h1>📊 Gestion des Charges</h1>

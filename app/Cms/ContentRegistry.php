@@ -129,7 +129,7 @@ class ContentRegistry
         return [
             'landing.hero.signal' => self::entry('Accroche au-dessus du titre', 'Conçu pour la distribution UV en Côte d\'Ivoire'),
             'landing.hero.title' => self::entry('Titre principal', "Vos flux UV.\nUne seule tour de contrôle.", 'multiline', 'Un saut de ligne devient un retour à la ligne dans le titre.'),
-            'landing.hero.lead' => self::entry('Texte d\'introduction', 'MODELEC CI relie ventes, remboursements, dettes, commissions et caisse pour que chaque mouvement soit visible, traçable et maîtrisé.', 'multiline'),
+            'landing.hero.lead' => self::entry('Texte d\'introduction', 'UVMASTER relie ventes, remboursements, dettes, commissions et caisse pour que chaque mouvement soit visible, traçable et maîtrisé.', 'multiline'),
             'landing.cta.primary' => self::entry('Bouton principal (inscription)', 'Commencer gratuitement', 'text', 'Utilisé dans le menu, le haut de page et l\'appel final : il mène à /offres.'),
             'landing.cta.discover' => self::entry('Bouton « découvrir »', 'Découvrir la plateforme'),
             'landing.cta.login' => self::entry('Bouton de connexion', 'Accéder à mon espace'),
@@ -197,9 +197,9 @@ class ContentRegistry
     private static function settings(): array
     {
         return [
-            'settings.brand.name' => self::entry('Nom de la marque', 'MODELEC CI', 'text', 'Affiché dans le pied de page et les pages de connexion.'),
+            'settings.brand.name' => self::entry('Nom de la marque', 'UVMASTER', 'text', 'Affiché dans le pied de page et les pages de connexion.'),
             'settings.brand.legal_name' => self::entry('Raison sociale', 'MODELEC Côte d\'Ivoire', 'text', 'Affichée à côté du copyright.'),
-            'settings.contact.email' => self::entry('E-mail de contact', 'contact@uvsystem.pro', 'email'),
+            'settings.contact.email' => self::entry('E-mail de contact', 'contact@uvmaster.ci', 'email'),
             'settings.contact.phone' => self::entry('Téléphone de contact', '', 'phone', 'Facultatif : affiché dans le pied de page quand il est renseigné.'),
             'settings.links.terms_url' => self::entry('Lien des conditions d\'utilisation', '', 'url', 'Adresse complète (https://…) ou chemin du site (/conditions). Vide : le texte simple est affiché.'),
             'settings.links.privacy_url' => self::entry('Lien de la politique de confidentialité', '', 'url', 'Adresse complète (https://…) ou chemin du site. Vide : aucun lien affiché.'),

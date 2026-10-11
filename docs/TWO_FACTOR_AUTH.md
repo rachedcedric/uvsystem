@@ -1,6 +1,6 @@
 # 🔐 Authentification à Deux Facteurs (2FA)
 
-Guide complet de l'authentification à deux facteurs (2FA) dans MODELEC CI.
+Guide complet de l'authentification à deux facteurs (2FA) dans UVMASTER.
 
 ## 📚 Table des Matières
 
@@ -97,7 +97,7 @@ php artisan route:list --path=2fa
 
 ### Étape 1 : Accéder à la page de sécurité
 
-1. Connectez-vous au panel admin : **https://www.uvsystem.pro/master**
+1. Connectez-vous au panel admin : **https://uvmaster.ci/master**
 2. Dans le menu de gauche, section **"Mon Compte"**
 3. Cliquez sur **"Sécurité 2FA"** (icône bouclier 🛡️)
 
@@ -125,7 +125,7 @@ Installez une de ces applications gratuites sur votre téléphone :
 2. Un **QR Code** s'affiche à l'écran
 3. Ouvrez votre application d'authentification
 4. Scannez le QR Code avec la caméra de votre téléphone
-5. L'application ajoute automatiquement "MODELEC CI - votre-email@example.com"
+5. L'application ajoute automatiquement "UVMASTER - votre-email@example.com"
 
 ### Étape 4 : Vérifier le code
 
@@ -160,7 +160,7 @@ Installez une de ces applications gratuites sur votre téléphone :
 #### Option A : Code de l'application (recommandé)
 
 1. Ouvrez votre application d'authentification
-2. Cherchez "MODELEC CI"
+2. Cherchez "UVMASTER"
 3. Entrez le code à 6 chiffres affiché
 4. Cliquez sur **"Vérifier"**
 

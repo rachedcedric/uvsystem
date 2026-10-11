@@ -87,7 +87,7 @@ RESEND_API_KEY=re_your_actual_api_key_here
 # Mail Configuration
 MAIL_MAILER=resend
 MAIL_FROM_ADDRESS="noreply@votreentreprise.ci"
-MAIL_FROM_NAME="MODELEC CI"
+MAIL_FROM_NAME="UVMASTER"
 
 # Webhook Configuration (optional)
 RESEND_WEBHOOK_SECRET=whsec_your_webhook_secret
@@ -129,9 +129,9 @@ class YourController extends Controller
         $result = $this->resend->send(
             to: 'client@example.com',
             subject: 'Bienvenue !',
-            html: '<h1>Bienvenue sur MODELEC CI</h1><p>Merci de vous être inscrit.</p>',
+            html: '<h1>Bienvenue sur UVMASTER</h1><p>Merci de vous être inscrit.</p>',
             options: [
-                'text' => 'Bienvenue sur MODELEC CI. Merci de vous être inscrit.',
+                'text' => 'Bienvenue sur UVMASTER. Merci de vous être inscrit.',
                 'tags' => [
                     ['name' => 'category', 'value' => 'welcome'],
                     ['name' => 'user_type', 'value' => 'agent'],
@@ -167,7 +167,7 @@ Mail::to('client@example.com')->send(new WelcomeEmail($user));
 use Resend\Laravel\Facades\Resend;
 
 Resend::emails()->send([
-    'from' => 'MODELEC CI <noreply@votreentreprise.ci>',
+    'from' => 'UVMASTER <noreply@votreentreprise.ci>',
     'to' => ['client@example.com'],
     'subject' => 'Bienvenue',
     'html' => '<h1>Bienvenue !</h1>',
@@ -431,7 +431,7 @@ Resend peut envoyer des webhooks pour tous les événements d'envoi d'emails, pe
 
 1. Allez sur https://resend.com/webhooks
 2. Cliquez sur **Create Webhook**
-3. Renseignez l'URL : **`https://www.uvsystem.pro/api/webhooks/resend`**
+3. Renseignez l'URL : **`https://uvmaster.ci/api/webhooks/resend`**
 4. Sélectionnez les événements à tracker (tous recommandés)
 5. Copiez le **Signing Secret** (format: `whsec_xxxxx`)
 
@@ -441,7 +441,7 @@ Le secret webhook est **déjà configuré** dans le projet :
 
 ```bash
 # Webhook Configuration (from https://resend.com/webhooks)
-# URL: https://www.uvsystem.pro/api/webhooks/resend
+# URL: https://uvmaster.ci/api/webhooks/resend
 RESEND_WEBHOOK_SECRET=whsec_zN7XWq+9fr288g9dsMFBwlq1Cjzljeve
 ```
 

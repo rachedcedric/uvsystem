@@ -116,7 +116,7 @@ class AccountSecurityController extends Controller
             default => 'Appareil inconnu',
         };
         $app = match (true) {
-            str_contains($userAgent, '; wv)') => 'Application MODELEC',
+            str_contains($userAgent, '; wv)') => 'Application '.config('branding.name'),
             str_contains($userAgent, 'Edg/') => 'Edge',
             str_contains($userAgent, 'Firefox/') => 'Firefox',
             str_contains($userAgent, 'Chrome/') => 'Chrome',

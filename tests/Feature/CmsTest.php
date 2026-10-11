@@ -84,7 +84,7 @@ class CmsTest extends TestCase
     {
         $this->assertSame("Vos flux UV.\nUne seule tour de contrôle.", cms('landing.hero.title'));
         $this->assertSame('Commencer gratuitement', cms('landing.cta.primary'));
-        $this->assertSame('contact@uvsystem.pro', cms('settings.contact.email'));
+        $this->assertSame('contact@uvmaster.ci', cms('settings.contact.email'));
         $this->assertSame('Essayer 14 jours', cms('public.offres.cta_trial', ['days' => 14]));
         $this->assertSame('Votre essai se termine dans 3 jour(s)', cms('emails.trial_expiring.subject', ['days' => 3]));
         $this->assertSame(0, CmsEntry::count());

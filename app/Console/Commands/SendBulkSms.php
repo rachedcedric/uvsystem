@@ -161,17 +161,17 @@ class SendBulkSms extends Command
         $debt = $agent->solde?->solde_restant ?? 0;
 
         return match ($template) {
-            'alert' => "MODELEC CI: ALERTE\n".
+            'alert' => config('branding.name').": ALERTE\n".
                 "Cher(e) {$agent->name},\n".
                 'Votre dette s eleve a '.number_format($debt, 0, ',', ' ')." FCFA.\n".
                 'Veuillez regulariser votre situation immediatement.',
 
-            'reminder' => "MODELEC CI: Rappel\n".
+            'reminder' => config('branding.name').": Rappel\n".
                 "Cher(e) {$agent->name},\n".
                 'Votre solde est de '.number_format($debt, 0, ',', ' ')." FCFA.\n".
                 'Merci de proceder au remboursement.',
 
-            default => $customMessage ?? "MODELEC CI: Message\n".
+            default => $customMessage ?? config('branding.name').": Message\n".
                 "Cher(e) {$agent->name},\n".
                 'Merci de nous contacter pour plus d informations.',
         };

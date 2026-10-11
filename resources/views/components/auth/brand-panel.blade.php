@@ -1,6 +1,6 @@
 @props(['subtitle', 'headline', 'lead', 'items' => []])
 {{-- Panneau de marque des pages de connexion (écrans larges, visiteurs non connectés uniquement). --}}
-<aside class="pf-aside" aria-label="Présentation de MODELEC CI">
+<aside class="pf-aside" aria-label="Présentation de {{ config('branding.name') }}">
     <div class="pf-aside__inner">
         <p class="pf-aside__brand">
             <span class="pf-aside__mark" aria-hidden="true">M</span>
@@ -25,5 +25,5 @@
     </div>
 </aside>
 
-{{-- Le logo MODELEC CI a un fond blanc : les pages de connexion restent en thème clair, quel que soit le réglage du système. --}}
+{{-- Le logo a un fond blanc : les pages de connexion restent en thème clair, quel que soit le réglage du système. --}}
 <script>document.documentElement.classList.remove('dark')</script>

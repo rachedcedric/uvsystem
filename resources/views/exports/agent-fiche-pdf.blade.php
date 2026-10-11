@@ -268,7 +268,7 @@
         <div class="page-header-left">
             <span class="logo-placeholder">🏢</span>
             <div style="display: inline-block; vertical-align: middle;">
-                <div class="company-name">{{ config('app.name', 'Système UV') }}</div>
+                <div class="company-name">{{ config('branding.name') }}</div>
                 <div class="page-header-subtitle">Gestion de la distribution des UV</div>
             </div>
         </div>
@@ -281,7 +281,7 @@
     <!-- Page Footer -->
     <div class="page-footer">
         <div class="page-footer-left">
-            <strong>Système de Gestion UV</strong><br>
+            <strong>{{ config('branding.tagline') }}</strong><br>
             Document confidentiel - Usage interne uniquement
         </div>
         <div class="page-footer-right">
@@ -291,7 +291,7 @@
     </div>
 
     <!-- Watermark -->
-    <div class="watermark">MODELEC CI</div>
+    <div class="watermark">{{ config('branding.name') }}</div>
 
     <!-- Content -->
     <div class="header">

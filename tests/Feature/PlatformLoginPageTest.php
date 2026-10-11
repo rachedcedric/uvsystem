@@ -38,7 +38,7 @@ class PlatformLoginPageTest extends TestCase
         $html = $this->get('/platform/login')->assertOk()
             ->assertSee('Console d\'administration')
             ->assertSee('Accès réservé aux administrateurs de la plateforme.')
-            ->assertSee('MODELEC CI')
+            ->assertSee(config('branding.name'))
             ->assertSee('Pilotez toutes vos entreprises clientes')
             ->assertSee('images/logo-wide.png', false)
             ->assertSee('css/filament-auth.css', false)

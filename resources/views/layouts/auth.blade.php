@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') — MODELEC CI</title>
+    <title>@yield('title') — {{ config('branding.name') }}</title>
     <style>
         *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f4f6;color:#111827;min-height:100vh;display:flex;justify-content:center;padding:16px}
         .card{background:#fff;border-radius:14px;box-shadow:0 4px 18px rgba(0,0,0,.08);padding:24px;width:100%;max-width:480px;height:fit-content}

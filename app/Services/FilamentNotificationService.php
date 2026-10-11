@@ -175,7 +175,7 @@ class FilamentNotificationService
     {
         Notification::make()
             ->title("Bienvenue, {$user->name}! 👋")
-            ->body('Vous êtes connecté au système de gestion UV.')
+            ->body('Vous êtes connecté à '.config('branding.name').'.')
             ->success()
             ->icon('heroicon-o-sparkles')
             ->duration(5000)

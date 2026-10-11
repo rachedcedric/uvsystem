@@ -1,6 +1,6 @@
 /*
- * Pages de connexion MODELEC CI : console plateforme (/platform) et espace entreprise (/master).
- * Identité MODELEC CI (mêmes couleurs que la page d'accueil) : vert forêt, vert, citron.
+ * Pages de connexion UVMASTER : console plateforme (/platform) et espace entreprise (/master).
+ * Identité UVMASTER (mêmes couleurs que la page d'accueil) : vert forêt, vert, citron.
  * Uniquement de la mise en forme : aucun comportement, aucun champ, aucune route n'est modifié.
  * Portée : :is(.fi-panel-platform, .fi-panel-admin) (corps de la page de ce panneau seulement) ; les pages connectées ne sont pas touchées.
  */

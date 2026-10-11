@@ -92,7 +92,7 @@ class SmsService
     {
         $ratio = $limit > 0 ? round(($currentDebt / $limit) * 100, 1) : 0;
 
-        $message = "MODELEC CI: Alerte dette!\n";
+        $message = config('branding.name').": Alerte dette!\n";
         $message .= 'Votre dette: '.number_format($currentDebt, 0, ',', ' ')." FCFA\n";
         $message .= 'Plafond: '.number_format($limit, 0, ',', ' ')." FCFA\n";
         $message .= "Taux: {$ratio}%\n";
@@ -106,7 +106,7 @@ class SmsService
      */
     public function sendPaymentReminder(Agent $agent, float $debt): bool
     {
-        $message = "MODELEC CI: Rappel de paiement\n";
+        $message = config('branding.name').": Rappel de paiement\n";
         $message .= "Cher(e) {$agent->name},\n";
         $message .= 'Votre solde: '.number_format($debt, 0, ',', ' ')." FCFA\n";
         $message .= 'Merci de régulariser votre situation.';
@@ -119,7 +119,7 @@ class SmsService
      */
     public function sendTransactionConfirmation(Agent $agent, float $amount, int $quantity, float $newDebt): bool
     {
-        $message = "MODELEC CI: Distribution reçue\n";
+        $message = config('branding.name').": Distribution reçue\n";
         $message .= 'Montant: '.number_format($amount, 0, ',', ' ')." FCFA\n";
         $message .= "Quantité: {$quantity} UV\n";
         $message .= 'Nouveau solde: '.number_format($newDebt, 0, ',', ' ').' FCFA';
@@ -132,7 +132,7 @@ class SmsService
      */
     public function sendRemboursementConfirmation(Agent $agent, float $amount, float $remainingDebt): bool
     {
-        $message = "MODELEC CI: Remboursement reçu\n";
+        $message = config('branding.name').": Remboursement reçu\n";
         $message .= 'Montant: '.number_format($amount, 0, ',', ' ')." FCFA\n";
         $message .= 'Solde restant: '.number_format($remainingDebt, 0, ',', ' ')." FCFA\n";
         $message .= 'Merci!';

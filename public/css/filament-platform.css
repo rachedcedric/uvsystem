@@ -3,7 +3,7 @@
  * La mise en forme des pages de connexion est dans filament-auth.css (partagée avec l'espace entreprise).
  */
 
-/* Barre du haut de la console : le logo MODELEC CI a un fond blanc, on le présente comme une pastille. */
+/* Barre du haut de la console : le logo a un fond blanc, on le présente comme une pastille. */
 .fi-panel-platform .fi-topbar img.fi-logo {
     height: 2.25rem !important;
     width: auto;

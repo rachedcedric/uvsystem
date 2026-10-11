@@ -1,5 +1,5 @@
 /*
- * Pont Capacitor pour l'application Android MODELEC CI.
+ * Pont Capacitor pour l'application Android UVMASTER.
  *
  * Chargé sur toutes les pages des panneaux /master et /agent, mais totalement inactif
  * dans un navigateur classique (window.Capacitor n'existe que dans l'APK).

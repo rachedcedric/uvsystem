@@ -34,7 +34,7 @@ class TwoFactorAuthService
     public function generateQrCodeSvg(User $user, string $secret): string
     {
         $qrCodeUrl = $this->google2fa->getQRCodeUrl(
-            config('app.name', 'MODELEC CI'),
+            config('branding.name'),
             $user->email,
             $secret
         );

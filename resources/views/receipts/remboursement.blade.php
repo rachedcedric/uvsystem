@@ -142,8 +142,8 @@
 
 <body>
     <div class="header">
-        <h1>🏦 UV Distribution System</h1>
-        <p>Système de Gestion des Unités de Valeur</p>
+        <h1>🏦 {{ config('branding.name') }}</h1>
+        <p>{{ config('branding.tagline') }}</p>
         <div class="receipt-number">{{ $numero_recu }}</div>
     </div>
 
@@ -209,7 +209,7 @@
     <div class="footer">
         <p>Ce reçu a été généré automatiquement le {{ $generated_at }}</p>
         <p>Document à conserver pour vos archives</p>
-        <p style="margin-top: 10px;">UV Distribution System - Tous droits réservés © {{ date('Y') }}</p>
+        <p style="margin-top: 10px;">{{ config('branding.name') }} - Tous droits réservés © {{ date('Y') }}</p>
     </div>
 </body>
 

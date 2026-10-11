@@ -68,7 +68,7 @@ class GenerateScheduledReportsCommand extends Command
 
         // Envoyer par email si demandé
         if ($email || config('reports.auto_send_email', false)) {
-            $recipient = $email ?: config('reports.default_recipient', 'admin@uvsystem.pro');
+            $recipient = $email ?: config('reports.default_recipient', 'admin@'.config('branding.domain'));
             $this->sendReportEmail($recipient, $files, $type, $periodLabel);
         }
 
@@ -181,10 +181,10 @@ class GenerateScheduledReportsCommand extends Command
             'periodLabel' => $periodLabel,
             'generatedAt' => now(),
             'company' => [
-                'name' => config('app.company_name', 'MODELEC CI'),
+                'name' => config('branding.name'),
                 'address' => config('app.company_address', ''),
                 'phone' => config('app.company_phone', ''),
-                'email' => config('app.company_email', 'contact@uvsystem.pro'),
+                'email' => config('branding.company.email'),
             ],
         ])->setPaper('a4', 'portrait');
 
@@ -230,7 +230,7 @@ class GenerateScheduledReportsCommand extends Command
                 'generatedAt' => now(),
             ], function ($message) use ($recipient, $attachments, $periodLabel) {
                 $message->to($recipient)
-                    ->subject("📊 {$periodLabel} - MODELEC CI")
+                    ->subject("📊 {$periodLabel} - ".config('branding.name'))
                     ->from(config('mail.from.address'), config('mail.from.name'));
 
                 foreach ($attachments as $attachment) {

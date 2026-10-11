@@ -21,7 +21,7 @@
 </head>
 
 <body>
-    <h1>MODELEC CI — {{ $title }}</h1>
+    <h1>{{ config('branding.name') }} — {{ $title }}</h1>
     <div class="sub">Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}</div>
 
     <div class="box">

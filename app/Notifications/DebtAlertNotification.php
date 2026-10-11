@@ -60,7 +60,7 @@ class DebtAlertNotification extends Notification implements PushNotificationCont
             ->line('**Plafond autorisé:** '.number_format($this->agent->debt_limit, 0, ',', ' ').' FCFA')
             ->line("**Ratio d'utilisation:** ".number_format($this->debtRatio, 1).'%')
             ->action('Voir la fiche agent', url("/master/agents/{$this->agent->id}"))
-            ->line("Merci d'utiliser notre système de gestion UV.");
+            ->line("Merci d'utiliser ".config('branding.name').'.');
     }
 
     public function toArray(object $notifiable): array

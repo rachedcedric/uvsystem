@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('master')
             ->login(\App\Filament\Pages\Auth\Login::class)
-            ->brandName(fn (): string => auth()->user()?->tenant?->name ?: 'MODELEC CI')
+            ->brandName(fn (): string => auth()->user()?->tenant?->name ?: config('branding.name'))
             ->brandLogo(fn (): string => $this->tenantLogoUrl(false))
             ->darkModeBrandLogo(fn (): string => $this->tenantLogoUrl(true))
             ->brandLogoHeight('2.5rem')
@@ -119,7 +119,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_PAGE_START,
-                fn () => '<img class="pf-logo" src="'.e(asset('images/logo-wide.png')).'" alt="MODELEC CI">',
+                fn () => '<img class="pf-logo" src="'.e(asset('images/logo-wide.png')).'" alt="'.e(config('branding.name')).'">',
                 scopes: \App\Filament\Pages\Auth\Login::class,
             )
             ->renderHook(

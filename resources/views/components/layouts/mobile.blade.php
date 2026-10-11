@@ -13,7 +13,7 @@
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#f5f7f2" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#08130d" media="(prefers-color-scheme: dark)">
-    <title>{{ $title ?? 'MODELEC CI' }}</title>
+    <title>{{ $title ?? config('branding.name') }}</title>
     <script>try{if(sessionStorage.getItem('m-launched'))document.documentElement.classList.add('m-booted')}catch(e){}</script>
     @vite(['resources/css/mobile.css', 'resources/js/mobile.js'])
     @livewireStyles

@@ -37,7 +37,7 @@ class ChargesExport implements FromArray, ShouldAutoSize, WithStyles, WithTitle
     public function array(): array
     {
         $rows = [
-            ['Rapport des Charges - MODELEC CI'],
+            ['Rapport des Charges - '.config('branding.name')],
             ['Période', $this->summary['period_label']],
             ['Total Revenu (FCFA)', number_format($this->summary['revenue'], 0, ',', ' ')],
             ['Total Charges (FCFA)', number_format($this->summary['charges'], 0, ',', ' ')],

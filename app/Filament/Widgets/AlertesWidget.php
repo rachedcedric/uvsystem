@@ -135,7 +135,7 @@ class AlertesWidget extends BaseWidget
                             // Envoi SMS
                             if (in_array($channel, ['sms', 'both'])) {
                                 $smsMessage = "Bonjour {$record->name}, vous avez une dette de ".
-                                    number_format($record->current_debt, 0, ',', ' ').' FCFA. Merci de régulariser. - MODELEC CI';
+                                    number_format($record->current_debt, 0, ',', ' ').' FCFA. Merci de régulariser. - '.config('branding.name');
 
                                 if ($smsService->sendToAgent($record, $smsMessage)) {
                                     $sentChannels[] = 'SMS';

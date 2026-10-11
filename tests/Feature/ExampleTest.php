@@ -17,7 +17,7 @@ class ExampleTest extends TestCase
         $response
             ->assertStatus(200)
             ->assertSee('Vos flux UV.')
-            ->assertSee('MODELEC CI')
+            ->assertSee(config('branding.name'))
             ->assertSee('href="/master/login"', false)
             ->assertSee('href="/m/login"', false)
             ->assertSee('class="brand" href="/"', false);

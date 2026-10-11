@@ -120,7 +120,7 @@
             <p>
                 Votre rapport
                 {{ strtolower($type) === 'daily' ? 'journalier' : (strtolower($type) === 'weekly' ? 'hebdomadaire' : 'mensuel') }}
-                MODELEC CI est disponible en pièce jointe.
+                {{ config('branding.name') }} est disponible en pièce jointe.
             </p>
 
             <div class="info-box">
@@ -160,7 +160,7 @@
 
         <div class="footer">
             <p>
-                <strong>MODELEC CI</strong> - Système de Gestion et Distribution UV<br>
+                <strong>{{ config('branding.name') }}</strong> - {{ config('branding.tagline') }}<br>
                 <a href="{{ url('/') }}">{{ url('/') }}</a>
             </p>
             <p style="font-size: 11px; color: #9ca3af;">

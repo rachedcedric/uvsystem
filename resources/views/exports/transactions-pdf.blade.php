@@ -166,7 +166,7 @@
 <body>
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-title">📊 {{ config('app.name', 'Système UV') }} - RAPPORT TRANSACTIONS</div>
+        <div class="page-header-title">📊 {{ config('branding.name') }} - RAPPORT TRANSACTIONS</div>
         <div class="page-header-subtitle">
             @if ($agent)
                 Agent: {{ $agent->name }} |
@@ -178,7 +178,7 @@
     <!-- Page Footer -->
     <div class="page-footer">
         <div class="page-footer-left">
-            <strong>Système de Gestion UV</strong><br>
+            <strong>{{ config('branding.tagline') }}</strong><br>
             Rapport généré le {{ now()->format('d/m/Y à H:i') }}
         </div>
         <div class="page-footer-right">

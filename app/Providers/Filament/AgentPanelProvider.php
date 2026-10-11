@@ -32,7 +32,7 @@ class AgentPanelProvider extends PanelProvider
             ->assets([
                 Css::make('compact-ui', asset('css/filament-compact.css')),
             ])
-            ->brandName('MODELEC CI - Portail Agent')
+            ->brandName(config('branding.name').' - Portail Agent')
             ->brandLogo(asset('images/logo.png'))
             ->darkModeBrandLogo(asset('images/logo-dark.png'))
             ->brandLogoHeight('2.5rem')

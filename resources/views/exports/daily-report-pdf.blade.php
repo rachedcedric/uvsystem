@@ -176,7 +176,7 @@
 <body>
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-title">📊 RAPPORT QUOTIDIEN - {{ config('app.name', 'Système UV') }}</div>
+        <div class="page-header-title">📊 RAPPORT QUOTIDIEN - {{ config('branding.name') }}</div>
         <div class="page-header-subtitle">
             Synthèse de l'activité du {{ $date->translatedFormat('l d F Y') }}
         </div>
@@ -184,7 +184,7 @@
 
     <!-- Page Footer -->
     <div class="page-footer">
-        <strong>Système de Gestion UV - Document Confidentiel</strong><br>
+        <strong>{{ config('branding.tagline') }} - Document Confidentiel</strong><br>
         Rapport généré automatiquement le {{ now()->format('d/m/Y à H:i') }}
     </div>
 

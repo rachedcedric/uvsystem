@@ -209,7 +209,7 @@ class RecoveryService
 
             // SMS de blocage
             $this->sms->send($agent->phone,
-                "MODELEC CI: COMPTE BLOQUÉ\n".
+                config('branding.name').": COMPTE BLOQUÉ\n".
                 "Votre compte a été bloqué pour dépassement de plafond.\n".
                 'Dette: '.number_format($agent->current_debt, 0, ',', ' ')." FCFA\n".
                 "Veuillez contacter l'administration."
@@ -252,7 +252,7 @@ class RecoveryService
 
             // Notification de déblocage
             $this->sms->send($agent->phone,
-                "MODELEC CI: COMPTE RÉACTIVÉ\n".
+                config('branding.name').": COMPTE RÉACTIVÉ\n".
                 "Votre compte a été réactivé suite à votre remboursement.\n".
                 'Merci pour votre paiement!'
             );
@@ -309,7 +309,7 @@ class RecoveryService
 
         $prefix = $urgent ? '⚠️ URGENT - ' : '';
 
-        $message = "{$prefix}MODELEC CI: Rappel paiement\n";
+        $message = "{$prefix}".config('branding.name').": Rappel paiement\n";
         $message .= 'Dette: '.number_format($agent->current_debt, 0, ',', ' ')." FCFA\n";
         $message .= 'Ratio: '.round($ratio, 1)."% du plafond\n";
 

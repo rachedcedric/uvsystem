@@ -109,7 +109,7 @@ class AccountSecurityTest extends TestCase
         $this->fakeSession($other, 'theirs');
 
         $this->actingAs($me)->get('/security/sessions')
-            ->assertOk()->assertSee('Application MODELEC · Android')->assertSee('10.0.0.9');
+            ->assertOk()->assertSee('Application '.config('branding.name').' · Android')->assertSee('10.0.0.9');
 
         // IDOR : l'identifiant d'une session d'un autre compte ne permet rien
         $this->post('/security/sessions/revoke', ['session_id' => 'theirs'])->assertRedirect();

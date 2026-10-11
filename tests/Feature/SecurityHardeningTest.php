@@ -97,7 +97,7 @@ class SecurityHardeningTest extends TestCase
 
     public function test_the_test_data_seeder_refuses_to_run_on_a_non_development_host(): void
     {
-        config(['app.url' => 'https://uvsystem.pro']);
+        config(['app.url' => 'https://uvmaster.ci']);
 
         Artisan::call('db:seed', ['--class' => 'TestDataSeeder', '--force' => true]);
 

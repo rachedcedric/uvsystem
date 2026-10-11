@@ -171,7 +171,7 @@
 <body>
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-title">🏢 {{ config('app.name', 'Système UV') }} - RAPPORT FINANCIER</div>
+        <div class="page-header-title">🏢 {{ config('branding.name') }} - RAPPORT FINANCIER</div>
         <div class="page-header-subtitle">
             Situation Financière des Agents | Généré le {{ now()->format('d/m/Y à H:i') }}
         </div>
@@ -181,7 +181,7 @@
     <!-- Page Footer -->
     <div class="page-footer">
         <div class="page-footer-left">
-            <strong>Système de Gestion UV</strong><br>
+            <strong>{{ config('branding.tagline') }}</strong><br>
             Document automatisé - Ne pas distribuer
         </div>
         <div class="page-footer-right">

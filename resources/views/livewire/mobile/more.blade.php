@@ -98,5 +98,5 @@
         </form>
     </div>
 
-    <p style="margin:18px 20px 0;text-align:center;font-size:12.5px;color:var(--fg-3)">MODELEC CI · Version 4.0</p>
+    <p style="margin:18px 20px 0;text-align:center;font-size:12.5px;color:var(--fg-3)">{{ config('branding.name') }} · Version 4.1</p>
 </div>

@@ -23,7 +23,7 @@ return [
     // L'APK et /master sont same-origin et n'ont pas besoin de CORS ; ceci ne sert qu'aux clients API externes.
     'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env(
         'CORS_ALLOWED_ORIGINS',
-        'https://uv-system.com,https://app.uv-system.com'
+        'https://uvmaster.ci,https://www.uvmaster.ci'
     ))))),
 
     // Réseau local de développement mobile : uniquement hors production.

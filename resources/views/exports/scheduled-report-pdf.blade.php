@@ -213,7 +213,7 @@
     <!-- En-tête -->
     <div class="header">
         <h1>📊 {{ $periodLabel }}</h1>
-        <div class="subtitle">Système de Gestion UV</div>
+        <div class="subtitle">{{ config('branding.tagline') }}</div>
         <div class="date">Généré le {{ $generatedAt->format('d/m/Y à H:i') }}</div>
     </div>
     
@@ -388,7 +388,7 @@
     <div class="footer">
         <p>
             <strong>{{ $company['name'] }}</strong> • {{ $company['email'] }}<br>
-            Ce rapport a été généré automatiquement par le système UV.<br>
+            Ce rapport a été généré automatiquement par {{ config('branding.name') }}.<br>
             © {{ date('Y') }} - Tous droits réservés
         </p>
     </div>

@@ -170,7 +170,7 @@ class TestSmsCommand extends Command
     {
         $this->line('📝 Envoi d\'un SMS simple...');
 
-        $message = "🧪 Test MODELEC CI\n";
+        $message = '🧪 Test '.config('branding.name')."\n";
         $message .= 'Date: '.now()->format('d/m/Y H:i')."\n";
         $message .= "Ce message confirme que l'intégration SMS fonctionne correctement.";
 
@@ -186,7 +186,7 @@ class TestSmsCommand extends Command
     {
         $this->line('📝 Envoi d\'une alerte de dette...');
 
-        $message = "MODELEC CI: Alerte dette!\n";
+        $message = config('branding.name').": Alerte dette!\n";
         $message .= 'Votre dette: '.number_format($agent->current_debt, 0, ',', ' ')." FCFA\n";
         $message .= 'Plafond: '.number_format($agent->debt_limit, 0, ',', ' ')." FCFA\n";
         $message .= 'Taux: '.round(($agent->current_debt / $agent->debt_limit) * 100, 1)."%\n";
@@ -204,7 +204,7 @@ class TestSmsCommand extends Command
     {
         $this->line('📝 Envoi d\'un rappel de paiement...');
 
-        $message = "MODELEC CI: Rappel de paiement\n";
+        $message = config('branding.name').": Rappel de paiement\n";
         $message .= "Cher(e) {$agent->name},\n";
         $message .= 'Votre solde: '.number_format($agent->current_debt, 0, ',', ' ')." FCFA\n";
         $message .= 'Merci de régulariser votre situation.';
@@ -221,7 +221,7 @@ class TestSmsCommand extends Command
     {
         $this->line('📝 Envoi d\'une confirmation de transaction...');
 
-        $message = "MODELEC CI: Distribution reçue\n";
+        $message = config('branding.name').": Distribution reçue\n";
         $message .= 'Montant: '.number_format(150000, 0, ',', ' ')." FCFA\n";
         $message .= "Quantité: 100 UV\n";
         $message .= 'Nouveau solde: '.number_format($agent->current_debt + 150000, 0, ',', ' ').' FCFA';
@@ -238,7 +238,7 @@ class TestSmsCommand extends Command
     {
         $this->line('📝 Envoi d\'une confirmation de remboursement...');
 
-        $message = "MODELEC CI: Remboursement reçu\n";
+        $message = config('branding.name').": Remboursement reçu\n";
         $message .= 'Montant: '.number_format(100000, 0, ',', ' ')." FCFA\n";
         $message .= 'Solde restant: '.number_format(max(0, $agent->current_debt - 100000), 0, ',', ' ')." FCFA\n";
         $message .= 'Merci!';

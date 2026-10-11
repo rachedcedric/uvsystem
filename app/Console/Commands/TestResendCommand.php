@@ -50,7 +50,7 @@ class TestResendCommand extends Command
         // Demander l'email si non fourni
         $email = $this->argument('email');
         if (! $email) {
-            $email = $this->ask('📧 Adresse email de destination ?', 'admin@uvsystem.pro');
+            $email = $this->ask('📧 Adresse email de destination ?', 'admin@'.config('branding.domain'));
         }
 
         // Valider l'email
@@ -68,7 +68,7 @@ class TestResendCommand extends Command
 
         try {
             $result = Resend::emails()->send([
-                'from' => 'MODELEC CI <onboarding@resend.dev>',
+                'from' => config('branding.name').' <onboarding@resend.dev>',
                 'to' => [$email],
                 'subject' => '🧪 Test Resend API - '.now()->format('d/m/Y H:i:s'),
                 'html' => $this->getTestEmailHtml(),
@@ -148,7 +148,7 @@ class TestResendCommand extends Command
      */
     private function getTestEmailHtml(): string
     {
-        return <<<'HTML'
+        return strtr(<<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -216,7 +216,7 @@ class TestResendCommand extends Command
 <body>
     <div class="header">
         <h1>🚀 Test Resend API</h1>
-        <div class="badge">MODELEC CI</div>
+        <div class="badge">{$brand}</div>
     </div>
 
     <div class="content">
@@ -230,7 +230,7 @@ class TestResendCommand extends Command
                 <li>Date d'envoi : <strong>{date}</strong></li>
                 <li>Méthode : API Resend directe</li>
                 <li>Statut : Envoyé avec succès</li>
-                <li>Système : MODELEC CI v1.0</li>
+                <li>Système : {$brand} v1.0</li>
             </ul>
         </div>
 
@@ -253,12 +253,12 @@ class TestResendCommand extends Command
 
     <div class="footer">
         <p>📧 Cet email a été envoyé via <strong>Resend API</strong></p>
-        <p>MODELEC CI - Système de Gestion et Distribution UV</p>
+        <p>{$brand} - {$tagline}</p>
         <p style="color: #9ca3af; font-size: 11px;">Si vous n'avez pas demandé cet email, vous pouvez l'ignorer en toute sécurité.</p>
     </div>
 </body>
 </html>
-HTML;
+HTML, ['{$brand}' => config('branding.name'), '{$tagline}' => config('branding.tagline')]);
     }
 
     /**
@@ -266,8 +266,8 @@ HTML;
      */
     private function getTestEmailText(): string
     {
-        return <<<'TEXT'
-🚀 TEST RESEND API - MODELEC CI
+        return strtr(<<<'TEXT'
+🚀 TEST RESEND API - {$brand}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✅ Intégration réussie !
@@ -279,7 +279,7 @@ l'intégration Resend fonctionne parfaitement avec Laravel Mail.
 • Date d'envoi : {date}
 • Méthode : Laravel Mail + Resend
 • Statut : Envoyé avec succès
-• Système : MODELEC CI v1.0
+• Système : {$brand} v1.0
 
 ✨ FONCTIONNALITÉS TESTÉES :
 ✓ Connexion à l'API Resend
@@ -295,7 +295,7 @@ l'intégration Resend fonctionne parfaitement avec Laravel Mail.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📧 Envoyé via Resend API
-MODELEC CI - Gestion et Distribution UV
-TEXT;
+{$brand} - {$tagline}
+TEXT, ['{$brand}' => config('branding.name'), '{$tagline}' => config('branding.tagline')]);
     }
 }

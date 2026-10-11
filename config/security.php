@@ -3,7 +3,7 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Security Configuration - MODELEC CI
+    | Security Configuration - UVMASTER
     |--------------------------------------------------------------------------
     |
     | Configuration de sécurité renforcée pour système de gestion financière

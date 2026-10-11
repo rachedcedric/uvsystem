@@ -184,7 +184,7 @@
     </table>
 
     <div class="footer-note">
-        MODELEC CI &copy; {{ date('Y') }} - Document confidentiel - Généré le {{ $generatedAt->format('d/m/Y') }} à {{ $generatedAt->format('H:i') }} par {{ $generatedBy }}
+        {{ config('branding.name') }} &copy; {{ date('Y') }} - Document confidentiel - Généré le {{ $generatedAt->format('d/m/Y') }} à {{ $generatedAt->format('H:i') }} par {{ $generatedBy }}
     </div>
 </body>
 

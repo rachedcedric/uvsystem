@@ -41,7 +41,7 @@ class TestDataSeeder extends Seeder
             $fournisseur = Fournisseur::create([
                 'name' => 'Fournisseur Principal',
                 'phone' => '+22501234567',
-                'email' => 'fournisseur@uvsystem.pro',
+                'email' => 'fournisseur@'.config('branding.domain'),
                 'address' => 'Abidjan, Côte d\'Ivoire',
                 'status' => 'active',
             ]);

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Liste des Agents - MODELEC CI</title>
+    <title>Liste des Agents - {{ config('branding.name') }}</title>
     <style>
         @page {
             margin: 100px 40px 80px 40px;
@@ -230,7 +230,7 @@
 <body>
     <!-- En-tête fixe -->
     <div class="page-header">
-        <div class="page-header-title">📊 MODELEC CI - Gestion des Agents</div>
+        <div class="page-header-title">📊 {{ config('branding.name') }} - Gestion des Agents</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -239,7 +239,7 @@
     <!-- Pied de page fixe -->
     <div class="page-footer">
         <div class="page-footer-left">
-            MODELEC CI &copy; {{ date('Y') }} - Document confidentiel
+            {{ config('branding.name') }} &copy; {{ date('Y') }} - Document confidentiel
         </div>
         <div class="page-footer-right">
             <span class="page-number"></span>
@@ -247,7 +247,7 @@
     </div>
 
     <!-- Watermark -->
-    <div class="watermark">MODELEC CI</div>
+    <div class="watermark">{{ config('branding.name') }}</div>
 
     <!-- Contenu -->
     <div class="header">

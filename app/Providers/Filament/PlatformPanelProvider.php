@@ -33,9 +33,9 @@ class PlatformPanelProvider extends PanelProvider
             ->id('platform')
             ->path('platform')
             ->login(Login::class)
-            // Vert de la marque MODELEC CI (même vert que la page d'accueil).
+            // Vert de la marque (même vert que la page d'accueil).
             ->colors(['primary' => Color::hex('#168447')])
-            ->brandName('MODELEC CI — Plateforme')
+            ->brandName(config('branding.name').' — Plateforme')
             ->brandLogo(asset('images/logo-wide.png'))
             ->brandLogoHeight('2.25rem')
             ->favicon(asset('favicon-32.png'))

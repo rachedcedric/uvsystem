@@ -198,7 +198,7 @@
 <body>
     <!-- En-tête fixe -->
     <div class="page-header">
-        <div class="page-header-title">💰 MODELEC CI - Rapport des Ventes</div>
+        <div class="page-header-title">💰 {{ config('branding.name') }} - Rapport des Ventes</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -207,7 +207,7 @@
     <!-- Pied de page fixe -->
     <div class="page-footer">
         <div class="page-footer-left">
-            MODELEC CI &copy; {{ date('Y') }} - Document confidentiel
+            {{ config('branding.name') }} &copy; {{ date('Y') }} - Document confidentiel
         </div>
         <div class="page-footer-right">
             <span class="page-number"></span>
@@ -215,7 +215,7 @@
     </div>
 
     <!-- Watermark -->
-    <div class="watermark">MODELEC CI</div>
+    <div class="watermark">{{ config('branding.name') }}</div>
 
     <!-- Contenu -->
     <div class="header">

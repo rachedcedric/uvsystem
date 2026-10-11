@@ -76,9 +76,9 @@ class TestWebhooksCommand extends Command
             'created_at' => now()->toIso8601String(),
             'data' => [
                 'email_id' => 'test-'.uniqid(),
-                'from' => 'contact@uvsystem.pro',
-                'to' => ['contact@uvsystem.pro'],
-                'subject' => '🧪 Test Email - MODELEC CI',
+                'from' => config('branding.contact_email'),
+                'to' => [config('branding.contact_email')],
+                'subject' => '🧪 Test Email - '.config('branding.name'),
                 'created_at' => now()->toIso8601String(),
             ],
         ];
@@ -100,7 +100,7 @@ class TestWebhooksCommand extends Command
             'email.clicked' => array_merge($basePayload, [
                 'data' => array_merge($basePayload['data'], [
                     'clicked_at' => now()->toIso8601String(),
-                    'link' => 'https://uvsystem.pro/master/agents/1',
+                    'link' => rtrim(config('branding.url'), '/').'/master/agents/1',
                     'user_agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
                     'ip' => '192.168.1.1',
                 ]),

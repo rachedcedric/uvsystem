@@ -199,7 +199,7 @@ class TenantCommandsIsolationTest extends TestCase
 
         // APP_ENV mal réglé sur « local » sur un vrai serveur : l'adresse publique les arrête
         $this->app->detectEnvironment(fn () => 'local');
-        config(['app.url' => 'https://uvsystem.pro']);
+        config(['app.url' => 'https://uvmaster.ci']);
         $this->assertSame(1, Artisan::call('demo:clear', ['--tenant' => 1, '--force' => true]));
         $this->assertStringContainsString('ne ressemble pas à un poste de développement', Artisan::output());
 

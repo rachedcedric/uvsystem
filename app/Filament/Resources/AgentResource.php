@@ -296,7 +296,7 @@ class AgentResource extends Resource
                                 // Envoi SMS
                                 if (in_array($channel, ['sms', 'both'])) {
                                     $smsMessage = $customMessage ?: "Bonjour {$record->name}, vous avez une dette de ".
-                                        number_format($record->current_debt, 0, ',', ' ').' FCFA en attente. Merci de régulariser votre situation. - MODELEC CI';
+                                        number_format($record->current_debt, 0, ',', ' ').' FCFA en attente. Merci de régulariser votre situation. - '.config('branding.name');
 
                                     if ($smsService->sendToAgent($record, $smsMessage)) {
                                         $sentChannels[] = 'SMS';

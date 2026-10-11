@@ -64,6 +64,6 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
         $debt = number_format($this->agent->current_debt, 0, ',', ' ');
 
         return $this->customMessage
-            ?? "Bonjour {$this->agent->name}, vous avez une dette de {$debt} FCFA en attente. Merci de régulariser votre situation. - Système UV";
+            ?? "Bonjour {$this->agent->name}, vous avez une dette de {$debt} FCFA en attente. Merci de régulariser votre situation. - ".config('branding.name');
     }
 }

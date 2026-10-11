@@ -64,8 +64,8 @@ class NotificationsDiagnostic extends Component
         $user = auth()->user();
 
         try {
-            Mail::raw("Ceci est un e-mail de test envoyé depuis MODELEC CI.\nS'il arrive dans votre boîte, l'envoi d'e-mails fonctionne.", function ($message) use ($user) {
-                $message->to($user->email)->subject('Test e-mail — MODELEC CI');
+            Mail::raw('Ceci est un e-mail de test envoyé depuis '.config('branding.name').".\nS'il arrive dans votre boîte, l'envoi d'e-mails fonctionne.", function ($message) use ($user) {
+                $message->to($user->email)->subject('Test e-mail — '.config('branding.name'));
             });
             $this->results = [['ok' => true, 'text' => 'E-mail de test envoyé à '.$user->email.'. Vérifiez votre boîte (et les courriers indésirables).']];
         } catch (\Throwable $e) {

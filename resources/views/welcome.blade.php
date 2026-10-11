@@ -4,9 +4,12 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#0b2f21">
-        <meta name="description" content="MODELEC CI centralise vos ventes UV, encaissements, dettes, commissions et mouvements de caisse dans une seule plateforme sécurisée.">
+        <meta name="description" content="{{ config('branding.name') }} centralise vos ventes UV, encaissements, dettes, commissions et mouvements de caisse dans une seule plateforme sécurisée.">
 
-        <title>MODELEC CI — Pilotez vos opérations UV</title>
+        <title>{{ config('branding.name') }} — Pilotez vos opérations UV</title>
+        <link rel="canonical" href="{{ rtrim(config('branding.url'), '/') }}/">
+        <meta property="og:site_name" content="{{ config('branding.name') }}">
+        <meta property="og:title" content="{{ config('branding.name') }} — {{ config('branding.tagline') }}">
 
         <link rel="icon" href="{{ asset('images/logo.png') }}">
         @vite('resources/css/landing.css')
@@ -16,8 +19,8 @@
 
         <header class="site-header">
             <nav class="site-nav shell" aria-label="Navigation principale">
-                <a class="brand" href="/" aria-label="MODELEC CI — Accueil">
-                    <img src="{{ asset('images/logo-wide.png') }}" width="205" height="75" alt="MODELEC Côte d'Ivoire">
+                <a class="brand" href="/" aria-label="{{ config('branding.name') }} — Accueil">
+                    <img src="{{ asset('images/logo-wide.png') }}" width="205" height="75" alt="{{ config('branding.name') }}">
                 </a>
 
                 <div class="nav-links" aria-label="Navigation de la page">
@@ -91,7 +94,7 @@
                         </ul>
                     </div>
 
-                    <div class="control-room" aria-label="Aperçu du tableau de bord MODELEC CI">
+                    <div class="control-room" aria-label="Aperçu du tableau de bord {{ config('branding.name') }}">
                         <div class="control-room__top">
                             <div class="window-controls" aria-hidden="true"><span></span><span></span><span></span></div>
                             <span class="control-room__title">Vue d'ensemble</span>
@@ -169,14 +172,14 @@
                         </div>
                         <p>
                             Fini les informations dispersées entre messages, cahiers et fichiers.
-                            MODELEC CI construit une chaîne continue, du stock UV jusqu'à la caisse.
+                            {{ config('branding.name') }} construit une chaîne continue, du stock UV jusqu'à la caisse.
                         </p>
                     </div>
 
                     <div class="solution-board">
                         <div class="solution-board__visual" aria-hidden="true">
                             <div class="pulse-map">
-                                <span class="pulse-map__hub">MODELEC</span>
+                                <span class="pulse-map__hub">{{ config('branding.name') }}</span>
                                 <span class="pulse-map__node pulse-map__node--one">Agents</span>
                                 <span class="pulse-map__node pulse-map__node--two">Caisse</span>
                                 <span class="pulse-map__node pulse-map__node--three">Fournisseurs</span>
@@ -305,7 +308,7 @@
                         <p class="section-kicker section-kicker--light">Sécurité</p>
                         <h2>{{ cms_html('landing.security.title') }}</h2>
                         <p>
-                            MODELEC CI sépare les données de chaque entreprise et applique les autorisations
+                            {{ config('branding.name') }} sépare les données de chaque entreprise et applique les autorisations
                             au niveau du serveur, pas seulement dans l'interface.
                         </p>
                         <a class="button button--light" href="{{ route('filament.admin.auth.login', [], false) }}">Accéder à l'espace sécurisé</a>
@@ -378,7 +381,7 @@
             <section class="final-cta">
                 <div class="shell final-cta__inner">
                     <div>
-                        <p class="section-kicker section-kicker--light">MODELEC CI</p>
+                        <p class="section-kicker section-kicker--light">{{ config('branding.name') }}</p>
                         <h2>{{ cms_html('landing.final.title') }}</h2>
                     </div>
                     <div class="final-cta__actions">

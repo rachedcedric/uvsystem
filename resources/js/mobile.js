@@ -383,7 +383,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
         }).then(function (response) {
             if (!response.ok) throw new Error('Push token registration failed: ' + response.status);
         }).catch(function (error) {
-            console.error('[MODELEC push] Impossible d’enregistrer cet appareil.', error);
+            console.error('[UVMASTER push] Impossible d’enregistrer cet appareil.', error);
         });
     }
 
@@ -405,7 +405,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
             savePushToken(token.value);
         });
         PushNotifications.addListener('registrationError', function (error) {
-            console.error('[MODELEC push] Enregistrement Firebase échoué.', error);
+            console.error('[UVMASTER push] Enregistrement Firebase échoué.', error);
         });
         PushNotifications.addListener('pushNotificationReceived', function (notification) {
             // Application au premier plan : Android n'affiche pas de bannière système, on la fabrique.
@@ -444,7 +444,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
             try { registerPushToken(localStorage.getItem(pushTokenKey)); } catch (e) { /* le listener registration fournit le token */ }
             return PushNotifications.register();
         }).catch(function (error) {
-            console.error('[MODELEC push] Initialisation des notifications impossible.', error);
+            console.error('[UVMASTER push] Initialisation des notifications impossible.', error);
             pushInitialized = false;
         });
     }

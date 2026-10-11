@@ -39,7 +39,7 @@ class TestNotificationsCommand extends Command
 
         // Demander l'email si non fourni
         if (! $email) {
-            $email = $this->ask('📧 Email du destinataire ?', 'contact@uvsystem.pro');
+            $email = $this->ask('📧 Email du destinataire ?', config('branding.contact_email'));
         }
 
         // Valider l'email
@@ -150,7 +150,7 @@ class TestNotificationsCommand extends Command
             $agent = Agent::create([
                 'name' => 'Agent Test',
                 'phone' => '+225 07 00 00 00 00',
-                'email' => 'agent.test@uvsystem.pro',
+                'email' => 'agent.test@'.config('branding.domain'),
                 'address' => 'Abidjan, Côte d\'Ivoire',
                 'status' => 'active',
                 'debt_limit' => 1000000, // 1M FCFA

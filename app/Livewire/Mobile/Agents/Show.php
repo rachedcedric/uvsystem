@@ -44,7 +44,7 @@ class Show extends Component
 
         try {
             if (in_array($this->channel, ['sms', 'both'], true)) {
-                $sms = $message ?: "Bonjour {$agent->name}, vous avez une dette de ".number_format($agent->current_debt, 0, ',', ' ').' FCFA en attente. Merci de régulariser votre situation. - MODELEC CI';
+                $sms = $message ?: "Bonjour {$agent->name}, vous avez une dette de ".number_format($agent->current_debt, 0, ',', ' ').' FCFA en attente. Merci de régulariser votre situation. - '.config('branding.name');
                 if (app(\App\Services\SmsService::class)->sendToAgent($agent, $sms)) {
                     $sent[] = 'SMS';
                 }

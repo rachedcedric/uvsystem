@@ -116,7 +116,7 @@ class GenerateDailyReport extends Command
         $users = User::all();
         foreach ($users as $user) {
             Mail::raw(
-                "Bonjour,\n\nVeuillez trouver ci-joint le rapport quotidien du {$date->format('d/m/Y')}.\n\nCordialement,\nSystème UV",
+                "Bonjour,\n\nVeuillez trouver ci-joint le rapport quotidien du {$date->format('d/m/Y')}.\n\nCordialement,\n".config('branding.name'),
                 function ($message) use ($user, $pdfPath, $date) {
                     $message->to($user->email)
                         ->subject("📊 Rapport quotidien UV - {$date->format('d/m/Y')}")
