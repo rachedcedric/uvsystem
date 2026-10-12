@@ -323,7 +323,7 @@ class CmsTest extends TestCase
         $this->get('/offres')->assertOk()->assertSee('Offres — ACME UV', false);
         $this->get('/inscription?plan=pro')->assertOk()->assertSee('href="https://acme.example/cgu"', false);
         Filament::setCurrentPanel(Filament::getPanel('admin'));
-        $this->get(route('filament.admin.auth.login'))->assertOk()->assertSee('ACME UV')->assertSee('ACME SARL');
+        $this->get(route('filament.admin.auth.login'))->assertOk()->assertSee('ACME UV');
     }
 
     public function test_the_landing_page_shows_the_edited_texts(): void

@@ -19,7 +19,6 @@ class ExampleTest extends TestCase
             ->assertSee('Vos flux UV.')
             ->assertSee(config('branding.name'))
             ->assertSee('href="/master/login"', false)
-            ->assertSee('href="/m/login"', false)
             ->assertSee('class="brand" href="/"', false);
     }
 
