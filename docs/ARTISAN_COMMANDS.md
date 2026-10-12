@@ -53,7 +53,7 @@ Teste l'intégration Resend.
 php artisan resend:test
 
 # Test vers une adresse spécifique
-php artisan resend:test contact@uvsystem.pro
+php artisan resend:test contact@uvmaster.ci
 
 # Types de tests
 php artisan resend:test --type=simple
@@ -178,7 +178,7 @@ php artisan reports:generate daily --format=pdf
 php artisan reports:generate weekly --format=excel
 
 # Rapport mensuel avec envoi email
-php artisan reports:generate monthly --format=pdf --email=admin@uvsystem.pro
+php artisan reports:generate monthly --format=pdf --email=admin@uvmaster.ci
 
 # Sauvegarder localement
 php artisan reports:generate daily --format=pdf --save

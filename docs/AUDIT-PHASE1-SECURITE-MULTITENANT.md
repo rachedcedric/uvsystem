@@ -18,7 +18,7 @@ Indépendamment du multi-tenant, l'audit révèle **des failles exploitables dè
 |---|---|
 | Backend | Laravel 12, PHP ≥ 8.2 |
 | Admin web | Filament 3.2 sur `/master` (panels `admin` + dossier `Filament/Agent`) |
-| Mobile | Capacitor 8 (WebView sur `https://uvsystem.pro/m`), UI Blade + Livewire (`routes/mobile.php`, `app/Livewire/Mobile/*`) ; pas de Laravel dans l'APK |
+| Mobile | Capacitor 8 (WebView sur `https://uvmaster.ci/m`), UI Blade + Livewire (`routes/mobile.php`, `app/Livewire/Mobile/*`) ; pas de Laravel dans l'APK |
 | API REST | `routes/api.php`, Sanctum (`auth:sanctum`), 11 contrôleurs ; **non utilisée par l'APK** (qui passe par sessions web + Livewire) |
 | BDD | MySQL en prod, SQLite en test/dev ; ORM Eloquent ; ~40 migrations |
 | Auth | Sessions (web/Filament/mobile, `remember` forcé) + tokens Sanctum (API). 2FA TOTP (pragmarx/google2fa) : middleware `Require2FA` **commenté** dans le panel, non appliqué |

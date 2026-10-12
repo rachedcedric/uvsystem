@@ -23,7 +23,7 @@ class AgentFlowTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
-        $this->master = User::factory()->create(['email' => 'master@uv-system.com']);
+        $this->master = User::factory()->create(['email' => 'master@uvmaster.ci']);
         $this->master->assignRole('master');
 
         // Stock UV disponible : sans approvisionnement, aucune distribution n'est possible.

@@ -227,7 +227,7 @@ class MobileEditDeleteTest extends TestCase
     {
         $this->assertSame(route('m.remboursements.create', ['agent' => 12]), \App\Support\Mobile\AdminUrl::toMobile('https://uvmaster.ci/master/remboursements/create?agent_id=12'));
         // Notifications déjà enregistrées avec l'ancien domaine : le lien reste converti.
-        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), \App\Support\Mobile\AdminUrl::toMobile('https://uvsystem.pro/master/remboursements/create?agent_id=12'));
+        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), \App\Support\Mobile\AdminUrl::toMobile('https://uvmaster.ci/master/remboursements/create?agent_id=12'));
         $this->assertSame(route('m.dettes.agent', 7), \App\Support\Mobile\AdminUrl::toMobile('/master/dettes/7'));
         $this->assertSame(route('m.home'), \App\Support\Mobile\AdminUrl::toMobile('/master'));
         $this->assertSame(route('m.dettes.agent', 7), \App\Support\Mobile\AdminUrl::toMobile('/admin/dettes/7'));

@@ -26,7 +26,7 @@ Ce document explique les changements effectués pour éliminer toutes les donné
 'company' => [
     'name' => 'MODELEC CI',
     'phone' => '+225 XX XX XX XX XX',
-    'email' => 'contact@uv-system.com',
+    'email' => 'contact@uvmaster.ci',
     // ...
 ],
 ```
