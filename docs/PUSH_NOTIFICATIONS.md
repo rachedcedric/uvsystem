@@ -44,7 +44,7 @@ envoyées ; les notifications en base continuent à fonctionner.
   **Plus → Préférences** (Sons, Sons des touches, Vibrations).
 - **Notifications push (appli fermée)** : canal Android `debt-alerts-v2` avec le
   son `modelec_alert` (`android/app/src/main/res/raw/modelec_alert.wav`) et
-  l'icône de barre d'état `ic_stat_modelec`. Android ne permet pas de changer le
+  l'icône de barre d'état `ic_stat_uvmaster`. Android ne permet pas de changer le
   son d'un canal existant : pour un autre son, créez un nouveau canal
   (`debt-alerts-v3`) dans `resources/js/mobile.js`,
   `app/Services/FirebaseMessaging.php` et `AndroidManifest.xml`.

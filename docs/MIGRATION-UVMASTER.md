@@ -53,8 +53,10 @@ tout ce qui dépend d'un accès externe est marqué **BLOQUÉ** avec l'action ex
    `A uvmaster.ci → <IP du VPS>` et `A www.uvmaster.ci → <IP du VPS>` (ou CNAME vers l'apex). Baisser le TTL à 300 s au moins 24 h avant la bascule.
 3. **Resend** : vérifier `uvmaster.ci`, créer l'expéditeur, mettre à jour l'URL du webhook (`https://uvmaster.ci/api/webhooks/resend`) et son secret. Si le compte Resend
    est partagé avec d'autres applications, **ajouter** le domaine sans retirer les existants.
-4. **Logos officiels UVMASTER** (`public/images/logo.png`, `logo-dark.png`, `logo-wide.png`, favicons, icônes et écran de démarrage Android) : non fournis, **non inventés**.
-   Les images actuelles contiennent encore l'ancien mot-symbole.
+4. **Logos UVMASTER** : `public/images/logo.png`, `logo-wide.png` et `logo-dark.png` sont maintenant des visuels UVMASTER, mais le fichier fourni est un raster de 393 × 92 px sur fond blanc,
+   et les trois fichiers sont identiques (pas de vraie variante pour thème sombre). Les icônes Android, l'écran de démarrage et les favicons en sont **dérivés** par
+   `scripts/generate-brand-assets.py` (le « UV » est extrait du logo, rien n'est dessiné). Pour une qualité définitive : fournir le logo en vectoriel (SVG) ou en PNG
+   d'au moins 1024 px, une version carrée pour l'icône d'application et une version claire pour le thème sombre, puis relancer le script.
 5. **SMS** : confirmer auprès de l'opérateur que l'identifiant « UVMASTER » peut être enregistré avant de modifier `TWILIO_FROM`.
 6. **Version MySQL de production** (⚪ non déterminée) : la relever (`SELECT VERSION();`) et fixer `MYSQL_IMAGE` à la même version.
 7. **Firebase** : aucun changement requis (identifiant d'application Android inchangé). Mettre le fichier de compte de service sur le VPS, en lecture seule, jamais dans Git.
@@ -115,7 +117,7 @@ APK 4.1 : connexion, retour matériel, déconnexion · `deploy/scripts/healthche
 
 APK/AAB signés : `android/app/build/outputs/apk/release/app-release.apk` (et `.aab`). Empreinte du certificat identique à l'ancienne version (mise à jour possible par-dessus).
 Les installations existantes (4.0) pointent sur l'ancien domaine : **elles ne fonctionneront plus après la coupure** ; distribuer la 4.1 avant (lien de téléchargement ou Google Play).
-Le serveur ne dépend pas du libellé de l'application. Le thème d'icônes et l'écran de démarrage attendent les logos officiels (§4.4).
+Le serveur ne dépend pas du libellé de l'application. Icône, icône de notification (`ic_stat_uvmaster`) et écran de démarrage sont UVMASTER, générés depuis le logo (§4.4) ; à valider visuellement sur appareil.
 
 ## 9. Retour arrière
 
@@ -136,7 +138,7 @@ Rien de ce qui suit n'a été exécuté sur la production ni sur un serveur rée
 | # | Contrôle | Statut | Preuve / reste à faire |
 |---|---|---|---|
 | 1 | Marque UVMASTER + slogan dans les écrans, e-mails, PDF, exports, 2FA, SMS, notifications | VALIDÉ | `BrandIdentityTest` ; balayage des références restantes (identifiants techniques conservés volontairement : paquet Android, nom du son d'alerte, `APP_NAME`) |
-| 2 | Logos officiels, icônes, écran de démarrage | BLOQUÉ | fichiers non fournis (§4.4) |
+| 2 | Logos web, icônes Android, écran de démarrage, favicons | VALIDÉ (aucun visuel Modelec restant) / À VALIDER visuellement | générés depuis le logo fourni (basse résolution, §4.4) ; rendu sur appareil réel NON TESTÉ |
 | 3 | Suite de tests SQLite | VALIDÉ | 1247 réussis, 1 ignoré, 0 échec |
 | 4 | Suite de tests MySQL 8.0.46 | VALIDÉ | 1232 réussis, 16 ignorés (tests de DDL propres à SQLite, déjà exercés par la vraie migration sur MySQL), 0 échec |
 | 5 | Dépendances (`composer audit`) | VALIDÉ | 0 avis après mise à jour (Laravel 12.69, Filament 3.3.56, Livewire 3.8) ; `npm audit --omit=dev` : 0 vulnérabilité |
