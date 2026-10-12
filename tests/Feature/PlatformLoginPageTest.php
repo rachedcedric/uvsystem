@@ -52,6 +52,18 @@ class PlatformLoginPageTest extends TestCase
         $this->assertStringContainsString('wire:submit="authenticate"', $html);
     }
 
+    public function test_the_livewire_script_emitted_by_the_login_page_is_reachable(): void
+    {
+        $html = $this->get('/platform/login')->assertOk()->getContent();
+
+        preg_match('/<script[^>]+src="([^"]*livewire[^"]*)"/', $html, $matches);
+        $this->assertNotEmpty($matches[1] ?? null);
+
+        $assetPath = parse_url(html_entity_decode($matches[1]), PHP_URL_PATH);
+        $this->assertNotEmpty($assetPath);
+        $this->get($assetPath)->assertOk();
+    }
+
     public function test_the_login_still_uses_the_standard_filament_authentication(): void
     {
         $this->assertTrue(is_subclass_of(Login::class, \Filament\Pages\Auth\Login::class));

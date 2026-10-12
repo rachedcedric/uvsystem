@@ -39,8 +39,8 @@ return [
         'dark_url' => '/images/logo-dark.png',
 
         // Dimensions
-        'width' => 200,
-        'height' => 200,
+        'width' => 393,
+        'height' => 92,
     ],
 
     /*

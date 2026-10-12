@@ -198,7 +198,7 @@ class ContentRegistry
     {
         return [
             'settings.brand.name' => self::entry('Nom de la marque', 'UVMASTER', 'text', 'Affiché dans le pied de page et les pages de connexion.'),
-            'settings.brand.legal_name' => self::entry('Raison sociale', 'MODELEC Côte d\'Ivoire', 'text', 'Affichée à côté du copyright.'),
+            'settings.brand.legal_name' => self::entry('Raison sociale', 'UVMASTER', 'text', 'Affichée à côté du copyright.'),
             'settings.contact.email' => self::entry('E-mail de contact', 'contact@uvmaster.ci', 'email'),
             'settings.contact.phone' => self::entry('Téléphone de contact', '', 'phone', 'Facultatif : affiché dans le pied de page quand il est renseigné.'),
             'settings.links.terms_url' => self::entry('Lien des conditions d\'utilisation', '', 'url', 'Adresse complète (https://…) ou chemin du site (/conditions). Vide : le texte simple est affiché.'),

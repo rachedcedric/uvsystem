@@ -12,6 +12,7 @@ if [ "$(id -u)" = "0" ]; then
     su-exec www-data php artisan storage:link --force >/dev/null 2>&1 || true
     # Caches de configuration, routes, vues, événements : calculés avec l'environnement RÉEL du conteneur.
     if [ "${APP_ENV:-production}" = "production" ]; then
+        su-exec www-data php artisan optimize:clear >/dev/null 2>&1
         su-exec www-data php artisan optimize >/dev/null 2>&1 || echo "[entrypoint] optimize ignoré (configuration incomplète ?)" >&2
     fi
 fi

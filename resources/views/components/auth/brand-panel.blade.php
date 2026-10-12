@@ -3,7 +3,7 @@
 <aside class="pf-aside" aria-label="Présentation de {{ config('branding.name') }}">
     <div class="pf-aside__inner">
         <p class="pf-aside__brand">
-            <span class="pf-aside__mark" aria-hidden="true">M</span>
+            <img class="pf-aside__logo" src="{{ asset('images/logo-wide.png') }}" alt="{{ config('branding.name') }}">
             <span>{{ cms('settings.brand.name') }} <small>{{ $subtitle }}</small></span>
         </p>
 
@@ -21,7 +21,7 @@
             </ul>
         </div>
 
-        <p class="pf-aside__foot">© {{ date('Y') }} {{ cms('settings.brand.legal_name') }}</p>
+        <p class="pf-aside__foot">© {{ date('Y') }} {{ config('branding.name') }}</p>
     </div>
 </aside>
 

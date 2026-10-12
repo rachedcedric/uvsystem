@@ -20,7 +20,7 @@
         <header class="site-header">
             <nav class="site-nav shell" aria-label="Navigation principale">
                 <a class="brand" href="/" aria-label="{{ config('branding.name') }} — Accueil">
-                    <img src="{{ asset('images/logo-wide.png') }}" width="205" height="75" alt="{{ config('branding.name') }}">
+                    <img src="{{ asset('images/logo-wide.png') }}" width="205" alt="{{ config('branding.name') }}">
                 </a>
 
                 <div class="nav-links" aria-label="Navigation de la page">
@@ -31,7 +31,6 @@
                 </div>
 
                 <div class="nav-actions">
-                    <a class="text-link" href="/m/login">Accès mobile</a>
                     <a class="button button--small button--dark" href="{{ route('filament.admin.auth.login', [], false) }}">Se connecter</a>
                     <a class="button button--small button--primary" href="{{ route('offres', [], false) }}">{{ cms('landing.cta.primary') }}</a>
                 </div>
@@ -47,7 +46,6 @@
                         <a href="#fonctionnalites">Fonctionnalités</a>
                         <a href="#securite">Sécurité</a>
                         <a href="#mobile">Application mobile</a>
-                        <a href="/m/login">Accès mobile</a>
                         <a class="button button--dark" href="{{ route('filament.admin.auth.login', [], false) }}">Se connecter</a>
                         <a class="button button--primary" href="{{ route('offres', [], false) }}">{{ cms('landing.cta.primary') }}</a>
                     </div>
@@ -373,7 +371,6 @@
                             <li><span>02</span><div><strong>Consulter les alertes</strong><small>Dettes et notifications restent accessibles au bon moment.</small></div></li>
                             <li><span>03</span><div><strong>Suivre l'activité</strong><small>Indicateurs journaliers et mensuels dans la même expérience.</small></div></li>
                         </ul>
-                        <a class="button button--dark" href="/m/login">Ouvrir l'accès mobile</a>
                     </div>
                 </div>
             </section>
@@ -412,9 +409,8 @@
                         <a href="{{ cms('settings.links.privacy_url') }}">Confidentialité</a>
                     @endif
                     <a href="{{ route('filament.admin.auth.login', [], false) }}">Espace web</a>
-                    <a href="/m/login">Accès mobile</a>
                 </div>
-                <p>© {{ date('Y') }} {{ cms('settings.brand.legal_name') }}</p>
+                <p>© {{ date('Y') }} {{ config('branding.name') }}</p>
             </div>
         </footer>
     </body>

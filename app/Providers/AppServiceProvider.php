@@ -88,6 +88,10 @@ class AppServiceProvider extends ServiceProvider
         // sans ceci, un tenant suspendu garderait la main sur une page /m déjà ouverte.
         \Livewire\Livewire::addPersistentMiddleware([\App\Http\Middleware\MobileAccess::class, \App\Http\Middleware\EnforceTwoFactor::class]);
 
+        if (! config('app.debug')) {
+            \Livewire\Livewire::setScriptRoute(fn ($handle) => \Illuminate\Support\Facades\Route::get('/livewire/livewire.min.js', $handle));
+        }
+
         $this->configureRateLimiting();
         $this->registerMoneyInputMacro();
     }
