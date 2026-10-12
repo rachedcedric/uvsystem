@@ -139,8 +139,8 @@ Rien de ce qui suit n'a été exécuté sur la production ni sur un serveur rée
 |---|---|---|---|
 | 1 | Marque UVMASTER + slogan dans les écrans, e-mails, PDF, exports, 2FA, SMS, notifications | VALIDÉ | `BrandIdentityTest` ; balayage des références restantes (identifiants techniques conservés volontairement : paquet Android, nom du son d'alerte, `APP_NAME`) |
 | 2 | Logos web, icônes Android, écran de démarrage, favicons | VALIDÉ (aucun visuel Modelec restant) / À VALIDER visuellement | générés depuis le logo fourni (basse résolution, §4.4) ; rendu sur appareil réel NON TESTÉ |
-| 3 | Suite de tests SQLite | VALIDÉ | 1247 réussis, 1 ignoré, 0 échec |
-| 4 | Suite de tests MySQL 8.0.46 | VALIDÉ | 1232 réussis, 16 ignorés (tests de DDL propres à SQLite, déjà exercés par la vraie migration sur MySQL), 0 échec |
+| 3 | Suite de tests SQLite | VALIDÉ | 1248 réussis, 1 ignoré, 0 échec |
+| 4 | Suite de tests MySQL 8.0.46 | VALIDÉ | 1233 réussis, 16 ignorés (tests de DDL propres à SQLite, déjà exercés par la vraie migration sur MySQL), 0 échec |
 | 5 | Dépendances (`composer audit`) | VALIDÉ | 0 avis après mise à jour (Laravel 12.69, Filament 3.3.56, Livewire 3.8) ; `npm audit --omit=dev` : 0 vulnérabilité |
 | 6 | Style (Pint) | ÉCHEC (préexistant) | `pint --test` signale 182 fichiers dont beaucoup non modifiés ici ; non corrigé pour ne pas mélanger un reformatage global à la migration |
 | 7 | Image Docker, pile complète, HTTPS, en-têtes, redirection 80→443, un seul service publié (Caddy), workers et planificateur sains | VALIDÉ (local) | `healthcheck.sh` = 0 |
