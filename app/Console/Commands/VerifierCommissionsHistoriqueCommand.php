@@ -9,6 +9,7 @@ use App\Services\CommissionBusinessDateResolver;
 use App\Services\CommissionService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 class VerifierCommissionsHistoriqueCommand extends Command
 {
@@ -160,7 +161,7 @@ class VerifierCommissionsHistoriqueCommand extends Command
         return [$debut, $fin->lessThan($debut) ? $debut : $fin];
     }
 
-    private function listeDesJours(Carbon $debut, Carbon $fin): \Illuminate\Support\Collection
+    private function listeDesJours(Carbon $debut, Carbon $fin): Collection
     {
         $jours = collect();
         $date = $debut->copy();

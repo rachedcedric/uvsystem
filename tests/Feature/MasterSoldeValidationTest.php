@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
@@ -168,7 +169,7 @@ class MasterSoldeValidationTest extends TestCase
         echo "✅ Fournisseur modifié\n";
 
         // Vérifier les logs
-        $logs = \App\Models\Activity::where('subject_type', Fournisseur::class)
+        $logs = Activity::where('subject_type', Fournisseur::class)
             ->where('subject_id', $fournisseur->id)
             ->get();
 

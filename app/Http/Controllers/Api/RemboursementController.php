@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class RemboursementController extends Controller
 {
@@ -167,7 +168,7 @@ class RemboursementController extends Controller
                 ],
             ], 201);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             throw $e; // règle métier refusée : 422, pas une erreur serveur
         } catch (\Exception $e) {
             return response()->json([

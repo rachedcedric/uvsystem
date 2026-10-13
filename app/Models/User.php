@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Tenancy\BelongsToTenant;
 use App\Tenancy\UserTenantScope;
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use BelongsToTenant, HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     public const ROLE_SUPER_ADMIN = 'super_admin';
@@ -100,7 +105,7 @@ class User extends Authenticatable implements FilamentUser
     protected function enforceEntitlementsOnInsert(): void
     {
         if ($this->tenant_id !== null) {
-            app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateUser((int) $this->tenant_id);
+            app(SubscriptionEntitlements::class)->assertCanCreateUser((int) $this->tenant_id);
         }
     }
 
@@ -127,10 +132,10 @@ class User extends Authenticatable implements FilamentUser
     public function revokeAllAccess(?string $exceptSessionId = null): void
     {
         $this->tokens()->delete();
-        $this->forceFill(['remember_token' => \Illuminate\Support\Str::random(60)])->saveQuietly();
+        $this->forceFill(['remember_token' => Str::random(60)])->saveQuietly();
 
         if (config('session.driver') === 'database') {
-            \Illuminate\Support\Facades\DB::table(config('session.table', 'sessions'))
+            DB::table(config('session.table', 'sessions'))
                 ->where('user_id', $this->getKey())
                 ->when($exceptSessionId, fn ($query) => $query->where('id', '!=', $exceptSessionId))
                 ->delete();
@@ -169,7 +174,7 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Get the agent associated with this user (if any).
      */
-    public function agent(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function agent(): HasOne
     {
         return $this->hasOne(Agent::class);
     }

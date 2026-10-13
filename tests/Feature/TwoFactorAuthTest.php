@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Services\TwoFactorAuthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PragmaRX\Google2FA\Google2FA;
 
 uses(RefreshDatabase::class);
 
@@ -48,7 +49,7 @@ describe('TwoFactorAuthService', function () {
             $secret = $this->service->generateSecretKey();
 
             // Generate valid OTP for testing
-            $google2fa = new \PragmaRX\Google2FA\Google2FA;
+            $google2fa = new Google2FA;
             $validOtp = $google2fa->getCurrentOtp($secret);
 
             $result = $this->service->enable($this->user, $secret, $validOtp);
@@ -73,7 +74,7 @@ describe('TwoFactorAuthService', function () {
         it('disables 2FA and clears secret', function () {
             // First enable 2FA
             $secret = $this->service->generateSecretKey();
-            $google2fa = new \PragmaRX\Google2FA\Google2FA;
+            $google2fa = new Google2FA;
             $validOtp = $google2fa->getCurrentOtp($secret);
             $this->service->enable($this->user, $secret, $validOtp);
 
@@ -104,7 +105,7 @@ describe('TwoFactorAuthService', function () {
     describe('validateOtp()', function () {
         it('validates correct OTP', function () {
             $secret = $this->service->generateSecretKey();
-            $google2fa = new \PragmaRX\Google2FA\Google2FA;
+            $google2fa = new Google2FA;
             $validOtp = $google2fa->getCurrentOtp($secret);
 
             // Enable 2FA first
@@ -119,7 +120,7 @@ describe('TwoFactorAuthService', function () {
 
         it('rejects incorrect OTP', function () {
             $secret = $this->service->generateSecretKey();
-            $google2fa = new \PragmaRX\Google2FA\Google2FA;
+            $google2fa = new Google2FA;
             $validOtp = $google2fa->getCurrentOtp($secret);
             $this->service->enable($this->user, $secret, $validOtp);
 
@@ -132,7 +133,7 @@ describe('TwoFactorAuthService', function () {
     describe('verifyRecoveryCode()', function () {
         it('verifies and removes valid recovery code', function () {
             $secret = $this->service->generateSecretKey();
-            $google2fa = new \PragmaRX\Google2FA\Google2FA;
+            $google2fa = new Google2FA;
             $validOtp = $google2fa->getCurrentOtp($secret);
             $this->service->enable($this->user, $secret, $validOtp);
 
@@ -148,7 +149,7 @@ describe('TwoFactorAuthService', function () {
 
         it('rejects invalid recovery code', function () {
             $secret = $this->service->generateSecretKey();
-            $google2fa = new \PragmaRX\Google2FA\Google2FA;
+            $google2fa = new Google2FA;
             $validOtp = $google2fa->getCurrentOtp($secret);
             $this->service->enable($this->user, $secret, $validOtp);
 
@@ -161,7 +162,7 @@ describe('TwoFactorAuthService', function () {
     describe('regenerateRecoveryCodes()', function () {
         it('generates new recovery codes', function () {
             $secret = $this->service->generateSecretKey();
-            $google2fa = new \PragmaRX\Google2FA\Google2FA;
+            $google2fa = new Google2FA;
             $validOtp = $google2fa->getCurrentOtp($secret);
             $this->service->enable($this->user, $secret, $validOtp);
 

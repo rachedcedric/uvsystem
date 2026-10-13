@@ -7,11 +7,16 @@ use App\Exceptions\SubscriptionRestricted;
 use App\Models\Agent;
 use App\Models\Fournisseur;
 use App\Models\Tenant;
+use App\Models\TenantSubscription;
+use App\Models\User;
+use App\Services\Subscriptions\SubscriptionAccessPolicy;
 use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Support\Subscriptions\ExportGate;
 use App\Tenancy\TenantContext;
 use App\Tenancy\TenantProvisioner;
+use Illuminate\Support\Env;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /** Politique SUBSCRIPTION_REQUIRED : fail closed par défaut ; « sans abonnement » n'est plus un état permissif. */
 class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
@@ -22,9 +27,9 @@ class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
         config(['subscriptions.require_subscription' => true]); // phpunit.xml garde l'ancien mode pour les tests historiques
     }
 
-    private function bootstrapUser(Tenant $tenant): \App\Models\User
+    private function bootstrapUser(Tenant $tenant): User
     {
-        return \App\Services\Subscriptions\SubscriptionAccessPolicy::withoutRestrictions(fn () => $this->userIn($tenant));
+        return SubscriptionAccessPolicy::withoutRestrictions(fn () => $this->userIn($tenant));
     }
 
     public function test_the_shipped_default_is_fail_closed(): void
@@ -33,7 +38,7 @@ class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
         $saved = [getenv('SUBSCRIPTION_REQUIRED'), $_ENV['SUBSCRIPTION_REQUIRED'] ?? null, $_SERVER['SUBSCRIPTION_REQUIRED'] ?? null];
         putenv('SUBSCRIPTION_REQUIRED');
         unset($_ENV['SUBSCRIPTION_REQUIRED'], $_SERVER['SUBSCRIPTION_REQUIRED']);
-        \Illuminate\Support\Env::disablePutenv();
+        Env::disablePutenv();
         try {
             $default = (require config_path('subscriptions.php'))['require_subscription'];
         } finally {
@@ -63,7 +68,7 @@ class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
     {
         $tenant = $this->tenant();
         $user = $this->bootstrapUser($tenant);
-        \App\Services\Subscriptions\SubscriptionAccessPolicy::withoutRestrictions(fn () => TenantContext::runAs($tenant->id, fn () => Agent::factory()->create()));
+        SubscriptionAccessPolicy::withoutRestrictions(fn () => TenantContext::runAs($tenant->id, fn () => Agent::factory()->create()));
         $this->actingAs($user);
         $e = app(SubscriptionEntitlements::class);
 
@@ -75,7 +80,7 @@ class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
         foreach (['scoring_agents', 'import_donnees', 'statistiques_avancees', 'exports_avances', 'notifications_push', 'sauvegardes_dediees', 'rapports_avances'] as $feature) {
             $this->assertFalse($e->hasFeature($tenant, $feature), $feature);
         }
-        $this->assertThrows(fn () => ExportGate::require('exports_avances'), \Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->assertThrows(fn () => ExportGate::require('exports_avances'), HttpException::class);
     }
 
     public function test_the_subscription_page_stays_reachable_and_says_there_is_no_subscription(): void
@@ -105,7 +110,7 @@ class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
         $this->actingAs($user);
 
         config(['subscriptions.require_subscription' => false]);
-        \App\Services\Subscriptions\SubscriptionAccessPolicy::flush();
+        SubscriptionAccessPolicy::flush();
 
         $this->assertNotNull(Agent::factory()->create());
     }
@@ -120,8 +125,8 @@ class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
         );
 
         $this->assertNotNull($manager->current($tenant));
-        $this->assertFalse(\App\Services\Subscriptions\SubscriptionAccessPolicy::isRestricted($tenant));
-        $this->assertSame(1, \App\Models\User::withoutGlobalScopes()->where('tenant_id', $tenant->id)->count());
+        $this->assertFalse(SubscriptionAccessPolicy::isRestricted($tenant));
+        $this->assertSame(1, User::withoutGlobalScopes()->where('tenant_id', $tenant->id)->count());
     }
 
     public function test_a_tenant_provisioned_without_subscription_has_its_master_but_stays_restricted(): void
@@ -129,14 +134,14 @@ class SubscriptionRequiredPolicyTest extends SubscriptionTestCase
         $tenant = app(TenantProvisioner::class)->provision(['name' => 'Technique '.uniqid()], ['name' => 'Admin', 'email' => 'b'.uniqid().'@example.com', 'password' => 'un-mot-de-passe-long']);
 
         $this->assertNull(app(SubscriptionManager::class)->current($tenant));
-        $this->assertTrue(\App\Services\Subscriptions\SubscriptionAccessPolicy::isRestricted($tenant));
-        $this->assertSame(1, \App\Models\User::withoutGlobalScopes()->where('tenant_id', $tenant->id)->count());
+        $this->assertTrue(SubscriptionAccessPolicy::isRestricted($tenant));
+        $this->assertSame(1, User::withoutGlobalScopes()->where('tenant_id', $tenant->id)->count());
         // L'amorçage ne dure que le temps de créer ce premier compte : ensuite, plus de création.
         $this->assertThrows(fn () => $this->userIn($tenant), SubscriptionRestricted::class);
     }
 
     public function test_the_migration_gave_every_pre_existing_tenant_a_subscription(): void
     {
-        $this->assertInstanceOf(\App\Models\TenantSubscription::class, app(SubscriptionManager::class)->current(Tenant::query()->findOrFail(1)));
+        $this->assertInstanceOf(TenantSubscription::class, app(SubscriptionManager::class)->current(Tenant::query()->findOrFail(1)));
     }
 }

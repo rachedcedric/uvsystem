@@ -13,6 +13,7 @@ use App\Models\TenantSubscription;
 use App\Models\User;
 use App\Tenancy\TenantContext;
 use App\Tenancy\TenantScope;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * POINT UNIQUE DE DÉCISION des droits d'abonnement.
@@ -110,7 +111,7 @@ class SubscriptionEntitlements
     public function getStorageUsageBytes(Tenant|int|null $tenant = null): int
     {
         $id = $this->tenantId($tenant);
-        $disk = \Illuminate\Support\Facades\Storage::disk(config('subscriptions.storage_disk', 'local'));
+        $disk = Storage::disk(config('subscriptions.storage_disk', 'local'));
 
         return (int) collect($disk->allFiles("tenants/{$id}"))->sum(fn (string $file) => $disk->size($file));
     }

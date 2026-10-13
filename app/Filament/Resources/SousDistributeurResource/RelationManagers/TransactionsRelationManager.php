@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\SousDistributeurResource\RelationManagers;
 
 use App\Models\SousDistributeurTransaction;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -29,7 +30,7 @@ class TransactionsRelationManager extends RelationManager
                     ->minValue(1)
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                        $prixUnitaire = \App\Support\Money::toFloat($get('prix_unitaire'));
+                        $prixUnitaire = Money::toFloat($get('prix_unitaire'));
                         $set('amount', $state * $prixUnitaire);
                     }),
 
@@ -41,7 +42,7 @@ class TransactionsRelationManager extends RelationManager
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
                         $quantity = $get('quantity_uv') ?? 0;
-                        $set('amount', $quantity * \App\Support\Money::toFloat($state));
+                        $set('amount', $quantity * Money::toFloat($state));
                     }),
 
                 Forms\Components\TextInput::make('amount')

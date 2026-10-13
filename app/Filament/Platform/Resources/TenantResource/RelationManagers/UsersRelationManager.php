@@ -3,8 +3,10 @@
 namespace App\Filament\Platform\Resources\TenantResource\RelationManagers;
 
 use App\Models\User;
+use App\Services\TwoFactorAuthService;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -53,15 +55,15 @@ class UsersRelationManager extends RelationManager
                     ->modalDescription('Ferme toutes les sessions et révoque tous les tokens de cet utilisateur.')
                     ->action(function (User $record) {
                         $record->revokeAllAccess();
-                        \Filament\Notifications\Notification::make()->title('Utilisateur déconnecté partout')->success()->send();
+                        Notification::make()->title('Utilisateur déconnecté partout')->success()->send();
                     }),
                 Tables\Actions\Action::make('reset2fa')->label('Réinitialiser la 2FA')->icon('heroicon-o-key')->color('warning')
                     ->requiresConfirmation()
                     ->modalDescription('À utiliser si l\'utilisateur a perdu son téléphone et ses codes de récupération.')
                     ->visible(fn (User $record) => $record->hasTwoFactorEnabled())
                     ->action(function (User $record) {
-                        app(\App\Services\TwoFactorAuthService::class)->disable($record);
-                        \Filament\Notifications\Notification::make()->title('2FA réinitialisée')->success()->send();
+                        app(TwoFactorAuthService::class)->disable($record);
+                        Notification::make()->title('2FA réinitialisée')->success()->send();
                     }),
             ]);
     }

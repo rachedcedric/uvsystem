@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Mobile\Charges\Show;
 use App\Livewire\Mobile\Crud;
 use App\Livewire\Mobile\Remboursements as RembLivewire;
 use App\Livewire\Mobile\Ventes as VentesLivewire;
@@ -14,10 +15,12 @@ use App\Models\Fournisseur;
 use App\Models\PaymentMethod;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
 use App\Services\MasterSoldeService;
 use App\Services\RemboursementService;
 use App\Services\UvDistributionService;
+use App\Support\Mobile\AdminUrl;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
@@ -148,7 +151,7 @@ class MobileEditDeleteTest extends TestCase
         $this->assertEquals(120000, $charge->fresh()->montant);
         $this->assertSame($this->user->id, $charge->fresh()->updated_by);
 
-        Livewire::test(\App\Livewire\Mobile\Charges\Show::class, ['charge' => $charge])->call('delete');
+        Livewire::test(Show::class, ['charge' => $charge])->call('delete');
         $this->assertSoftDeleted($charge);
     }
 
@@ -185,7 +188,7 @@ class MobileEditDeleteTest extends TestCase
     public function test_caisse_pdfs_are_downloadable(): void
     {
         app(CaisseService::class)->enregistrer('entree', 50000, 'Apport');
-        $day = app(\App\Services\CaissePeriodResolver::class)->currentDate()->toDateString();
+        $day = app(CaissePeriodResolver::class)->currentDate()->toDateString();
 
         foreach ([route('m.exports.caisse-jour', $day), route('m.exports.caisse-historique'), route('m.exports.caisse-historique', ['p' => 'all'])] as $url) {
             $res = $this->get($url);
@@ -225,14 +228,14 @@ class MobileEditDeleteTest extends TestCase
 
     public function test_notification_links_are_translated_to_mobile_screens(): void
     {
-        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), \App\Support\Mobile\AdminUrl::toMobile('https://uvmaster.ci/master/remboursements/create?agent_id=12'));
+        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), AdminUrl::toMobile('https://uvmaster.ci/master/remboursements/create?agent_id=12'));
         // Notifications déjà enregistrées avec l'ancien domaine : le lien reste converti.
-        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), \App\Support\Mobile\AdminUrl::toMobile('https://uvmaster.ci/master/remboursements/create?agent_id=12'));
-        $this->assertSame(route('m.dettes.agent', 7), \App\Support\Mobile\AdminUrl::toMobile('/master/dettes/7'));
-        $this->assertSame(route('m.home'), \App\Support\Mobile\AdminUrl::toMobile('/master'));
-        $this->assertSame(route('m.dettes.agent', 7), \App\Support\Mobile\AdminUrl::toMobile('/admin/dettes/7'));
-        $this->assertSame(route('m.home'), \App\Support\Mobile\AdminUrl::toMobile('/admin'));
-        $this->assertSame('https://exemple.com/x', \App\Support\Mobile\AdminUrl::toMobile('https://exemple.com/x'));
+        $this->assertSame(route('m.remboursements.create', ['agent' => 12]), AdminUrl::toMobile('https://uvmaster.ci/master/remboursements/create?agent_id=12'));
+        $this->assertSame(route('m.dettes.agent', 7), AdminUrl::toMobile('/master/dettes/7'));
+        $this->assertSame(route('m.home'), AdminUrl::toMobile('/master'));
+        $this->assertSame(route('m.dettes.agent', 7), AdminUrl::toMobile('/admin/dettes/7'));
+        $this->assertSame(route('m.home'), AdminUrl::toMobile('/admin'));
+        $this->assertSame('https://exemple.com/x', AdminUrl::toMobile('https://exemple.com/x'));
     }
 
     public function test_supplier_sheet_shows_the_credit_debt(): void

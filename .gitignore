@@ -57,3 +57,5 @@ keystore.properties
 /android/app/google-services.json
 /storage/app/firebase/
 /storage/framework/cache/laravel-excel/
+/storage/framework/cache/facade-*.php
+/storage/framework/cache/laravel-excel/

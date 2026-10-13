@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Exceptions\SubscriptionLimitReached;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Tenancy\BelongsToTenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -32,13 +35,13 @@ class Charge extends Model
             return;
         }
 
-        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $disk = Storage::disk('local');
 
         if ($disk->exists($this->justificatif_path)
-            && ($message = app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->storageRefusal(0, (int) $this->tenant_id)) !== null) {
+            && ($message = app(SubscriptionEntitlements::class)->storageRefusal(0, (int) $this->tenant_id)) !== null) {
             $disk->delete($this->justificatif_path);
 
-            throw \App\Exceptions\SubscriptionLimitReached::because($message, 'justificatif');
+            throw SubscriptionLimitReached::because($message, 'justificatif');
         }
     }
 

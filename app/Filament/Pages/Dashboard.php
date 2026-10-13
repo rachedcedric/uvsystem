@@ -13,6 +13,7 @@ use App\Filament\Widgets\RealTimeActivityWidget;
 use App\Filament\Widgets\RevenueChargesNetWidget;
 use App\Filament\Widgets\TopAgentsWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Widgets\Widget;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Str;
 
@@ -25,7 +26,7 @@ class Dashboard extends BaseDashboard
      * Cette page n'affiche qu'un sous-ensemble curé, dans l'ordre de
      * priorité métier, plutôt que la totalité du pool enregistré.
      *
-     * @return array<class-string<\Filament\Widgets\Widget>>
+     * @return array<class-string<Widget>>
      */
     public function getWidgets(): array
     {

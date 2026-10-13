@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Agent;
 use App\Services\SmsService;
 use Illuminate\Support\Facades\Log;
 
@@ -36,7 +37,7 @@ describe('SmsService', function () {
 
             Log::shouldReceive('info')
                 ->once()
-                ->with('SMS not sent (disabled)', \Mockery::any());
+                ->with('SMS not sent (disabled)', Mockery::any());
 
             $smsService = new SmsService;
             $result = $smsService->send('+2250708091011', 'Test message');
@@ -52,7 +53,7 @@ describe('SmsService', function () {
             config(['services.sms.enabled' => false]);
             config(['services.twilio.account_sid' => null]);
 
-            $agent = new \App\Models\Agent;
+            $agent = new Agent;
             $agent->id = 1;
             $agent->name = 'Test Agent';
             $agent->phone = null;
@@ -71,14 +72,14 @@ describe('SmsService', function () {
             config(['services.sms.enabled' => false]);
             config(['services.twilio.account_sid' => null]);
 
-            $agent = new \App\Models\Agent;
+            $agent = new Agent;
             $agent->id = 2;
             $agent->name = 'Test Agent';
             $agent->phone = '0708091011';
 
             Log::shouldReceive('info')
                 ->once()
-                ->with('SMS not sent (disabled)', \Mockery::any());
+                ->with('SMS not sent (disabled)', Mockery::any());
 
             $smsService = new SmsService;
             $result = $smsService->sendToAgent($agent, 'Test notification');
@@ -94,17 +95,17 @@ describe('SmsService', function () {
             config(['services.sms.enabled' => false]);
             config(['services.twilio.account_sid' => null]);
 
-            $agent1 = new \App\Models\Agent;
+            $agent1 = new Agent;
             $agent1->id = 1;
             $agent1->phone = '0708091011';
 
-            $agent2 = new \App\Models\Agent;
+            $agent2 = new Agent;
             $agent2->id = 2;
             $agent2->phone = '0708091012';
 
             Log::shouldReceive('info')
                 ->twice()
-                ->with('SMS not sent (disabled)', \Mockery::any());
+                ->with('SMS not sent (disabled)', Mockery::any());
 
             $smsService = new SmsService;
             $results = $smsService->sendBulk([$agent1, $agent2], 'Bulk test message');
@@ -122,13 +123,13 @@ describe('SmsService', function () {
             config(['services.sms.enabled' => false]);
             config(['services.twilio.account_sid' => null]);
 
-            $agent = new \App\Models\Agent;
+            $agent = new Agent;
             $agent->id = 3;
             $agent->phone = '0708091011';
 
             Log::shouldReceive('info')
                 ->once()
-                ->with('SMS not sent (disabled)', \Mockery::any());
+                ->with('SMS not sent (disabled)', Mockery::any());
 
             $smsService = new SmsService;
             $result = $smsService->sendDebtAlert($agent, 500000, 600000);
@@ -144,14 +145,14 @@ describe('SmsService', function () {
             config(['services.sms.enabled' => false]);
             config(['services.twilio.account_sid' => null]);
 
-            $agent = new \App\Models\Agent;
+            $agent = new Agent;
             $agent->id = 4;
             $agent->name = 'Test Agent';
             $agent->phone = '0708091011';
 
             Log::shouldReceive('info')
                 ->once()
-                ->with('SMS not sent (disabled)', \Mockery::any());
+                ->with('SMS not sent (disabled)', Mockery::any());
 
             $smsService = new SmsService;
             $result = $smsService->sendPaymentReminder($agent, 250000);
@@ -167,13 +168,13 @@ describe('SmsService', function () {
             config(['services.sms.enabled' => false]);
             config(['services.twilio.account_sid' => null]);
 
-            $agent = new \App\Models\Agent;
+            $agent = new Agent;
             $agent->id = 5;
             $agent->phone = '0708091011';
 
             Log::shouldReceive('info')
                 ->once()
-                ->with('SMS not sent (disabled)', \Mockery::any());
+                ->with('SMS not sent (disabled)', Mockery::any());
 
             $smsService = new SmsService;
             $result = $smsService->sendTransactionConfirmation($agent, 100000, 50, 350000);
@@ -189,13 +190,13 @@ describe('SmsService', function () {
             config(['services.sms.enabled' => false]);
             config(['services.twilio.account_sid' => null]);
 
-            $agent = new \App\Models\Agent;
+            $agent = new Agent;
             $agent->id = 6;
             $agent->phone = '0708091011';
 
             Log::shouldReceive('info')
                 ->once()
-                ->with('SMS not sent (disabled)', \Mockery::any());
+                ->with('SMS not sent (disabled)', Mockery::any());
 
             $smsService = new SmsService;
             $result = $smsService->sendRemboursementConfirmation($agent, 50000, 300000);

@@ -2,8 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\ScoringOverviewWidget;
 use App\Models\Agent;
 use App\Services\AnalyticsService;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Filament\Pages\Page;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -32,7 +34,7 @@ class AgentScoringPage extends Page implements HasTable
 
     public function mount(): void
     {
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
     }
 
     private ?Collection $scoringData = null;
@@ -200,7 +202,7 @@ class AgentScoringPage extends Page implements HasTable
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Widgets\ScoringOverviewWidget::class,
+            ScoringOverviewWidget::class,
         ];
     }
 }

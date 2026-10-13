@@ -9,6 +9,7 @@ use App\Models\Fournisseur;
 use App\Models\User;
 use App\Services\RemboursementService;
 use App\Services\UvDistributionService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
@@ -34,7 +35,7 @@ class AgentDailyDebtsRefundsHistoryTest extends TestCase
         // Ancre l'horloge en milieu de journée : évite tout flakiness des
         // tests qui reculent l'horloge de quelques minutes (now()->subMinutes)
         // si la suite tourne réellement tout près de minuit.
-        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-06-15 12:00:00'));
+        Carbon::setTestNow(Carbon::parse('2026-06-15 12:00:00'));
 
         foreach (['view_uv_transactions', 'create_uv_transactions', 'view_remboursements', 'create_remboursements'] as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
@@ -61,12 +62,12 @@ class AgentDailyDebtsRefundsHistoryTest extends TestCase
 
     protected function tearDown(): void
     {
-        \Carbon\Carbon::setTestNow();
+        Carbon::setTestNow();
 
         parent::tearDown();
     }
 
-    protected function creerDette(Agent $agent, float $amount, ?\Carbon\Carbon $at = null): void
+    protected function creerDette(Agent $agent, float $amount, ?Carbon $at = null): void
     {
         $t = app(UvDistributionService::class)->distribute($agent, $amount, $this->fournisseur);
         if ($at) {
@@ -75,7 +76,7 @@ class AgentDailyDebtsRefundsHistoryTest extends TestCase
         $agent->recalculateDebt();
     }
 
-    protected function rembourser(Agent $agent, float $amount, ?\Carbon\Carbon $at = null): void
+    protected function rembourser(Agent $agent, float $amount, ?Carbon $at = null): void
     {
         $r = app(RemboursementService::class)->process($agent, $amount);
         if ($at) {
@@ -141,7 +142,7 @@ class AgentDailyDebtsRefundsHistoryTest extends TestCase
     public function test_agent_with_a_refund(): void
     {
         $this->creerDette($this->agentA, 150_000);
-        \Carbon\Carbon::setTestNow(now()->addMinutes(5));
+        Carbon::setTestNow(now()->addMinutes(5));
         $this->rembourser($this->agentA, 50_000);
 
         $history = Livewire::test(CreateRemboursement::class)
@@ -159,9 +160,9 @@ class AgentDailyDebtsRefundsHistoryTest extends TestCase
     public function test_partial_then_full_refund_marks_debt_as_soldee(): void
     {
         $this->creerDette($this->agentA, 150_000);
-        \Carbon\Carbon::setTestNow(now()->addMinutes(5));
+        Carbon::setTestNow(now()->addMinutes(5));
         $this->rembourser($this->agentA, 50_000); // partiel
-        \Carbon\Carbon::setTestNow(now()->addMinutes(5));
+        Carbon::setTestNow(now()->addMinutes(5));
         $this->rembourser($this->agentA, 100_000); // solde le reste
 
         $history = Livewire::test(CreateRemboursement::class)
@@ -219,8 +220,8 @@ class AgentDailyDebtsRefundsHistoryTest extends TestCase
     /** 11. Transactions proches de minuit */
     public function test_transaction_near_midnight(): void
     {
-        $this->creerDette($this->agentA, 10_000, \Carbon\Carbon::yesterday()->endOfDay()->subSecond());
-        $this->creerDette($this->agentA, 20_000, \Carbon\Carbon::today()->startOfDay()->addSecond());
+        $this->creerDette($this->agentA, 10_000, Carbon::yesterday()->endOfDay()->subSecond());
+        $this->creerDette($this->agentA, 20_000, Carbon::today()->startOfDay()->addSecond());
 
         $history = Livewire::test(CreateRemboursement::class)
             ->set('data.agent_id', $this->agentA->id)

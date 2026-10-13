@@ -7,6 +7,7 @@ use App\Exports\UvTransactionsExport;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Console\Command;
@@ -189,7 +190,7 @@ class GenerateScheduledReportsCommand extends Command
         ])->setPaper('a4', 'portrait');
 
         $content = $pdf->output();
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanStore(strlen($content));
+        app(SubscriptionEntitlements::class)->assertCanStore(strlen($content));
         Storage::disk('local')->put($path, $content);
 
         return $path;

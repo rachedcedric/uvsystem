@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Imports\AgentsImport;
 use App\Imports\RemboursementsImport;
 use App\Imports\UvTransactionsImport;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
@@ -49,7 +50,7 @@ class ImportPage extends Page implements HasForms
     public function mount(): void
     {
         abort_unless(static::canAccess(), 403);
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
         $this->form->fill();
     }
 
@@ -134,7 +135,7 @@ class ImportPage extends Page implements HasForms
     public function import(): void
     {
         abort_unless(static::canAccess(), 403);
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
         $data = $this->form->getState();
 
         if (empty($data['file']) || empty($data['import_type'])) {

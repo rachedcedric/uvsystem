@@ -4,8 +4,10 @@ use App\Filament\Resources\UvTransactionResource\Pages\ListUvTransactions;
 use App\Filament\Widgets\Top5AgentsTodayWidget;
 use App\Filament\Widgets\VentesUvStatsWidget;
 use App\Models\Agent;
+use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Models\User;
+use App\Models\UvTransaction;
 use App\Services\UvDistributionService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,7 +38,7 @@ function ventesUvAdmin(): User
 
 function approvisionnerPourVentesUv(User $admin, Fournisseur $fournisseur, float $amount): void
 {
-    \App\Models\Approvisionnement::create([
+    Approvisionnement::create([
         'user_id' => $admin->id,
         'fournisseur_id' => $fournisseur->id,
         'amount' => $amount,
@@ -44,7 +46,7 @@ function approvisionnerPourVentesUv(User $admin, Fournisseur $fournisseur, float
     ]);
 }
 
-function venteUvA(Carbon $instant, Agent $agent, float $amount): \App\Models\UvTransaction
+function venteUvA(Carbon $instant, Agent $agent, float $amount): UvTransaction
 {
     return (new UvDistributionService)->distribute(agent: $agent, amount: $amount, transactionDate: $instant->toDateTimeString());
 }

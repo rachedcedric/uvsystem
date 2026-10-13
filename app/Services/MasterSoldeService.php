@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\MasterSolde;
+use App\Models\User;
 use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
@@ -105,9 +106,9 @@ class MasterSoldeService
             $ownerId = Auth::id() ?? MasterSolde::query()->value('user_id');
 
             if (! $ownerId) {
-                $ownerId = \App\Models\User::query()
+                $ownerId = User::query()
                     ->whereHas('roles', fn ($q) => $q->where('name', 'master'))
-                    ->value('id') ?? \App\Models\User::query()->value('id');
+                    ->value('id') ?? User::query()->value('id');
             }
 
             if ($ownerId) {

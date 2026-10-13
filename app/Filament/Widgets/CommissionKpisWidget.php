@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Commission;
 use App\Services\BusinessPeriodResolver;
 use App\Services\CommissionService;
+use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
 /**
@@ -91,10 +92,10 @@ class CommissionKpisWidget extends BaseWidget
         ];
     }
 
-    private function formatCutoffLabel(\Carbon\Carbon $nextCutoff): string
+    private function formatCutoffLabel(Carbon $nextCutoff): string
     {
         $cutoffHeure = $nextCutoff->format('H\\hi');
-        $now = \Carbon\Carbon::now();
+        $now = Carbon::now();
 
         if ($nextCutoff->isSameDay($now)) {
             return "Aujourd'hui à {$cutoffHeure}";

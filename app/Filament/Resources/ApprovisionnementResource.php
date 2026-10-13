@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ApprovisionnementResource extends Resource
 {
@@ -353,7 +354,7 @@ class ApprovisionnementResource extends Resource
                             ->searchable(),
                     ])
                     ->action(function (array $data) {
-                        return \Maatwebsite\Excel\Facades\Excel::download(
+                        return Excel::download(
                             new ApprovisionnementExport(
                                 $data['date_from'] ?? null,
                                 $data['date_to'] ?? null,

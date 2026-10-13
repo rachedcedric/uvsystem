@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Agent;
+use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
+use App\Models\MasterSolde;
 use App\Models\Remboursement;
 use App\Models\User;
 use App\Services\MasterSoldeService;
@@ -37,7 +39,7 @@ class SoldeUvDisponibleTest extends TestCase
 
     protected function approvisionner(float $amount): void
     {
-        \App\Models\Approvisionnement::create([
+        Approvisionnement::create([
             'user_id' => auth()->id(),
             'fournisseur_id' => $this->fournisseur->id,
             'amount' => $amount,
@@ -165,7 +167,7 @@ class SoldeUvDisponibleTest extends TestCase
         );
 
         // La ligne persistée (legacy) doit refléter la même vérité.
-        $solde = \App\Models\MasterSolde::first();
+        $solde = MasterSolde::first();
         $this->assertEqualsWithDelta($totals['solde_disponible'], (float) $solde->solde_disponible, 0.01);
     }
 }

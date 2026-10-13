@@ -4,6 +4,7 @@ namespace App\Services\Mobile;
 
 use App\Models\Agent;
 use App\Tenancy\TenantContext;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  */
 class AgentHistory
 {
-    private static function union(Agent $agent): \Illuminate\Database\Query\Builder
+    private static function union(Agent $agent): Builder
     {
         $ventes = TenantContext::table('uv_transactions')
             ->where('agent_id', $agent->id)
@@ -39,7 +40,7 @@ class AgentHistory
         return $ventes->unionAll($remboursements);
     }
 
-    private static function ordered(Agent $agent): \Illuminate\Database\Query\Builder
+    private static function ordered(Agent $agent): Builder
     {
         $union = self::union($agent);
 

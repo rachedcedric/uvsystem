@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Concerns;
 
 use App\Models\Tenant;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Tenancy\TenantContext;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -55,6 +56,6 @@ trait RunsPerTenant
     {
         $feature = $this->requiredFeature();
 
-        return $feature === null || app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->hasFeature(null, $feature);
+        return $feature === null || app(SubscriptionEntitlements::class)->hasFeature(null, $feature);
     }
 }

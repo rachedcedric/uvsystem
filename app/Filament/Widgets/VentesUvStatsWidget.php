@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\UvTransaction;
 use App\Services\BusinessPeriodResolver;
+use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
 /**
@@ -60,7 +61,7 @@ class VentesUvStatsWidget extends BaseWidget
         ];
     }
 
-    private function sumVentes(\Carbon\Carbon $start, \Carbon\Carbon $end): float
+    private function sumVentes(Carbon $start, Carbon $end): float
     {
         return (float) UvTransaction::where('transaction_type', 'distribution')
             ->where('status', '!=', 'cancelled')

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\RunsPerTenant;
+use App\Models\Agent;
 use App\Services\NotificationService;
 use Illuminate\Console\Command;
 
@@ -32,7 +33,7 @@ class SendPaymentReminders extends Command
         } else {
             // Mode simulation
             $results = [
-                'total' => \App\Models\Agent::query()
+                'total' => Agent::query()
                     ->where('status', 'active')
                     ->where('current_debt', '>', 0)
                     ->whereRaw('debt_limit > 0')

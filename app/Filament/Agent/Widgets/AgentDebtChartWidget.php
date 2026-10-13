@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
 use App\Support\DailyBarChart;
+use Carbon\Carbon;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
@@ -55,7 +56,7 @@ class AgentDebtChartWidget extends ChartWidget
             $debtData[] = round($cumulativeDebt, 2);
         }
 
-        $labels = $dates->map(fn ($date) => \Carbon\Carbon::parse($date)->format('d/m/Y'))->toArray();
+        $labels = $dates->map(fn ($date) => Carbon::parse($date)->format('d/m/Y'))->toArray();
         $colors = DailyBarChart::colors($debtData, 'rgba(59, 130, 246, 0.68)', 'rgb(37, 99, 235)', false);
 
         return [

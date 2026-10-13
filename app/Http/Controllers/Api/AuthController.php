@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\TwoFactorAuthService;
 use Filament\Facades\Filament;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -39,24 +41,24 @@ class AuthController extends Controller
         // 2FA : un compte qui l'a activée ne reçoit de token qu'avec un code valide (ou un code de récupération).
         if ($user->hasTwoFactorEnabled()) {
             $otp = (string) ($validated['otp'] ?? '');
-            $service = app(\App\Services\TwoFactorAuthService::class);
+            $service = app(TwoFactorAuthService::class);
 
             if ($otp === '') {
                 return response()->json(['success' => false, 'message' => 'Code de double authentification requis.', 'otp_required' => true], 422);
             }
 
             $rateKey = '2fa-api|'.$user->getKey().'|'.$request->ip();
-            if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateKey, 5)) {
+            if (RateLimiter::tooManyAttempts($rateKey, 5)) {
                 throw ValidationException::withMessages(['otp' => ['Trop d\'essais. Réessayez plus tard.']]);
             }
 
             if (! $service->validateOtp($user, $otp) && ! $service->verifyRecoveryCode($user, $otp)) {
-                \Illuminate\Support\Facades\RateLimiter::hit($rateKey, 300);
+                RateLimiter::hit($rateKey, 300);
 
                 throw ValidationException::withMessages(['otp' => ['Code de double authentification invalide.']]);
             }
 
-            \Illuminate\Support\Facades\RateLimiter::clear($rateKey);
+            RateLimiter::clear($rateKey);
         }
 
         // Utiliser device_name fourni ou générer un nom par défaut

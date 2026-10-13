@@ -5,6 +5,7 @@ namespace App\Tenancy;
 use App\Models\CaisseCategorie;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Subscriptions\SubscriptionAccessPolicy;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -38,7 +39,7 @@ class TenantProvisioner
             TenantContext::runAs($tenant->id, function () use ($admin) {
                 $this->seedReferenceData();
                 // Sans abonnement (parcours technique), le premier master doit tout de même pouvoir être créé.
-                \App\Services\Subscriptions\SubscriptionAccessPolicy::withoutRestrictions(fn () => $this->createAdmin($admin));
+                SubscriptionAccessPolicy::withoutRestrictions(fn () => $this->createAdmin($admin));
             });
 
             return $tenant;

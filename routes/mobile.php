@@ -3,6 +3,7 @@
 use App\Http\Controllers\Mobile\ExportController;
 use App\Http\Controllers\Mobile\LogoutController;
 use App\Http\Controllers\Mobile\PushTokenController;
+use App\Livewire\Mobile\Account\Profile;
 use App\Livewire\Mobile\Admin;
 use App\Livewire\Mobile\Agents;
 use App\Livewire\Mobile\Analytics;
@@ -65,7 +66,7 @@ Route::prefix('m')->name('m.')->group(function () {
         // Abonnement du tenant courant (master/admin) : reste accessible quand l'abonnement est expiré.
         Route::get('abonnement', SubscriptionShow::class)->name('abonnement');
         // Profil de l'entreprise (nom, coordonnées, logo, pied de page des documents).
-        Route::get('profil-entreprise', \App\Livewire\Mobile\Account\Profile::class)->name('profil');
+        Route::get('profil-entreprise', Profile::class)->name('profil');
         // Un compte lié à une fiche agent (master compris) retrouve son espace agent (autre panneau : navigation complète).
         Route::get('espace-agent', function () {
             abort_unless(auth()->user()?->agent()->exists(), 403);

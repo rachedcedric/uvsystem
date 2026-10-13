@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Tenancy\BelongsToTenant;
 use App\Tenancy\TenantContext;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 
 class Agent extends Model
 {
@@ -44,7 +47,7 @@ class Agent extends Model
     /** Limite d'agents de l'offre : refus réel côté serveur (Filament, API, import, mobile, commandes). */
     protected function enforceEntitlementsOnInsert(): void
     {
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
+        app(SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
     }
 
     protected static function enforcesEntitlements(): bool
@@ -60,7 +63,7 @@ class Agent extends Model
 
     protected function enforceEntitlementsOnUpdate(): void
     {
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
+        app(SubscriptionEntitlements::class)->assertCanCreateAgent((int) $this->tenant_id);
     }
 
     // ==================== RELATIONS ====================
@@ -247,7 +250,7 @@ class Agent extends Model
      *
      * @return array{distribue: float, retourne: float, rembourse: float}
      */
-    public function soldeTotals(?\Carbon\Carbon $asOf = null): array
+    public function soldeTotals(?Carbon $asOf = null): array
     {
         $distributedQuery = $this->transactions()
             ->where('transaction_type', 'distribution')
@@ -288,7 +291,7 @@ class Agent extends Model
      * plafonnée à 0 (reflète fidèlement l'historique, y compris un éventuel
      * trop-perçu).
      */
-    public function debtAsOf(?\Carbon\Carbon $asOf = null): float
+    public function debtAsOf(?Carbon $asOf = null): float
     {
         $totaux = $this->soldeTotals($asOf);
 
@@ -311,22 +314,22 @@ class Agent extends Model
      * Sans argument, retourne le total actuel (équivalent à la somme de
      * current_debt sur les agents actifs endettés).
      */
-    public static function totalDetteActiveAsOf(?\Carbon\Carbon $asOf = null): float
+    public static function totalDetteActiveAsOf(?Carbon $asOf = null): float
     {
         $distributedQuery = TenantContext::table('uv_transactions')
-            ->select('agent_id', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total'))
+            ->select('agent_id', DB::raw('SUM(amount) as total'))
             ->where('transaction_type', 'distribution')
             ->where('status', '!=', 'cancelled')
             ->whereNull('deleted_at');
 
         $returnedQuery = TenantContext::table('uv_transactions')
-            ->select('agent_id', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total'))
+            ->select('agent_id', DB::raw('SUM(amount) as total'))
             ->where('transaction_type', 'retour')
             ->where('status', '!=', 'cancelled')
             ->whereNull('deleted_at');
 
         $repaidQuery = TenantContext::table('remboursements')
-            ->select('agent_id', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total'))
+            ->select('agent_id', DB::raw('SUM(amount) as total'))
             ->whereNull('deleted_at');
 
         if ($asOf) {

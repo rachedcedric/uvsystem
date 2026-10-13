@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Agent;
+use App\Notifications\Concerns\RequiresPlanFeature;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,7 +18,7 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
         protected ?string $customMessage = null,
     ) {}
 
-    use \App\Notifications\Concerns\RequiresPlanFeature;
+    use RequiresPlanFeature;
 
     protected function requiredFeature(): string
     {

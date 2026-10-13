@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Pages\NotificationsPage;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -73,7 +74,7 @@ class NotificationsRecentesWidget extends BaseWidget
                     ->action(function () {
                         Auth::user()->unreadNotifications->markAsRead();
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Notifications lues')
                             ->success()
                             ->send();

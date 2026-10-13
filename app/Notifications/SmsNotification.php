@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\RequiresPlanFeature;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Twilio\TwilioChannel;
@@ -19,7 +20,7 @@ class SmsNotification extends Notification
     /**
      * Get the notification's delivery channels.
      */
-    use \App\Notifications\Concerns\RequiresPlanFeature;
+    use RequiresPlanFeature;
 
     protected function requiredFeature(): string
     {

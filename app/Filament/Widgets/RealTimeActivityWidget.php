@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\User;
 use App\Tenancy\TenantContext;
 use Filament\Widgets\Widget;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class RealTimeActivityWidget extends Widget
@@ -44,7 +45,7 @@ class RealTimeActivityWidget extends Widget
      * récente à la plus ancienne, paginée en base (LIMIT/OFFSET), sans jamais
      * charger l'intégralité des transactions côté frontend.
      */
-    private function buildUnionQuery(): \Illuminate\Database\Query\Builder
+    private function buildUnionQuery(): Builder
     {
         $ventes = TenantContext::table('uv_transactions')
             ->where('transaction_type', 'distribution')

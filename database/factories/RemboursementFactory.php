@@ -7,7 +7,7 @@ use App\Models\Remboursement;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Remboursement>
+ * @extends Factory<Remboursement>
  */
 class RemboursementFactory extends Factory
 {

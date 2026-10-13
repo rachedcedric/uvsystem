@@ -9,6 +9,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\TenantSubscription;
 use App\Notifications\Subscriptions\SubscriptionExpired;
+use App\Notifications\Subscriptions\SubscriptionNotification;
 use App\Notifications\Subscriptions\SubscriptionPlanChanged;
 use App\Notifications\Subscriptions\SubscriptionReactivated;
 use App\Notifications\Subscriptions\SubscriptionSuspended;
@@ -421,7 +422,7 @@ class SubscriptionManager
         ]);
     }
 
-    /** @param  class-string<\App\Notifications\Subscriptions\SubscriptionNotification>  $notification */
+    /** @param  class-string<SubscriptionNotification>  $notification */
     private function notify(TenantSubscription $subscription, string $notification, string $dedupKey): void
     {
         $this->notifier->send($subscription, $notification, $dedupKey, SubscriptionNotifier::contextFor($subscription));

@@ -1,5 +1,6 @@
 <?php
 
+use App\Tenancy\MigrationPreflight;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -48,7 +49,7 @@ return new class extends Migration
     {
         // Contrôle préalable : lève MigrationBlocked AVANT toute modification si l'appartenance de données
         // existantes est ambiguë (ex. tables clients*) ou si aucune sauvegarde vérifiable n'existe.
-        \App\Tenancy\MigrationPreflight::assertCanMigrate();
+        MigrationPreflight::assertCanMigrate();
 
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();

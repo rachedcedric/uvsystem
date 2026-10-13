@@ -7,6 +7,7 @@ use App\Models\Approvisionnement;
 use App\Models\Commission;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -38,7 +39,7 @@ class StatisticsPage extends Page implements HasForms
 
     public function mount(): void
     {
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('statistiques_essentielles');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('statistiques_essentielles');
 
         $this->filters = [
             'period' => 'month',

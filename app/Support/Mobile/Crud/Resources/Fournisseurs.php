@@ -3,8 +3,10 @@
 namespace App\Support\Mobile\Crud\Resources;
 
 use App\Models\Fournisseur;
+use App\Services\FournisseurDebtService;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
+use App\Support\Mobile\Fcfa;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -93,11 +95,11 @@ class Fournisseurs extends MobileResource
     {
         $debt = [];
         if ($record->type === 'AGENT_PREMIUM') {
-            $totals = app(\App\Services\FournisseurDebtService::class)->soldeTotals($record);
+            $totals = app(FournisseurDebtService::class)->soldeTotals($record);
             $debt = [
-                'Total à crédit' => \App\Support\Mobile\Fcfa::format($totals['distribue']),
-                'Déjà payé' => \App\Support\Mobile\Fcfa::format($totals['rembourse']),
-                'Reste à payer' => \App\Support\Mobile\Fcfa::format($totals['distribue'] - $totals['rembourse']),
+                'Total à crédit' => Fcfa::format($totals['distribue']),
+                'Déjà payé' => Fcfa::format($totals['rembourse']),
+                'Reste à payer' => Fcfa::format($totals['distribue'] - $totals['rembourse']),
             ];
         }
 

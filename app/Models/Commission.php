@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Tenancy\BelongsToTenant;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -200,7 +201,7 @@ class Commission extends Model
     /**
      * Vérifier si une commission globale existe pour une date
      */
-    public static function existeCommissionGlobalePour(\Carbon\Carbon $date): bool
+    public static function existeCommissionGlobalePour(Carbon $date): bool
     {
         return self::where('is_global', true)
             ->whereDate('date_commission', $date)
@@ -210,7 +211,7 @@ class Commission extends Model
     /**
      * Récupérer la commission globale d'une date
      */
-    public static function getCommissionGlobalePour(\Carbon\Carbon $date): ?self
+    public static function getCommissionGlobalePour(Carbon $date): ?self
     {
         return self::where('is_global', true)
             ->whereDate('date_commission', $date)

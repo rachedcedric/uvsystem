@@ -2,6 +2,7 @@
 
 namespace App\Filament\Platform\Pages;
 
+use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Artisan;
@@ -204,7 +205,7 @@ class BackupPage extends Page
 
     public static function canAccess(): bool
     {
-        /** @var \App\Models\User|null $user */
+        /** @var User|null $user */
         $user = Auth::user();
 
         return $user && $user->isSuperAdmin(); // Les sauvegardes contiennent les données de TOUS les tenants : réservées au super admin de plateforme.

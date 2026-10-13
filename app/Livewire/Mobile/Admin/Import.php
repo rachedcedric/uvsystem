@@ -3,6 +3,7 @@
 namespace App\Livewire\Mobile\Admin;
 
 use App\Services\Mobile\DataImporter;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -34,7 +35,7 @@ class Import extends Component
     public function mount(): void
     {
         abort_unless(self::allowed(), 403);
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
     }
 
     public static function allowed(): bool
@@ -53,7 +54,7 @@ class Import extends Component
     public function import(): void
     {
         abort_unless(self::allowed(), 403);
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('import_donnees');
 
         $this->validate([
             'type' => ['required', 'in:agents,transactions,remboursements'],

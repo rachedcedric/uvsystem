@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mobile;
 
 use App\Http\Controllers\Controller;
 use App\Models\PushToken;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -12,7 +13,7 @@ class PushTokenController extends Controller
     public function store(Request $request): Response
     {
         abort_unless($request->user()->hasAnyRole(['master', 'admin']), 403);
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('notifications_push');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('notifications_push');
 
         $validated = $request->validate([
             'token' => ['required', 'string', 'max:512'],

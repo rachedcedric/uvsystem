@@ -8,6 +8,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\Subscriptions\SubscriptionExpired;
 use App\Notifications\Subscriptions\SubscriptionNotification;
+use App\Notifications\Subscriptions\TrialStarted;
+use App\Services\Subscriptions\SubscriptionLifecycleProcessor;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Services\Subscriptions\SubscriptionNotifier;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -74,7 +76,7 @@ class SubscriptionNotificationsTest extends SubscriptionTestCase
         $this->manager->startTrial($this->tenant, $this->plan('pro'));
 
         Queue::assertNothingPushed();
-        Notification::assertSentTo($this->master, \App\Notifications\Subscriptions\TrialStarted::class);
+        Notification::assertSentTo($this->master, TrialStarted::class);
     }
 
     public function test_a_send_failure_is_persisted_and_never_alters_the_business_state(): void
@@ -148,8 +150,8 @@ class SubscriptionNotificationsTest extends SubscriptionTestCase
         // Simule un premier processus qui a déjà « réclamé » la notification et n'a pas encore fini.
         SubscriptionNotificationLog::withoutGlobalScopes()->where('type', 'trial_started')->update(['sent_at' => null, 'attempts' => 1, 'claimed_at' => now()]);
 
-        $this->assertFalse($notifier->send($sub, \App\Notifications\Subscriptions\TrialStarted::class, "trial_started:{$sub->id}", []));
-        Notification::assertSentToTimes($this->master, \App\Notifications\Subscriptions\TrialStarted::class, 0);
+        $this->assertFalse($notifier->send($sub, TrialStarted::class, "trial_started:{$sub->id}", []));
+        Notification::assertSentToTimes($this->master, TrialStarted::class, 0);
     }
 
     public function test_the_same_notification_is_never_sent_twice(): void
@@ -158,10 +160,10 @@ class SubscriptionNotificationsTest extends SubscriptionTestCase
         $sub = $this->manager->startTrial($this->tenant, $this->plan('pro'));
         $notifier = app(SubscriptionNotifier::class);
 
-        $this->assertFalse($notifier->send($sub, \App\Notifications\Subscriptions\TrialStarted::class, "trial_started:{$sub->id}"));
-        $this->assertFalse($notifier->send($sub, \App\Notifications\Subscriptions\TrialStarted::class, "trial_started:{$sub->id}"));
+        $this->assertFalse($notifier->send($sub, TrialStarted::class, "trial_started:{$sub->id}"));
+        $this->assertFalse($notifier->send($sub, TrialStarted::class, "trial_started:{$sub->id}"));
 
-        Notification::assertSentToTimes($this->master, \App\Notifications\Subscriptions\TrialStarted::class, 1);
+        Notification::assertSentToTimes($this->master, TrialStarted::class, 1);
     }
 
     public function test_the_report_counts_notification_failures_and_retries(): void
@@ -171,7 +173,7 @@ class SubscriptionNotificationsTest extends SubscriptionTestCase
         $this->manager->startTrial($this->tenant, $this->plan('pro'), days: 1);
         $this->travelToDate('2026-10-12 02:00:00');
 
-        $report = app(\App\Services\Subscriptions\SubscriptionLifecycleProcessor::class)->run();
+        $report = app(SubscriptionLifecycleProcessor::class)->run();
 
         $this->assertSame(1, $report['expired']);
         $this->assertGreaterThanOrEqual(1, $report['notification_failures']);

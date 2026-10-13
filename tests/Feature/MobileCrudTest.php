@@ -2,16 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Mobile\Agents\Show;
 use App\Livewire\Mobile\Crud;
 use App\Models\Agent;
 use App\Models\CaisseCategorie;
+use App\Models\CaisseMouvement;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
 use App\Models\Fournisseur;
 use App\Models\PalierCommission;
 use App\Models\SousDistributeur;
 use App\Models\User;
+use App\Support\Mobile\Crud\Registry;
+use App\Support\Mobile\Crud\Resources\CategoriesCaisse;
+use App\Support\Mobile\Crud\Resources\CategoriesCharges;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -140,7 +146,7 @@ class MobileCrudTest extends TestCase
 
         $user = User::where('email', 'awa@example.com')->firstOrFail();
         $this->assertTrue($user->hasRole('commercial'));
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('motdepasse1', $user->password));
+        $this->assertTrue(Hash::check('motdepasse1', $user->password));
 
         Livewire::test(Crud\Show::class, ['resource' => 'utilisateurs', 'id' => (string) $this->master->id])->call('delete')->assertForbidden();
     }
@@ -189,19 +195,19 @@ class MobileCrudTest extends TestCase
             ->set('data.name', ' transport ')->set('data.sort_order', '1')
             ->call('save')->assertHasErrors(['data.name']);
 
-        $this->assertTrue(\App\Support\Mobile\Crud\Resources\CategoriesCaisse::canDelete($this->master, $existing));
+        $this->assertTrue(CategoriesCaisse::canDelete($this->master, $existing));
 
-        \App\Models\CaisseMouvement::create(['type' => 'entree', 'amount' => 1000, 'libelle' => 'x', 'caisse_categorie_id' => $existing->id, 'date_mouvement' => now()]);
-        $this->assertFalse(\App\Support\Mobile\Crud\Resources\CategoriesCaisse::canDelete($this->master, $existing->fresh()));
+        CaisseMouvement::create(['type' => 'entree', 'amount' => 1000, 'libelle' => 'x', 'caisse_categorie_id' => $existing->id, 'date_mouvement' => now()]);
+        $this->assertFalse(CategoriesCaisse::canDelete($this->master, $existing->fresh()));
     }
 
     public function test_charge_category_in_use_cannot_be_deleted(): void
     {
         $cat = ChargeCategorie::create(['code' => 'loyer', 'name' => 'Loyer', 'is_active' => true]);
-        $this->assertTrue(\App\Support\Mobile\Crud\Resources\CategoriesCharges::canDelete($this->master, $cat));
+        $this->assertTrue(CategoriesCharges::canDelete($this->master, $cat));
 
         Charge::create(['category_id' => $cat->id, 'libelle' => 'Loyer octobre', 'montant' => 100000, 'date_charge' => today(), 'created_by' => $this->master->id]);
-        $this->assertFalse(\App\Support\Mobile\Crud\Resources\CategoriesCharges::canDelete($this->master, $cat));
+        $this->assertFalse(CategoriesCharges::canDelete($this->master, $cat));
     }
 
     public function test_sub_distributor_form_and_pages_render(): void
@@ -223,13 +229,13 @@ class MobileCrudTest extends TestCase
         $agent = Agent::factory()->create(['name' => 'Awa Koné']);
 
         $this->get(route('m.agents'))->assertOk()->assertSee('Nouvel agent');
-        Livewire::test(\App\Livewire\Mobile\Agents\Show::class, ['agent' => $agent])->assertSee('Supprimer l')->call('delete');
+        Livewire::test(Show::class, ['agent' => $agent])->assertSee('Supprimer l')->call('delete');
         $this->assertSoftDeleted($agent);
     }
 
     public function test_every_registered_resource_renders_its_pages(): void
     {
-        foreach (\App\Support\Mobile\Crud\Registry::all() as $resource) {
+        foreach (Registry::all() as $resource) {
             if ($resource::slug() === 'agents' || $resource::hidden()) {
                 continue; // écrans dédiés, couverts par MobileSmokeTest
             }

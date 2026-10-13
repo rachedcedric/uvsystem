@@ -5,12 +5,17 @@ namespace Tests\Feature\Subscriptions;
 use App\Enums\SubscriptionStatus;
 use App\Models\SubscriptionSignup;
 use App\Models\Tenant;
+use App\Models\TenantSubscription;
 use App\Models\User;
 use App\Notifications\Subscriptions\VerifySignupNotification;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Services\Subscriptions\TenantSignupService;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Testing\TestResponse;
 
 /** Pages publiques /offres et /inscription (double confirmation e-mail + anti-abus d'essais). */
@@ -118,14 +123,14 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $signup = SubscriptionSignup::first();
         $token = basename(parse_url($this->link(), PHP_URL_PATH));
 
-        $raw = \Illuminate\Support\Facades\DB::table('subscription_signups')->first();
+        $raw = DB::table('subscription_signups')->first();
         $this->assertStringNotContainsString('Un-Mot-De-Passe-12', json_encode($raw));
         $this->assertStringNotContainsString('Boutique Soleil', $raw->payload, 'charge utile chiffrée');
         $this->assertNotSame($token, $raw->token_hash);
         $this->assertSame(hash('sha256', $token), $raw->token_hash, 'seul le hash du lien est stocké');
 
         $payload = $signup->payloadData();
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Un-Mot-De-Passe-12', $payload['password_hash']));
+        $this->assertTrue(Hash::check('Un-Mot-De-Passe-12', $payload['password_hash']));
         $this->assertArrayNotHasKey('password', $payload);
     }
 
@@ -153,7 +158,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $this->assertSame($tenant->id, $user->tenant_id);
         $this->assertSame(['master'], $user->getRoleNames()->all());
         $this->assertFalse($user->isSuperAdmin());
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('Un-Mot-De-Passe-12', $user->password), 'le mot de passe choisi fonctionne (jamais haché deux fois)');
+        $this->assertTrue(Hash::check('Un-Mot-De-Passe-12', $user->password), 'le mot de passe choisi fonctionne (jamais haché deux fois)');
 
         $sub = app(SubscriptionManager::class)->current($tenant);
         $this->assertSame(SubscriptionStatus::Trialing, $sub->status);
@@ -199,12 +204,12 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $link = $this->link();
 
         $this->post($link)->assertRedirect(route('m.login'))->assertSessionHas('status', fn ($m) => str_contains($m, 'est confirmée'));
-        $counts = [$this->tenantCount(), User::withoutGlobalScopes()->count(), \App\Models\TenantSubscription::withoutGlobalScopes()->count()];
+        $counts = [$this->tenantCount(), User::withoutGlobalScopes()->count(), TenantSubscription::withoutGlobalScopes()->count()];
 
         $this->post($link)->assertRedirect(route('m.login'))->assertSessionHas('status', fn ($m) => str_contains($m, 'déjà créée'));
         $this->post($link)->assertRedirect(route('m.login'));
 
-        $this->assertSame($counts, [$this->tenantCount(), User::withoutGlobalScopes()->count(), \App\Models\TenantSubscription::withoutGlobalScopes()->count()]);
+        $this->assertSame($counts, [$this->tenantCount(), User::withoutGlobalScopes()->count(), TenantSubscription::withoutGlobalScopes()->count()]);
     }
 
     public function test_an_expired_link_is_refused_and_creates_nothing(): void
@@ -224,7 +229,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
 
         $this->post("/inscription/verifier/{$token}")->assertForbidden();
         $this->post($this->link().'x')->assertForbidden();
-        $this->post(\Illuminate\Support\Facades\URL::temporarySignedRoute('inscription.verifier', now()->addHour(), ['token' => 'inconnu']))->assertRedirect(route('offres'));
+        $this->post(URL::temporarySignedRoute('inscription.verifier', now()->addHour(), ['token' => 'inconnu']))->assertRedirect(route('offres'));
         $this->assertNull(Tenant::where('contact_email', 'awa@example.com')->first());
     }
 
@@ -251,7 +256,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
 
     public function test_a_second_trial_with_the_same_mailbox_in_another_spelling_is_refused(): void
     {
-        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $this->withoutMiddleware(ThrottleRequests::class);
         $this->submit(['email' => 'jean.dupont@gmail.com', 'phone' => '0701000001']);
         $this->confirm();
         $tenants = $this->tenantCount();
@@ -330,7 +335,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
     public function test_confirmation_mails_per_address_are_limited(): void
     {
         config(['subscriptions.signup.max_mails_per_email_per_hour' => 2]);
-        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $this->withoutMiddleware(ThrottleRequests::class);
 
         $this->submit()->assertRedirect(route('inscription.envoye'));
         $this->submit()->assertRedirect(route('inscription.envoye'));
@@ -391,7 +396,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
 
     public function test_weak_passwords_and_missing_terms_are_refused(): void
     {
-        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $this->withoutMiddleware(ThrottleRequests::class);
 
         foreach (['court1A', 'toutenminuscules12', 'SANSCHIFFRESMAJ', '12345678901234'] as $weak) {
             $this->submit(['password' => $weak, 'password_confirmation' => $weak])->assertSessionHasErrors('password');

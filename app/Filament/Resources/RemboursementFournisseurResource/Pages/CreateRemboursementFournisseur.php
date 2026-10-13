@@ -5,6 +5,7 @@ namespace App\Filament\Resources\RemboursementFournisseurResource\Pages;
 use App\Filament\Resources\RemboursementFournisseurResource;
 use App\Models\Fournisseur;
 use App\Services\FournisseurDebtService;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
@@ -95,7 +96,7 @@ class CreateRemboursementFournisseur extends CreateRecord
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('backToDettesFournisseurs')
+            Action::make('backToDettesFournisseurs')
                 ->label('← Retour aux Dettes Fournisseurs')
                 ->color('gray')
                 ->url('/master/dettes-fournisseurs'),

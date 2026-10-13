@@ -10,6 +10,7 @@ use App\Models\Remboursement;
 use App\Models\User;
 use App\Models\UvTransaction;
 use App\Services\UvDistributionService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
@@ -35,7 +36,7 @@ class AgentDailySalesHistoryTest extends TestCase
         // Ancre l'horloge en milieu de journée : évite tout flakiness des
         // tests qui reculent l'horloge de quelques minutes (now()->subMinutes)
         // si la suite tourne réellement tout près de minuit.
-        \Carbon\Carbon::setTestNow(\Carbon\Carbon::parse('2026-06-15 12:00:00'));
+        Carbon::setTestNow(Carbon::parse('2026-06-15 12:00:00'));
 
         foreach (['view_uv_transactions', 'create_uv_transactions'] as $permission) {
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
@@ -60,7 +61,7 @@ class AgentDailySalesHistoryTest extends TestCase
         ]);
     }
 
-    protected function vendre(Agent $agent, float $amount, ?\Carbon\Carbon $at = null): UvTransaction
+    protected function vendre(Agent $agent, float $amount, ?Carbon $at = null): UvTransaction
     {
         $transaction = app(UvDistributionService::class)->distribute($agent, $amount, $this->fournisseur);
 
@@ -271,8 +272,8 @@ class AgentDailySalesHistoryTest extends TestCase
     /** 15. Transaction proche de minuit : reste rattachée au bon jour (fuseau de l'app) */
     public function test_transaction_near_midnight_is_attributed_to_the_correct_day(): void
     {
-        $this->vendre($this->agentA, 111_000, \Carbon\Carbon::yesterday()->endOfDay()->subSecond());
-        $todaySale = $this->vendre($this->agentA, 222_000, \Carbon\Carbon::today()->startOfDay()->addSecond());
+        $this->vendre($this->agentA, 111_000, Carbon::yesterday()->endOfDay()->subSecond());
+        $todaySale = $this->vendre($this->agentA, 222_000, Carbon::today()->startOfDay()->addSecond());
 
         $history = Livewire::test(CreateUvTransaction::class)
             ->set('data.agent_id', $this->agentA->id)
@@ -285,7 +286,7 @@ class AgentDailySalesHistoryTest extends TestCase
 
     protected function tearDown(): void
     {
-        \Carbon\Carbon::setTestNow();
+        Carbon::setTestNow();
 
         parent::tearDown();
     }

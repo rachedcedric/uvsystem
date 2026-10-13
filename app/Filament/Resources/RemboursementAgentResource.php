@@ -3,7 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RemboursementAgentResource\Pages;
+use App\Models\AgentPartenaire;
 use App\Models\RemboursementAgent;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -54,7 +56,7 @@ class RemboursementAgentResource extends Resource
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                 if ($state) {
-                                    $agent = \App\Models\AgentPartenaire::find($state);
+                                    $agent = AgentPartenaire::find($state);
                                     if ($agent) {
                                         $set('_dette_actuelle', number_format($agent->dette, 0, ',', ' ').' FCFA');
                                         $set('_dette_montant', $agent->dette);
@@ -89,8 +91,8 @@ class RemboursementAgentResource extends Resource
                             ->money(min: 0)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
-                                $detteActuelle = \App\Support\Money::toFloat($get('_dette_montant'));
-                                $montant = \App\Support\Money::toFloat($state);
+                                $detteActuelle = Money::toFloat($get('_dette_montant'));
+                                $montant = Money::toFloat($state);
                                 if ($montant > $detteActuelle) {
                                     $set('_validation_message', '⚠️ Le montant dépasse la dette actuelle !');
                                 } elseif ($montant == $detteActuelle) {

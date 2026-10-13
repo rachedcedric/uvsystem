@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -248,7 +249,7 @@ class CaisseService
     }
 
     /** Mouvements d'une journée de caisse, dans l'ordre chronologique. */
-    public function mouvementsQuery(Carbon $businessDate): \Illuminate\Database\Eloquent\Builder
+    public function mouvementsQuery(Carbon $businessDate): Builder
     {
         $b = $this->periods->bounds($businessDate);
 

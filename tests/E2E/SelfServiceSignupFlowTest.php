@@ -17,7 +17,9 @@ use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Testing\TestResponse;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -159,7 +161,7 @@ class SelfServiceSignupFlowTest extends TestCase
 
     public function test_many_companies_register_independently_and_never_see_each_other(): void
     {
-        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
+        $this->withoutMiddleware(ThrottleRequests::class);
         $count = 12;
 
         for ($i = 1; $i <= $count; $i++) {
@@ -310,7 +312,7 @@ class SelfServiceSignupFlowTest extends TestCase
     {
         // Aucune route de ce parcours n'est protégée par une authentification ni par un rôle de plateforme.
         foreach (['inscription', 'inscription.store', 'inscription.envoye', 'inscription.verifier', 'inscription.confirmer', 'offres'] as $name) {
-            $route = \Illuminate\Support\Facades\Route::getRoutes()->getByName($name);
+            $route = Route::getRoutes()->getByName($name);
             $this->assertNotNull($route, $name);
             $this->assertEmpty(array_intersect($route->gatherMiddleware(), ['auth', 'auth:sanctum', 'staff', '2fa']), "$name ne doit exiger aucune connexion");
         }

@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Contracts\PushNotification as PushNotificationContract;
 use App\Models\Agent;
 use App\Notifications\Channels\FirebasePushChannel;
+use App\Notifications\Concerns\RequiresPlanFeature;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -30,7 +31,7 @@ class DebtReminderNotification extends Notification implements PushNotificationC
         protected string $debtStatusLabel,
     ) {}
 
-    use \App\Notifications\Concerns\RequiresPlanFeature;
+    use RequiresPlanFeature;
 
     protected function requiredFeature(): string
     {

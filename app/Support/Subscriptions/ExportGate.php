@@ -2,6 +2,7 @@
 
 namespace App\Support\Subscriptions;
 
+use App\Exports\CommissionsExport;
 use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Tenancy\TenantContext;
 
@@ -22,7 +23,7 @@ class ExportGate
 
     private const REPORT_PDF_VIEWS = ['exports.daily-report-pdf', 'exports.scheduled-report-pdf'];
 
-    private const ADVANCED_EXCEL = [\App\Exports\CommissionsExport::class];
+    private const ADVANCED_EXCEL = [CommissionsExport::class];
 
     public static function featureForPdfView(string $view): ?string
     {

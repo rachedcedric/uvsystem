@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Services\Subscriptions\SubscriptionEntitlements;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateUser extends CreateRecord
@@ -21,10 +23,10 @@ class CreateUser extends CreateRecord
     {
         $this->assertRolesAllowed();
 
-        $reason = app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->userCreationRefusal();
+        $reason = app(SubscriptionEntitlements::class)->userCreationRefusal();
 
         if ($reason !== null) {
-            \Filament\Notifications\Notification::make()->title('Création impossible')->body($reason)->danger()->send();
+            Notification::make()->title('Création impossible')->body($reason)->danger()->send();
             $this->halt();
         }
     }

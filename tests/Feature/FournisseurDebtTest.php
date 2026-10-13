@@ -1,10 +1,12 @@
 <?php
 
 use App\Filament\Pages\DettesFournisseursPage;
+use App\Filament\Resources\RemboursementFournisseurResource;
 use App\Filament\Resources\RemboursementFournisseurResource\Pages\CreateRemboursementFournisseur;
 use App\Filament\Widgets\FournisseurDebtStatsWidget;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
+use App\Models\PaymentMethod;
 use App\Models\RemboursementFournisseur;
 use App\Models\User;
 use App\Services\FournisseurDebtService;
@@ -153,7 +155,7 @@ describe('DettesFournisseursPage and FournisseurDebtStatsWidget', function () {
         $html = Livewire::test(DettesFournisseursPage::class)->html();
 
         expect($html)->toContain('Grossiste XYZ')
-            ->toContain(\App\Filament\Resources\RemboursementFournisseurResource::getUrl('create', ['fournisseur_id' => $fournisseur->id]));
+            ->toContain(RemboursementFournisseurResource::getUrl('create', ['fournisseur_id' => $fournisseur->id]));
     });
 
     it('denies access without the view_remboursements_fournisseurs permission', function () {
@@ -184,7 +186,7 @@ describe('CreateRemboursementFournisseur — preselection and reuse of registere
         $fournisseur = creditFournisseur();
         approvisionnerFournisseur($fournisseur, $admin, 100_000);
 
-        \App\Models\PaymentMethod::firstOrCreate(['code' => 'cash'], ['name' => 'Espèces', 'is_active' => true, 'sort_order' => 1]);
+        PaymentMethod::firstOrCreate(['code' => 'cash'], ['name' => 'Espèces', 'is_active' => true, 'sort_order' => 1]);
 
         Livewire::test(CreateRemboursementFournisseur::class)
             ->fillForm([

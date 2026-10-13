@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Models\User;
+use App\Security\TwoFactorGate;
 use App\Services\TwoFactorAuthService;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -110,7 +111,7 @@ class TwoFactorAuthPage extends Page implements HasForms
 
     public function disable2FA(): void
     {
-        abort_unless(app(\App\Security\TwoFactorGate::class)->mayDisable($this->getUser()), 403);
+        abort_unless(app(TwoFactorGate::class)->mayDisable($this->getUser()), 403);
 
         $service = app(TwoFactorAuthService::class);
         $service->disable($this->getUser());

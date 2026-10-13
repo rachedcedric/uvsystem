@@ -7,8 +7,10 @@ use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -32,7 +34,7 @@ class GenerateDailyReport extends Command
     public function handle(): int
     {
         $date = $this->option('date')
-            ? \Carbon\Carbon::parse($this->option('date'))
+            ? Carbon::parse($this->option('date'))
             : now()->subDay();
 
         $this->info("📊 Génération du rapport pour le {$date->format('d/m/Y')}...");
@@ -54,7 +56,7 @@ class GenerateDailyReport extends Command
         return Command::SUCCESS;
     }
 
-    protected function collectData(\Carbon\Carbon $date): array
+    protected function collectData(Carbon $date): array
     {
         return [
             'date' => $date,
@@ -97,7 +99,7 @@ class GenerateDailyReport extends Command
         ]);
     }
 
-    protected function generatePdf(array $data, \Carbon\Carbon $date): string
+    protected function generatePdf(array $data, Carbon $date): string
     {
         $pdf = Pdf::loadView('exports.daily-report-pdf', $data)->setPaper('a4', 'portrait');
         $filename = "rapport_quotidien_{$date->format('Y-m-d')}.pdf";
@@ -105,13 +107,13 @@ class GenerateDailyReport extends Command
         $path = TenantContext::storagePath("reports/{$filename}");
         // Disque PRIVÉ explicite : le disque par défaut peut être « public » (FILESYSTEM_DISK), donc lisible par URL.
         $content = $pdf->output();
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->assertCanStore(strlen($content));
+        app(SubscriptionEntitlements::class)->assertCanStore(strlen($content));
         Storage::disk('local')->put($path, $content);
 
         return $path;
     }
 
-    protected function sendEmail(string $pdfPath, \Carbon\Carbon $date): void
+    protected function sendEmail(string $pdfPath, Carbon $date): void
     {
         $users = User::all();
         foreach ($users as $user) {

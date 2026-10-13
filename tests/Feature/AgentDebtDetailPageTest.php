@@ -3,6 +3,7 @@
 use App\Exports\DettesExport;
 use App\Filament\Pages\AgentDebtDetailPage;
 use App\Models\Agent;
+use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Models\User;
 use App\Services\RemboursementService;
@@ -51,7 +52,7 @@ describe('AgentDebtDetailPage — summary (4 tiles distinct from the global list
         $fournisseur = Fournisseur::factory()->create();
 
         Carbon::setTestNow(Carbon::create(2026, 6, 15, 10, 0));
-        \App\Models\Approvisionnement::create([
+        Approvisionnement::create([
             'user_id' => $admin->id,
             'fournisseur_id' => $fournisseur->id,
             'amount' => 100_000_000,
@@ -100,7 +101,7 @@ describe('AgentDebtDetailPage — full history for exports (not just the visible
         $this->actingAs($admin);
         $fournisseur = Fournisseur::factory()->create();
 
-        \App\Models\Approvisionnement::create([
+        Approvisionnement::create([
             'user_id' => $admin->id,
             'fournisseur_id' => $fournisseur->id,
             'amount' => 100_000_000,
@@ -130,7 +131,7 @@ describe('DettesExport — numeric amounts, full dataset', function () {
         $this->actingAs($admin);
         $fournisseur = Fournisseur::factory()->create();
 
-        \App\Models\Approvisionnement::create([
+        Approvisionnement::create([
             'user_id' => $admin->id,
             'fournisseur_id' => $fournisseur->id,
             'amount' => 100_000_000,
@@ -169,7 +170,7 @@ describe('exports.dette-agent-pdf view renders without error', function () {
         $this->actingAs($admin);
         $fournisseur = Fournisseur::factory()->create();
 
-        \App\Models\Approvisionnement::create([
+        Approvisionnement::create([
             'user_id' => $admin->id,
             'fournisseur_id' => $fournisseur->id,
             'amount' => 100_000_000,

@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantContext;
+use App\Tenancy\TenantContextMissing;
 use Carbon\Carbon;
 
 class SubscriptionEntitlementsTest extends SubscriptionTestCase
@@ -167,7 +168,7 @@ class SubscriptionEntitlementsTest extends SubscriptionTestCase
         });
         TenantContext::runAs($b->id, fn () => $this->assertSame(2, $this->entitlements->getAgentUsage()));
 
-        $this->assertThrows(fn () => $this->entitlements->getAgentUsage(), \App\Tenancy\TenantContextMissing::class);
+        $this->assertThrows(fn () => $this->entitlements->getAgentUsage(), TenantContextMissing::class);
     }
 
     // ---------------------------------------------------------------- expiration : politique centralisée

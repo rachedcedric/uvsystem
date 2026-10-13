@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Mobile\Admin;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -84,7 +85,7 @@ class Backups extends Component
                     $backups[] = [
                         'name' => basename($file),
                         'size' => $this->formatBytes($disk->size($file)),
-                        'date' => \Carbon\Carbon::createFromTimestamp($disk->lastModified($file)),
+                        'date' => Carbon::createFromTimestamp($disk->lastModified($file)),
                     ];
                 }
             }

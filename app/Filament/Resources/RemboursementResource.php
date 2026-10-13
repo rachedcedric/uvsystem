@@ -6,6 +6,8 @@ use App\Filament\Resources\RemboursementResource\Pages;
 use App\Models\Agent;
 use App\Models\PaymentMethod;
 use App\Models\Remboursement;
+use App\Services\ShortReferenceGenerator;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -13,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 
 class RemboursementResource extends Resource
@@ -105,7 +108,7 @@ class RemboursementResource extends Resource
                                     // reste à payer.
                                     $currentDebt = Agent::find($agentId)?->debtAsOf() ?? 0.0;
 
-                                    if (\App\Support\Money::toFloat($value) > $currentDebt) {
+                                    if (Money::toFloat($value) > $currentDebt) {
                                         $fail('Le montant du remboursement ne peut pas dépasser le reste à payer.');
                                     }
                                 },
@@ -129,14 +132,14 @@ class RemboursementResource extends Resource
                                 }
                                 $agent = Agent::find($agentId);
                                 $debt = $agent?->current_debt ?? 0;
-                                $amount = \App\Support\Money::toFloat($get('amount'));
+                                $amount = Money::toFloat($get('amount'));
                                 $newDebt = max(0, $debt - $amount);
                                 $color = $newDebt > 0 ? 'color: #f59e0b;' : 'color: #22c55e; font-weight: bold;';
                                 $icon = $newDebt == 0 ? '✅' : '📉';
 
                                 return new HtmlString("<span style='{$color}'>{$icon} ".number_format($newDebt, 0, ',', ' ').' FCFA</span>');
                             })
-                            ->visible(fn (Get $get) => $get('agent_id') !== null && \App\Support\Money::toFloat($get('amount')) > 0),
+                            ->visible(fn (Get $get) => $get('agent_id') !== null && Money::toFloat($get('amount')) > 0),
 
                         Forms\Components\Select::make('payment_method')
                             ->label('Méthode de paiement')
@@ -149,7 +152,7 @@ class RemboursementResource extends Resource
                             ->label('Référence')
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->default(fn () => app(\App\Services\ShortReferenceGenerator::class)->generate('R', 'remboursements'))
+                            ->default(fn () => app(ShortReferenceGenerator::class)->generate('R', 'remboursements'))
                             ->disabled()
                             ->dehydrated(),
 
@@ -281,8 +284,8 @@ class RemboursementResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['min_amount'], fn ($q, $min) => $q->where('amount', '>=', \App\Support\Money::toFloat($min)))
-                            ->when($data['max_amount'], fn ($q, $max) => $q->where('amount', '<=', \App\Support\Money::toFloat($max)));
+                            ->when($data['min_amount'], fn ($q, $min) => $q->where('amount', '>=', Money::toFloat($min)))
+                            ->when($data['max_amount'], fn ($q, $max) => $q->where('amount', '<=', Money::toFloat($max)));
                     }),
             ])
             ->filtersFormColumns(3)
@@ -347,12 +350,12 @@ class RemboursementResource extends Resource
         return ['reference', 'agent.name', 'agent.phone'];
     }
 
-    public static function getGlobalSearchResultTitle(\Illuminate\Database\Eloquent\Model $record): string
+    public static function getGlobalSearchResultTitle(Model $record): string
     {
         return "Remboursement {$record->reference}";
     }
 
-    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    public static function getGlobalSearchResultDetails(Model $record): array
     {
         return [
             'Agent' => $record->agent?->name ?? '-',

@@ -6,6 +6,7 @@ use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Services\MasterSoldeService;
 use App\Services\UvDistributionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -232,12 +233,12 @@ describe('UvDistributionService', function () {
             approvisionner(5000000);
 
             $transaction = getService()->distribute(agent: $agent, amount: 1200000);
-            expect(app(App\Services\MasterSoldeService::class)->getAvailableBalance())->toBe(3800000.0);
+            expect(app(MasterSoldeService::class)->getAvailableBalance())->toBe(3800000.0);
 
             getService()->cancel($transaction);
 
             expect($transaction->fresh()->status)->toBe('cancelled')
-                ->and(app(App\Services\MasterSoldeService::class)->getAvailableBalance())->toBe(5000000.0);
+                ->and(app(MasterSoldeService::class)->getAvailableBalance())->toBe(5000000.0);
         });
     });
 

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Console\Command;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class FixUserPermissions extends Command
 {
@@ -16,7 +17,7 @@ class FixUserPermissions extends Command
     public function handle(): int
     {
         // Reset cache
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
         $this->info('✅ Cache des permissions vidé');
 
         // Vérifier les rôles

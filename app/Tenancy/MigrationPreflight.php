@@ -2,6 +2,7 @@
 
 namespace App\Tenancy;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -40,9 +41,9 @@ class MigrationPreflight
      * les tables de toutes les bases visibles sur le serveur (production, préproduction, copies…) : on la borne
      * explicitement à la base de la connexion, sinon on contrôlerait des tables qui ne sont pas les nôtres.
      *
-     * @return \Illuminate\Support\Collection<int, string>
+     * @return Collection<int, string>
      */
-    private static function tableNames(): \Illuminate\Support\Collection
+    private static function tableNames(): Collection
     {
         $connection = DB::connection();
         $schema = in_array($connection->getDriverName(), ['mysql', 'mariadb'], true) ? $connection->getDatabaseName() : null;

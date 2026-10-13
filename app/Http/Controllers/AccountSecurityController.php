@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Tenancy\TenantContext;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -33,7 +34,7 @@ class AccountSecurityController extends Controller
                     'current' => $row->id === $current,
                     'device' => $this->describe((string) $row->user_agent),
                     'ip' => $row->ip_address,
-                    'last_activity' => \Carbon\Carbon::createFromTimestamp($row->last_activity),
+                    'last_activity' => Carbon::createFromTimestamp($row->last_activity),
                 ])
             : collect();
 

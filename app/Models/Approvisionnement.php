@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ShortReferenceGenerator;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -50,7 +51,7 @@ class Approvisionnement extends Model
 
         static::creating(function ($approvisionnement) {
             if (! $approvisionnement->reference) {
-                $approvisionnement->reference = app(\App\Services\ShortReferenceGenerator::class)->generate('A', 'approvisionnements');
+                $approvisionnement->reference = app(ShortReferenceGenerator::class)->generate('A', 'approvisionnements');
             }
             if (! $approvisionnement->date_approvisionnement) {
                 $approvisionnement->date_approvisionnement = now();

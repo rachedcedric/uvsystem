@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Services\AnalyticsService;
 use App\Support\DailyBarChart;
+use Carbon\Carbon;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 
@@ -35,7 +36,7 @@ class CashFlowPredictionWidget extends ChartWidget
         $upper = [];
 
         foreach ($prediction['predictions'] as $day) {
-            $labels[] = \Carbon\Carbon::parse($day['date'])->format('d/m/Y');
+            $labels[] = Carbon::parse($day['date'])->format('d/m/Y');
             $predicted[] = $day['predicted'];
             $lower[] = $day['lower'];
             $upper[] = $day['upper'];

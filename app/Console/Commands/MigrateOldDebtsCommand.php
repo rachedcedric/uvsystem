@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Console\Commands\Concerns\RunsForOneTenant;
 use App\Models\Agent;
 use App\Models\AgentSolde;
+use App\Models\Remboursement;
 use App\Models\UvTransaction;
 use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
@@ -123,7 +124,7 @@ class MigrateOldDebtsCommand extends Command
 
                     // Si il y avait des remboursements, créer des remboursements
                     if ($oldDebt->total_rembourse > 0) {
-                        \App\Models\Remboursement::create([
+                        Remboursement::create([
                             'agent_id' => $agent->id,
                             'amount' => $oldDebt->total_rembourse,
                             'payment_method' => 'unknown',

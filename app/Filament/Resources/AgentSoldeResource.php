@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\AgentSoldeResource\Pages;
 use App\Models\Agent;
 use App\Models\AgentSolde;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -105,8 +106,8 @@ class AgentSoldeResource extends Resource
                             ->default(0.00)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
-                                $totalDist = \App\Support\Money::toFloat($state);
-                                $totalRemb = \App\Support\Money::toFloat($get('total_rembourse'));
+                                $totalDist = Money::toFloat($state);
+                                $totalRemb = Money::toFloat($get('total_rembourse'));
                                 $set('solde_restant', $totalDist - $totalRemb);
                             })
                             ->helperText('Montant total des UV distribuées'),
@@ -118,8 +119,8 @@ class AgentSoldeResource extends Resource
                             ->default(0.00)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, Forms\Get $get, Forms\Set $set) {
-                                $totalDist = \App\Support\Money::toFloat($get('total_uv_distribues'));
-                                $totalRemb = \App\Support\Money::toFloat($state);
+                                $totalDist = Money::toFloat($get('total_uv_distribues'));
+                                $totalRemb = Money::toFloat($state);
                                 $set('solde_restant', $totalDist - $totalRemb);
                             })
                             ->helperText('Montant total des remboursements'),

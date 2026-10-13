@@ -6,6 +6,7 @@ use App\Contracts\PushNotification;
 use App\Models\PushToken;
 use App\Models\User;
 use App\Services\FirebaseMessaging;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -21,7 +22,7 @@ class FirebasePushChannel
         }
 
         // Notifications push = fonctionnalité de l'offre (Pro et au-dessus).
-        if ($notifiable->tenant_id !== null && ! app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->hasFeature((int) $notifiable->tenant_id, 'notifications_push')) {
+        if ($notifiable->tenant_id !== null && ! app(SubscriptionEntitlements::class)->hasFeature((int) $notifiable->tenant_id, 'notifications_push')) {
             return;
         }
 

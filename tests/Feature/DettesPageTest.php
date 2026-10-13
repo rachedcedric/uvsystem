@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\AgentDebtDetailPage;
 use App\Filament\Pages\DettesPage;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
@@ -183,7 +184,7 @@ class DettesPageTest extends TestCase
         $html = Livewire::test(DettesPage::class)->html();
 
         $this->assertStringContainsString(
-            \App\Filament\Pages\AgentDebtDetailPage::getUrl(['agent' => $agent->id]),
+            AgentDebtDetailPage::getUrl(['agent' => $agent->id]),
             $html
         );
     }

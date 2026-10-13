@@ -5,12 +5,21 @@ namespace Tests\Feature;
 use App\Livewire\Mobile\Admin;
 use App\Livewire\Mobile\Agents;
 use App\Livewire\Mobile\Dettes;
+use App\Models\Activity;
 use App\Models\Agent;
+use App\Models\Approvisionnement;
+use App\Models\Fournisseur;
+use App\Models\PaymentMethod;
+use App\Models\Remboursement;
 use App\Models\User;
+use App\Models\UvTransaction;
+use App\Services\UvDistributionService;
+use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use PragmaRX\Google2FA\Google2FA;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -40,7 +49,7 @@ class MobileAdminTest extends TestCase
     public function test_activity_log_lists_filters_and_shows_the_changes(): void
     {
         activity()->causedBy($this->master)->log('Vente créée par test');
-        $activity = \App\Models\Activity::latest('id')->firstOrFail();
+        $activity = Activity::latest('id')->firstOrFail();
 
         $component = Livewire::test(Admin\ActivityLog::class)->assertSee('Aujourd')->assertSee('Vente créée par test');
 
@@ -76,7 +85,7 @@ class MobileAdminTest extends TestCase
         Storage::disk('local')->put("{$dir}/ok.zip", 'zip');
 
         Role::firstOrCreate(['name' => User::ROLE_SUPER_ADMIN, 'guard_name' => 'web']);
-        $super = \App\Tenancy\TenantContext::runAs(null, fn () => User::factory()->create());
+        $super = TenantContext::runAs(null, fn () => User::factory()->create());
         $super->assignRole(User::ROLE_SUPER_ADMIN);
         $this->actingAs($super);
 
@@ -111,13 +120,13 @@ class MobileAdminTest extends TestCase
 
     public function test_transaction_import_uses_the_distribution_service_checks(): void
     {
-        \App\Models\Approvisionnement::create(['user_id' => $this->master->id, 'fournisseur_id' => \App\Models\Fournisseur::factory()->create()->id, 'amount' => 300000, 'date_approvisionnement' => now()]);
+        Approvisionnement::create(['user_id' => $this->master->id, 'fournisseur_id' => Fournisseur::factory()->create()->id, 'amount' => 300000, 'date_approvisionnement' => now()]);
         $agent = Agent::factory()->create(['phone' => '0700555555', 'status' => 'active', 'debt_limit' => 250000]);
 
         $csv = "agent_telephone,montant,notes\n0700555555,100000,ok\n0700555555,200000,trop haut\n0799999999,1000,inconnu\n";
         $component = Livewire::test(Admin\Import::class)->set('type', 'transactions')->set('file', $this->csv($csv))->call('import');
 
-        $this->assertSame(1, \App\Models\UvTransaction::count());
+        $this->assertSame(1, UvTransaction::count());
         $this->assertEquals(100000, $agent->fresh()->current_debt);
         $results = $component->get('results');
         $this->assertSame(1, $results['success']);
@@ -126,15 +135,15 @@ class MobileAdminTest extends TestCase
 
     public function test_repayment_import_cannot_exceed_the_debt(): void
     {
-        \App\Models\Approvisionnement::create(['user_id' => $this->master->id, 'fournisseur_id' => \App\Models\Fournisseur::factory()->create()->id, 'amount' => 500000, 'date_approvisionnement' => now()]);
+        Approvisionnement::create(['user_id' => $this->master->id, 'fournisseur_id' => Fournisseur::factory()->create()->id, 'amount' => 500000, 'date_approvisionnement' => now()]);
         $agent = Agent::factory()->create(['phone' => '0700666666', 'status' => 'active', 'debt_limit' => 500000]);
-        (new \App\Services\UvDistributionService)->distribute($agent, 100000);
-        \App\Models\PaymentMethod::firstOrCreate(['code' => 'cash'], ['name' => 'Espèces', 'is_active' => true, 'sort_order' => 1]);
+        (new UvDistributionService)->distribute($agent, 100000);
+        PaymentMethod::firstOrCreate(['code' => 'cash'], ['name' => 'Espèces', 'is_active' => true, 'sort_order' => 1]);
 
         $csv = "agent_telephone,montant\n0700666666,40000\n0700666666,90000\n";
         $component = Livewire::test(Admin\Import::class)->set('type', 'remboursements')->set('file', $this->csv($csv))->call('import');
 
-        $this->assertEquals(40000, \App\Models\Remboursement::sum('amount'));
+        $this->assertEquals(40000, Remboursement::sum('amount'));
         $this->assertSame(1, $component->get('results')['success']);
         $this->assertSame(3, $component->get('results')['failures'][0]['row']);
     }
@@ -157,7 +166,7 @@ class MobileAdminTest extends TestCase
 
         $component->set('code', '000000')->call('confirmSetup')->assertHasErrors('code');
 
-        $valid = (new \PragmaRX\Google2FA\Google2FA)->getCurrentOtp($secret);
+        $valid = (new Google2FA)->getCurrentOtp($secret);
         $component->set('code', $valid)->call('confirmSetup')->assertHasNoErrors();
 
         $user = $this->master->fresh();

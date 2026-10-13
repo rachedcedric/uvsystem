@@ -7,6 +7,8 @@ use App\Models\Fournisseur;
 use App\Models\PaymentMethod;
 use App\Models\RemboursementFournisseur;
 use App\Services\FournisseurDebtService;
+use App\Services\ShortReferenceGenerator;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -107,7 +109,7 @@ class RemboursementFournisseurResource extends Resource
 
                                     $reste = app(FournisseurDebtService::class)->detteRestante($fournisseur);
 
-                                    if (\App\Support\Money::toFloat($value) > $reste) {
+                                    if (Money::toFloat($value) > $reste) {
                                         $fail('Le montant du remboursement ne peut pas dépasser le reste à payer.');
                                     }
                                 },
@@ -133,7 +135,7 @@ class RemboursementFournisseurResource extends Resource
                             ->label('Référence')
                             ->required()
                             ->unique(ignoreRecord: true)
-                            ->default(fn () => app(\App\Services\ShortReferenceGenerator::class)->generate('R', 'remboursements_fournisseurs'))
+                            ->default(fn () => app(ShortReferenceGenerator::class)->generate('R', 'remboursements_fournisseurs'))
                             ->disabled()
                             ->dehydrated(),
 

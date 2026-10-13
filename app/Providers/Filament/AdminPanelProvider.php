@@ -2,14 +2,18 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\Login;
+use App\Http\Middleware\BlockReadOnlyFormPages;
 use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\TriggerDebtReminderCycle;
 use App\Services\TenantDocumentBranding;
+use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Assets\Css;
@@ -31,7 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('master')
-            ->login(\App\Filament\Pages\Auth\Login::class)
+            ->login(Login::class)
             ->brandName(fn (): string => auth()->user()?->tenant?->name ?: config('branding.name'))
             ->brandLogo(fn (): string => $this->tenantLogoUrl(false))
             ->darkModeBrandLogo(fn (): string => $this->tenantLogoUrl(true))
@@ -53,7 +57,7 @@ class AdminPanelProvider extends PanelProvider
             ->font('Inter')
             // Un compte lié à une fiche agent (master compris) retrouve son espace agent.
             ->navigationItems([
-                \Filament\Navigation\NavigationItem::make('Mon espace agent')
+                NavigationItem::make('Mon espace agent')
                     ->icon('heroicon-o-user-circle')
                     ->group('Mon activité')
                     ->sort(1)
@@ -115,12 +119,12 @@ class AdminPanelProvider extends PanelProvider
             // Connexion : panneau de marque (visiteurs non connectés) et logo au-dessus du titre (page de connexion seulement).
             ->renderHook(
                 PanelsRenderHook::BODY_START,
-                fn () => \Filament\Facades\Filament::auth()->guest() ? view('filament.admin.login-brand') : '',
+                fn () => Filament::auth()->guest() ? view('filament.admin.login-brand') : '',
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_PAGE_START,
                 fn () => '<img class="pf-logo" src="'.e(asset('images/logo-wide.png')).'" alt="'.e(config('branding.name')).'">',
-                scopes: \App\Filament\Pages\Auth\Login::class,
+                scopes: Login::class,
             )
             ->renderHook(
                 'panels::auth.login.form.after',
@@ -135,7 +139,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_START,
-                fn () => \Filament\Facades\Filament::auth()->check() ? view('components.subscription-banner') : '',
+                fn () => Filament::auth()->check() ? view('components.subscription-banner') : '',
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
@@ -162,7 +166,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
                 TriggerDebtReminderCycle::class,
                 EnforceTwoFactor::class,
-                \App\Http\Middleware\BlockReadOnlyFormPages::class,
+                BlockReadOnlyFormPages::class,
             ]);
     }
 

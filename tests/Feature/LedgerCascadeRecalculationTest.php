@@ -9,6 +9,7 @@ use App\Models\Remboursement;
 use App\Models\User;
 use App\Models\UvTransaction;
 use App\Services\CommissionService;
+use App\Services\LedgerCascadeService;
 use App\Services\MasterSoldeService;
 use App\Services\RemboursementService;
 use App\Services\UvDistributionService;
@@ -193,7 +194,7 @@ describe('LedgerCascadeService — reconstruction du grand livre global', functi
         $t1->forceFill(['solde_uv_avant' => 0, 'solde_uv_apres' => 0])->saveQuietly();
         expect((float) $t1->fresh()->solde_uv_apres)->toBe(0.0);
 
-        app(\App\Services\LedgerCascadeService::class)->rebuildAll();
+        app(LedgerCascadeService::class)->rebuildAll();
 
         expect((float) $t1->fresh()->solde_uv_avant)->toBe(5_000_000.0)
             ->and((float) $t1->fresh()->solde_uv_apres)->toBe(4_000_000.0);

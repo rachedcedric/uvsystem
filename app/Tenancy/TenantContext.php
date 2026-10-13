@@ -3,6 +3,7 @@
 namespace App\Tenancy;
 
 use App\Models\Tenant;
+use App\Services\Subscriptions\SubscriptionAccessPolicy;
 use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -198,6 +199,6 @@ class TenantContext
         self::$stack = [];
         self::$fallback = null;
         self::$console = null;
-        \App\Services\Subscriptions\SubscriptionAccessPolicy::flush();
+        SubscriptionAccessPolicy::flush();
     }
 }

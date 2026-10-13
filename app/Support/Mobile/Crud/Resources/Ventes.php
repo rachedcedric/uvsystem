@@ -8,6 +8,7 @@ use App\Services\MasterSoldeService;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
 use App\Support\Mobile\Fcfa;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 
@@ -73,7 +74,7 @@ class Ventes extends MobileResource
         if ($record->status === 'cancelled') {
             throw ValidationException::withMessages(['amount' => 'Une vente annulée ne peut plus être modifiée.']);
         }
-        if (\Carbon\Carbon::parse($data['transaction_date'])->isFuture()) {
+        if (Carbon::parse($data['transaction_date'])->isFuture()) {
             throw ValidationException::withMessages(['transaction_date' => 'La date ne peut pas être dans le futur.']);
         }
 

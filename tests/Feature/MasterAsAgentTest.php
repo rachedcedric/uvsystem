@@ -2,13 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SubscriptionCycle;
+use App\Exceptions\SubscriptionLimitReached;
 use App\Filament\Agent\Pages\AgentDashboard;
 use App\Filament\Resources\AgentResource\Pages\CreateAgent;
 use App\Filament\Resources\AgentResource\Pages\EditAgent;
 use App\Livewire\Mobile\Crud;
 use App\Models\Agent;
+use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Filament\Facades\Filament;
@@ -200,12 +204,12 @@ class MasterAsAgentTest extends TestCase
 
     public function test_the_master_as_agent_counts_in_the_plan_limit_like_any_agent(): void
     {
-        \App\Models\SubscriptionPlan::query()->where('slug', 'essentiel')->update(['max_agents' => 1]);
-        app(\App\Services\Subscriptions\SubscriptionManager::class)->activate($this->tenant, \App\Models\SubscriptionPlan::where('slug', 'essentiel')->first(), \App\Enums\SubscriptionCycle::Monthly);
+        SubscriptionPlan::query()->where('slug', 'essentiel')->update(['max_agents' => 1]);
+        app(SubscriptionManager::class)->activate($this->tenant, SubscriptionPlan::where('slug', 'essentiel')->first(), SubscriptionCycle::Monthly);
         $this->act($this->master);
         Livewire::test(CreateAgent::class)->fillForm($this->agentData(['user_id' => $this->master->id]))->call('create');
 
-        $this->assertThrows(fn () => TenantContext::runAs($this->tenant->id, fn () => Agent::factory()->create()), \App\Exceptions\SubscriptionLimitReached::class);
+        $this->assertThrows(fn () => TenantContext::runAs($this->tenant->id, fn () => Agent::factory()->create()), SubscriptionLimitReached::class);
     }
 
     // ------------------------------------------------------------------ mobile

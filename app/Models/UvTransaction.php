@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\CommissionBusinessDateResolver;
+use App\Services\ShortReferenceGenerator;
 use App\Tenancy\BelongsToTenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -57,7 +59,7 @@ class UvTransaction extends Model
      */
     public function getCommissionBusinessDateAttribute(): Carbon
     {
-        return app(\App\Services\CommissionBusinessDateResolver::class)->resolve($this->created_at);
+        return app(CommissionBusinessDateResolver::class)->resolve($this->created_at);
     }
 
     /**
@@ -83,7 +85,7 @@ class UvTransaction extends Model
 
         static::creating(function ($transaction) {
             if (! $transaction->reference) {
-                $transaction->reference = app(\App\Services\ShortReferenceGenerator::class)->generate('V', 'uv_transactions');
+                $transaction->reference = app(ShortReferenceGenerator::class)->generate('V', 'uv_transactions');
             }
             if (! $transaction->transaction_date) {
                 $transaction->transaction_date = now();

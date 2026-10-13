@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Models\User;
+use App\Services\MasterSoldeService;
 use App\Services\UvDistributionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -81,6 +82,6 @@ describe('Masquage UI de "Retour" à la création (backend intact)', function ()
 
         expect($retour->transaction_type)->toBe('retour')
             ->and((float) $retour->amount)->toBe(50_000.0)
-            ->and(app(\App\Services\MasterSoldeService::class)->getAvailableBalance())->toBe(850_000.0);
+            ->and(app(MasterSoldeService::class)->getAvailableBalance())->toBe(850_000.0);
     });
 });

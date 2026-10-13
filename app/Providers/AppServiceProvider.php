@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Http\Middleware\EnforceTwoFactor;
+use App\Http\Middleware\MobileAccess;
 use App\Models\Approvisionnement;
 use App\Models\Remboursement;
 use App\Models\RemboursementAgent;
@@ -16,13 +18,22 @@ use App\Observers\RemboursementObserver;
 use App\Observers\UvTransactionObserver;
 use App\Observers\UvTransactionSecurityObserver;
 use App\Observers\VenteUvObserver;
+use App\Services\Subscriptions\SubscriptionNotifier;
 use App\Support\Money;
+use App\Support\Subscriptions\GatedExcel;
+use App\Support\Subscriptions\GatedPdf;
 use Filament\Forms\Components\TextInput;
 use Filament\Support\RawJs;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
+use Maatwebsite\Excel\Files\Filesystem;
+use Maatwebsite\Excel\QueuedWriter;
+use Maatwebsite\Excel\Reader;
+use Maatwebsite\Excel\Writer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,15 +46,15 @@ class AppServiceProvider extends ServiceProvider
         require_once app_path('Cms/helpers.php');
 
         // Un seul notifieur par processus : il cumule les échecs d'envoi rapportés par subscriptions:process.
-        $this->app->singleton(\App\Services\Subscriptions\SubscriptionNotifier::class);
+        $this->app->singleton(SubscriptionNotifier::class);
 
         // Toute génération de PDF / Excel passe par les fonctionnalités d'export de l'offre (voir ExportGate).
-        $this->app->extend('dompdf.wrapper', fn ($pdf, $app) => new \App\Support\Subscriptions\GatedPdf($app['dompdf'], $app['config'], $app['files'], $app['view']));
-        $this->app->extend('excel', fn ($excel, $app) => new \App\Support\Subscriptions\GatedExcel(
-            $app->make(\Maatwebsite\Excel\Writer::class),
-            $app->make(\Maatwebsite\Excel\QueuedWriter::class),
-            $app->make(\Maatwebsite\Excel\Reader::class),
-            $app->make(\Maatwebsite\Excel\Files\Filesystem::class),
+        $this->app->extend('dompdf.wrapper', fn ($pdf, $app) => new GatedPdf($app['dompdf'], $app['config'], $app['files'], $app['view']));
+        $this->app->extend('excel', fn ($excel, $app) => new GatedExcel(
+            $app->make(Writer::class),
+            $app->make(QueuedWriter::class),
+            $app->make(Reader::class),
+            $app->make(Filesystem::class),
         ));
 
         //
@@ -86,10 +97,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Les actions Livewire (/livewire/update) ne repassent pas par les middlewares de route :
         // sans ceci, un tenant suspendu garderait la main sur une page /m déjà ouverte.
-        \Livewire\Livewire::addPersistentMiddleware([\App\Http\Middleware\MobileAccess::class, \App\Http\Middleware\EnforceTwoFactor::class]);
+        Livewire::addPersistentMiddleware([MobileAccess::class, EnforceTwoFactor::class]);
 
         if (! config('app.debug')) {
-            \Livewire\Livewire::setScriptRoute(fn ($handle) => \Illuminate\Support\Facades\Route::get('/livewire/livewire.min.js', $handle));
+            Livewire::setScriptRoute(fn ($handle) => Route::get('/livewire/livewire.min.js', $handle));
         }
 
         $this->configureRateLimiting();

@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\Subscriptions\Payments\ManualSubscriptionPaymentGateway;
+
 return [
     /*
     | Offre attribuée par la migration aux tenants existants dont `tenants.plan` est vide ou inconnu.
@@ -47,7 +49,7 @@ return [
     // Passerelles de paiement : nom => classe implémentant SubscriptionPaymentGateway. Seule « manual » est fournie ;
     // ajouter CinetPay/PayDunya ici plus tard, après configuration explicite.
     'gateways' => [
-        'manual' => \App\Services\Subscriptions\Payments\ManualSubscriptionPaymentGateway::class,
+        'manual' => ManualSubscriptionPaymentGateway::class,
     ],
 
     // Variantes visuelles proposées pour une offre (clé stockée => libellé).

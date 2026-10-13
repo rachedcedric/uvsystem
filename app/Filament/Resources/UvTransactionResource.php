@@ -7,6 +7,7 @@ use App\Models\Agent;
 use App\Models\UvTransaction;
 use App\Services\MasterSoldeService;
 use App\Services\UvDistributionService;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -115,7 +116,7 @@ class UvTransactionResource extends Resource
 
                                     // Vérifier le solde Master (Money::toFloat car $value
                                     // est encore la saisie formatée avec espaces à ce stade)
-                                    $amount = \App\Support\Money::toFloat($value);
+                                    $amount = Money::toFloat($value);
                                     $masterService = new MasterSoldeService;
                                     if (! $masterService->hasSufficientBalance($amount)) {
                                         $available = $masterService->getAvailableBalance();
@@ -392,8 +393,8 @@ class UvTransactionResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['min_amount'], fn ($q, $min) => $q->where('amount', '>=', \App\Support\Money::toFloat($min)))
-                            ->when($data['max_amount'], fn ($q, $max) => $q->where('amount', '<=', \App\Support\Money::toFloat($max)));
+                            ->when($data['min_amount'], fn ($q, $min) => $q->where('amount', '>=', Money::toFloat($min)))
+                            ->when($data['max_amount'], fn ($q, $max) => $q->where('amount', '<=', Money::toFloat($max)));
                     }),
 
                 Tables\Filters\Filter::make('transaction_date')

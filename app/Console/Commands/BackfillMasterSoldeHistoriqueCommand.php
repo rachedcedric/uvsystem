@@ -6,6 +6,7 @@ use App\Console\Commands\Concerns\RunsPerTenant;
 use App\Services\MasterSoldeService;
 use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -124,7 +125,7 @@ class BackfillMasterSoldeHistoriqueCommand extends Command
      * solde avant/après affichable) mais avec un delta de 0 : ils n'ont
      * jamais réellement affecté le solde.
      */
-    private function chargerEvenements(): \Illuminate\Support\Collection
+    private function chargerEvenements(): Collection
     {
         $approvisionnements = TenantContext::table('approvisionnements')
             ->whereNull('deleted_at')

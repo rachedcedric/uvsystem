@@ -8,6 +8,7 @@ use App\Models\Remboursement;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
 use App\Support\Mobile\Fcfa;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -72,7 +73,7 @@ class Remboursements extends MobileResource
 
     public static function save(array $data, ?Model $record): Model
     {
-        if (\Carbon\Carbon::parse($data['payment_date'])->isFuture()) {
+        if (Carbon::parse($data['payment_date'])->isFuture()) {
             throw ValidationException::withMessages(['payment_date' => 'La date ne peut pas être dans le futur.']);
         }
 

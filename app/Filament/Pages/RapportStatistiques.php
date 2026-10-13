@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\Commission;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -36,7 +37,7 @@ class RapportStatistiques extends Page implements HasForms
 
     public function mount(): void
     {
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('statistiques_avancees');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('statistiques_avancees');
 
         $this->dateFrom = now()->startOfMonth();
         $this->dateTo = now();

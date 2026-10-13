@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Charge;
@@ -10,9 +11,11 @@ use App\Models\Commission;
 use App\Models\Fournisseur;
 use App\Models\PaymentMethod;
 use App\Models\User;
+use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
 use App\Services\RemboursementService;
 use App\Services\UvDistributionService;
+use App\Support\Mobile\Crud\Registry;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -42,9 +45,9 @@ class MobileSmokeTest extends TestCase
         $charge = Charge::create(['category_id' => $cat->id, 'libelle' => 'Loyer', 'montant' => 90000, 'date_charge' => today(), 'created_by' => $master->id]);
         $mouvement = app(CaisseService::class)->enregistrer('entree', 40000, 'Apport');
         $commission = Commission::create(['is_global' => true, 'date_commission' => today(), 'volume_total_jour' => 1200000, 'commission_globale' => 6360, 'montant_vente' => 1200000, 'montant_commission' => 6360, 'nombre_transactions' => 3, 'seuil_min' => 1000000, 'seuil_max' => 1499999]);
-        $day = app(\App\Services\CaissePeriodResolver::class)->currentDate()->toDateString();
+        $day = app(CaissePeriodResolver::class)->currentDate()->toDateString();
         activity()->causedBy($master)->log('Test');
-        $activity = \App\Models\Activity::latest('id')->first();
+        $activity = Activity::latest('id')->first();
 
         $urls = [
             route('m.home'), route('m.more'), route('m.notifications'),
@@ -67,7 +70,7 @@ class MobileSmokeTest extends TestCase
             route('m.crud.edit', ['approvisionnements', Approvisionnement::first()->id]), route('m.crud.edit', ['mouvements-caisse', $mouvement->id]),
         ];
 
-        foreach (\App\Support\Mobile\Crud\Registry::all() as $resource) {
+        foreach (Registry::all() as $resource) {
             if ($resource::hidden() || $resource::slug() === 'agents') {
                 continue;
             }

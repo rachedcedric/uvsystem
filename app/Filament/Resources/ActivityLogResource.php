@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityLogResource\Pages;
 use App\Models\Activity;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -136,7 +137,7 @@ class ActivityLogResource extends Resource
                 Tables\Filters\SelectFilter::make('causer_id')
                     ->label('Utilisateur')
                     ->options(function () {
-                        return \App\Models\User::pluck('name', 'id')->toArray();
+                        return User::pluck('name', 'id')->toArray();
                     })
                     ->searchable(),
 

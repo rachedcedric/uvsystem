@@ -19,7 +19,10 @@ use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -37,7 +40,7 @@ class CmsTest extends TestCase
         TenantContext::setFallback(null);
         Content::flush();
         Filament::setCurrentPanel(Filament::getPanel('platform'));
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
         config(['security.authentication.2fa_enabled' => false]);
     }
 
@@ -310,7 +313,7 @@ class CmsTest extends TestCase
 
         $this->get(route('inscription.envoye'))->assertOk()->assertSee('Regardez vos mails');
         $token = 'abc';
-        $url = \Illuminate\Support\Facades\URL::temporarySignedRoute('inscription.verifier', now()->addHour(), ['token' => $token]);
+        $url = URL::temporarySignedRoute('inscription.verifier', now()->addHour(), ['token' => $token]);
         $this->get($url)->assertOk()->assertSee('Dernière étape')->assertSee('Je valide');
     }
 
@@ -351,7 +354,7 @@ class CmsTest extends TestCase
             'emails.subscription_change_requested.body_free' => 'Changement immédiat vers {plan}.',
         ]);
 
-        $verify = (new VerifySignupNotification('https://x.test/v', 'Boutique Soleil', 24))->toMail(new \Illuminate\Notifications\AnonymousNotifiable);
+        $verify = (new VerifySignupNotification('https://x.test/v', 'Boutique Soleil', 24))->toMail(new AnonymousNotifiable);
         $this->assertSame('Validez Boutique Soleil', $verify->subject);
         $this->assertSame('Salut,', $verify->greeting);
         $this->assertSame(['Bienvenue chez Boutique Soleil.'], $verify->introLines);

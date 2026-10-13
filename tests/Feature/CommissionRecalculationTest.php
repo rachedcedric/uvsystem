@@ -7,6 +7,7 @@ use App\Models\Commission;
 use App\Models\CommissionRecalculation;
 use App\Models\Fournisseur;
 use App\Models\User;
+use App\Models\UvTransaction;
 use App\Observers\CommissionRecalculationObserver;
 use App\Services\CommissionService;
 use App\Services\UvDistributionService;
@@ -74,7 +75,7 @@ function approvisionnerPourCommission(float $amount): void
  * après coup : on gèle Carbon::now() pour la durée de la création, comme
  * le ferait une vraie vente saisie à ce moment-là.
  */
-function venteCommissionA(Carbon $instant, Agent $agent, float $amount): \App\Models\UvTransaction
+function venteCommissionA(Carbon $instant, Agent $agent, float $amount): UvTransaction
 {
     approvisionnerPourCommission($amount);
 

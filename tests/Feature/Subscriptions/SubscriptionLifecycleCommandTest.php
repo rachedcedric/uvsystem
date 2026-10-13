@@ -4,6 +4,8 @@ namespace Tests\Feature\Subscriptions;
 
 use App\Enums\SubscriptionCycle;
 use App\Enums\SubscriptionStatus;
+use App\Exceptions\InvalidSubscriptionTransition;
+use App\Models\Agent;
 use App\Models\SubscriptionNotificationLog;
 use App\Models\SubscriptionPayment;
 use App\Models\Tenant;
@@ -22,6 +24,8 @@ use App\Services\Subscriptions\Payments\ManualSubscriptionPaymentGateway;
 use App\Services\Subscriptions\SubscriptionBilling;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantContext;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use InvalidArgumentException;
@@ -46,7 +50,7 @@ class SubscriptionLifecycleCommandTest extends SubscriptionTestCase
 
     protected function tearDown(): void
     {
-        \Illuminate\Support\Carbon::setTestNow();
+        Carbon::setTestNow();
         parent::tearDown();
     }
 
@@ -124,13 +128,13 @@ class SubscriptionLifecycleCommandTest extends SubscriptionTestCase
 
     public function test_expiry_deletes_nothing(): void
     {
-        $agent = TenantContext::runAs($this->tenant->id, fn () => \App\Models\Agent::factory()->create());
+        $agent = TenantContext::runAs($this->tenant->id, fn () => Agent::factory()->create());
         $this->manager->startTrial($this->tenant, $this->plan('pro'), days: 1);
         $this->travelToDate('2026-10-12 02:00:00');
 
         $this->process();
 
-        $this->assertNotNull(\App\Models\Agent::withoutGlobalScopes()->find($agent->id));
+        $this->assertNotNull(Agent::withoutGlobalScopes()->find($agent->id));
         $this->assertNotNull(User::withoutGlobalScopes()->find($this->master->id));
         $this->assertSame(1, TenantSubscription::withoutGlobalScopes()->count() - TenantSubscription::withoutGlobalScopes()->where('tenant_id', 1)->count());
     }
@@ -153,7 +157,7 @@ class SubscriptionLifecycleCommandTest extends SubscriptionTestCase
         $this->travelToDate('2026-10-12 02:00:00');
 
         // Provoque une erreur sur un abonnement : valeur de cycle corrompue au niveau SQL (cas anormal, indépendant du moteur).
-        \Illuminate\Support\Facades\DB::table('tenant_subscriptions')->where('id', $broken->id)->update(['cycle' => 'invalide']);
+        DB::table('tenant_subscriptions')->where('id', $broken->id)->update(['cycle' => 'invalide']);
         Log::spy();
 
         $this->artisan('subscriptions:process')->assertFailed();
@@ -212,7 +216,7 @@ class SubscriptionLifecycleCommandTest extends SubscriptionTestCase
         $this->assertSame(SubscriptionPayment::FAILED, $payment->fresh()->status);
         $this->assertSame('2026-11-10', $this->manager->current($this->tenant)->current_period_ends_at->toDateString());
         $this->assertSame(1, $this->sentCount(PaymentFailed::class));
-        $this->assertThrows(fn () => $billing->confirm($payment->fresh(), ['reference' => 'R', 'confirmed_by' => $this->superAdmin()]), \App\Exceptions\InvalidSubscriptionTransition::class);
+        $this->assertThrows(fn () => $billing->confirm($payment->fresh(), ['reference' => 'R', 'confirmed_by' => $this->superAdmin()]), InvalidSubscriptionTransition::class);
     }
 
     public function test_the_billing_depends_on_the_contract_not_on_a_provider(): void

@@ -22,6 +22,8 @@ use App\Models\SousDistributeurSolde;
 use App\Models\SousDistributeurTransaction;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\UvTransaction;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -34,13 +36,13 @@ use ZipArchive;
  */
 class TenantDataExporter
 {
-    /** @var array<string, class-string<\Illuminate\Database\Eloquent\Model>> */
+    /** @var array<string, class-string<Model>> */
     private const TABLES = [
         'agents' => Agent::class,
         'agent_soldes' => AgentSolde::class,
         'fournisseurs' => Fournisseur::class,
         'approvisionnements' => Approvisionnement::class,
-        'uv_transactions' => \App\Models\UvTransaction::class,
+        'uv_transactions' => UvTransaction::class,
         'remboursements' => Remboursement::class,
         'remboursements_fournisseurs' => RemboursementFournisseur::class,
         'commissions' => Commission::class,
@@ -99,7 +101,7 @@ class TenantDataExporter
         return $zipPath;
     }
 
-    /** @param  class-string<\Illuminate\Database\Eloquent\Model>  $model */
+    /** @param  class-string<Model>  $model */
     private function writeCsv(string $model, string $file): int
     {
         $handle = fopen($file, 'w');

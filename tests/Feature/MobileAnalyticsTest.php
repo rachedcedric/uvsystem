@@ -7,6 +7,7 @@ use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Models\User;
+use App\Models\UvTransaction;
 use App\Services\AnalyticsService;
 use App\Services\Mobile\StatisticsService;
 use App\Services\UvDistributionService;
@@ -61,7 +62,7 @@ class MobileAnalyticsTest extends TestCase
         (new UvDistributionService)->cancel($cancelled);
 
         // Une vente enregistrée en fin de journée doit compter dans « aujourd'hui ».
-        \App\Models\UvTransaction::where('amount', 50000)->update(['transaction_date' => now()->setTime(23, 30)]);
+        UvTransaction::where('amount', 50000)->update(['transaction_date' => now()->setTime(23, 30)]);
 
         [$from, $to] = StatisticsService::range('day');
         $overview = (new StatisticsService($from, $to))->overview();

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Mobile\Crud;
 
+use App\Exceptions\SubscriptionException;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
 use App\Support\Mobile\Crud\Registry;
@@ -96,7 +97,7 @@ class Form extends Component
 
         try {
             $saved = $r::save($clean, $record);
-        } catch (\App\Exceptions\SubscriptionException $e) {
+        } catch (SubscriptionException $e) {
             $this->addError('form', collect($e->errors())->flatten()->implode(' '));
 
             return null;

@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Parcours de souscription : offre -> cycle -> entreprise -> premier master -> conditions -> essai -> connexion.
@@ -103,7 +104,7 @@ class SubscribeController extends Controller
     {
         try {
             $signup->complete($token, $created);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return redirect()->route('offres')->withErrors($e->errors());
         } catch (\Throwable $e) {
             // La transaction est annulée : rien n'a été créé et le lien reste utilisable pour un nouvel essai.

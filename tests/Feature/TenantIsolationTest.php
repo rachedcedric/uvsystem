@@ -2,21 +2,32 @@
 
 namespace Tests\Feature;
 
+use App\Console\Commands\Concerns\RunsPerTenant;
+use App\Filament\Platform\Resources\TenantResource\Pages\CreateTenant;
+use App\Filament\Platform\Resources\TenantResource\Pages\ListTenants;
 use App\Models\Activity;
 use App\Models\Agent;
+use App\Models\CaisseCategorie;
 use App\Models\Fournisseur;
 use App\Models\PaymentMethod;
 use App\Models\Remboursement;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Security\TwoFactorGate;
 use App\Tenancy\TenantContext;
 use App\Tenancy\TenantContextMissing;
 use App\Tenancy\TenantProvisioner;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Filament\Facades\Filament;
+use Illuminate\Console\Command;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
+use Livewire\Livewire;
 use LogicException;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Tests\TestCase;
 
 /**
@@ -269,7 +280,7 @@ class TenantIsolationTest extends TestCase
 
         $this->assertSame(2, Agent::withoutGlobalScopes()->where('phone', '0799999999')->count());
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
         TenantContext::runAs($this->a->id, fn () => Agent::forceCreate(['name' => 'A2', 'phone' => '0799999999']));
     }
 
@@ -297,7 +308,7 @@ class TenantIsolationTest extends TestCase
         $super = $this->superAdmin();
         // La 2FA est obligatoire pour le super admin : on la considère activée et prouvée.
         $super->forceFill(['two_factor_secret' => 'JBSWY3DPEHPK3PXP', 'two_factor_enabled' => true])->save();
-        $verified = [\App\Security\TwoFactorGate::SESSION_KEY => $super->id];
+        $verified = [TwoFactorGate::SESSION_KEY => $super->id];
 
         $this->withSession($verified)->actingAs($super)->get('/platform')->assertOk();
         $this->withSession($verified)->actingAs($super)->get('/platform/tenants')->assertOk();
@@ -332,7 +343,7 @@ class TenantIsolationTest extends TestCase
 
         $this->actingAs($admin);
         $this->assertSame(['bank_transfer', 'cash', 'cheque', 'mobile_money'], PaymentMethod::orderBy('code')->pluck('code')->all());
-        $this->assertSame(1, \App\Models\CaisseCategorie::where('is_system', true)->count());
+        $this->assertSame(1, CaisseCategorie::where('is_system', true)->count());
 
         // Les données de référence de C n'ont pas touché A.
         $this->actingAs($this->userA);
@@ -346,9 +357,9 @@ class TenantIsolationTest extends TestCase
         $suspended = Tenant::create(['name' => 'Société suspendue']);
         $suspended->suspend();
 
-        $probe = new class extends \Illuminate\Console\Command
+        $probe = new class extends Command
         {
-            use \App\Console\Commands\Concerns\RunsPerTenant;
+            use RunsPerTenant;
 
             protected $signature = 'probe:tenant';
 
@@ -363,7 +374,7 @@ class TenantIsolationTest extends TestCase
         };
         $probe->setLaravel(app());
 
-        $probe->run(new \Symfony\Component\Console\Input\ArrayInput([]), new \Symfony\Component\Console\Output\NullOutput);
+        $probe->run(new ArrayInput([]), new NullOutput);
 
         $byTenant = collect($probe->seen)->mapWithKeys(fn ($row) => [$row[0] => $row[1]]);
         $this->assertEqualsCanonicalizing([1, $this->a->id, $this->b->id], $byTenant->keys()->all());
@@ -397,10 +408,10 @@ class TenantIsolationTest extends TestCase
 
     public function test_super_admin_creates_and_suspends_a_tenant_from_the_platform_panel(): void
     {
-        \Filament\Facades\Filament::setCurrentPanel(\Filament\Facades\Filament::getPanel('platform'));
+        Filament::setCurrentPanel(Filament::getPanel('platform'));
         $this->actingAs($this->superAdmin());
 
-        \Livewire\Livewire::test(\App\Filament\Platform\Resources\TenantResource\Pages\CreateTenant::class)
+        Livewire::test(CreateTenant::class)
             ->fillForm([
                 'name' => 'Société D', 'status' => 'active',
                 'admin_name' => 'Admin D', 'admin_email' => 'admin-d@example.com', 'admin_password' => 'un-mot-de-passe-long',
@@ -412,12 +423,12 @@ class TenantIsolationTest extends TestCase
         $this->assertNotNull($tenant);
         $this->assertTrue(User::withoutGlobalScopes()->where('email', 'admin-d@example.com')->first()->hasRole('master'));
 
-        \Livewire\Livewire::test(\App\Filament\Platform\Resources\TenantResource\Pages\ListTenants::class)
+        Livewire::test(ListTenants::class)
             ->callTableAction('suspend', $tenant);
         $this->assertFalse($tenant->fresh()->isActive());
 
         // Un master de tenant ne peut pas utiliser cette page.
         $this->actingAs($this->userA);
-        \Livewire\Livewire::test(\App\Filament\Platform\Resources\TenantResource\Pages\ListTenants::class)->assertForbidden();
+        Livewire::test(ListTenants::class)->assertForbidden();
     }
 }

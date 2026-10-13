@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\UvTransaction;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -10,6 +11,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class UvTransactionsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
@@ -25,9 +27,9 @@ class UvTransactionsExport implements FromQuery, ShouldAutoSize, WithHeadings, W
     protected ?string $transactionType = null;
 
     /** Bornes horodatées exactes (jour métier) : prioritaires sur les dates calendaires. */
-    protected ?\Carbon\Carbon $rangeStart = null;
+    protected ?Carbon $rangeStart = null;
 
-    protected ?\Carbon\Carbon $rangeEnd = null;
+    protected ?Carbon $rangeEnd = null;
 
     protected bool $excludeCancelled = false;
 
@@ -36,8 +38,8 @@ class UvTransactionsExport implements FromQuery, ShouldAutoSize, WithHeadings, W
         ?string $startDate = null,
         ?string $endDate = null,
         ?string $transactionType = null,
-        ?\Carbon\Carbon $rangeStart = null,
-        ?\Carbon\Carbon $rangeEnd = null,
+        ?Carbon $rangeStart = null,
+        ?Carbon $rangeEnd = null,
         bool $excludeCancelled = false,
     ) {
         $this->agentId = $agentId;
@@ -96,7 +98,7 @@ class UvTransactionsExport implements FromQuery, ShouldAutoSize, WithHeadings, W
             1 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => '3B82F6'],
                 ],
             ],

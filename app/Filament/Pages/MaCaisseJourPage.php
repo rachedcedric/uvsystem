@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
 use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
@@ -102,7 +103,7 @@ class MaCaisseJourPage extends Page implements HasTable
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('caisse_categorie_id')->label('Catégorie')
-                    ->options(fn () => \App\Models\CaisseCategorie::orderBy('sort_order')->pluck('name', 'id')->all()),
+                    ->options(fn () => CaisseCategorie::orderBy('sort_order')->pluck('name', 'id')->all()),
                 Tables\Filters\SelectFilter::make('type')->label('Type')
                     ->options([CaisseMouvement::TYPE_ENTREE => 'Entrée', CaisseMouvement::TYPE_SORTIE => 'Sortie']),
             ])

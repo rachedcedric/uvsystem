@@ -13,6 +13,8 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationsPage extends Page implements HasTable
@@ -136,18 +138,18 @@ class NotificationsPage extends Page implements HasTable
         ];
     }
 
-    private function lastReminderAt(Agent $agent): ?\Illuminate\Support\Carbon
+    private function lastReminderAt(Agent $agent): ?Carbon
     {
-        $createdAt = \Illuminate\Notifications\DatabaseNotification::query()
+        $createdAt = DatabaseNotification::query()
             ->where('type', DebtReminderNotification::class)
             ->where('data->agent_id', $agent->id)
             ->latest()
             ->value('created_at');
 
-        return $createdAt ? \Illuminate\Support\Carbon::parse($createdAt) : null;
+        return $createdAt ? Carbon::parse($createdAt) : null;
     }
 
-    private function nextReminderAt(): \Illuminate\Support\Carbon
+    private function nextReminderAt(): Carbon
     {
         $next = now()->copy()->startOfHour();
         $next->hour += $next->hour % 2 === 0 ? 2 : 1;

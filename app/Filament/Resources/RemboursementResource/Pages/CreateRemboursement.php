@@ -8,6 +8,7 @@ use App\Models\Remboursement;
 use App\Models\UvTransaction;
 use App\Services\RemboursementService;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
@@ -135,7 +136,7 @@ class CreateRemboursement extends CreateRecord
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('backToDettes')
+            Action::make('backToDettes')
                 ->label('← Retour aux Dettes')
                 ->color('gray')
                 ->url('/master/dettes'),

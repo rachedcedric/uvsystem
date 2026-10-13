@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\UvTransaction;
 use App\Services\MasterSoldeService;
 use App\Services\UvDistributionService;
+use App\Support\Mobile\Fcfa;
 use App\Support\Mobile\OperationDateTime;
 use App\Support\Money;
 use Illuminate\Support\Facades\Gate;
@@ -95,11 +96,11 @@ class Create extends Component
         }
 
         if ($amount > $this->masterBalance) {
-            return 'Solde UV insuffisant : '.\App\Support\Mobile\Fcfa::format($this->masterBalance).' disponibles.';
+            return 'Solde UV insuffisant : '.Fcfa::format($this->masterBalance).' disponibles.';
         }
 
         if ($this->agent && ! $this->unlimited && $this->credit !== null && $amount > $this->credit) {
-            return 'Ce montant dépasse le crédit disponible de l\'agent ('.\App\Support\Mobile\Fcfa::format($this->credit).').';
+            return 'Ce montant dépasse le crédit disponible de l\'agent ('.Fcfa::format($this->credit).').';
         }
 
         return null;

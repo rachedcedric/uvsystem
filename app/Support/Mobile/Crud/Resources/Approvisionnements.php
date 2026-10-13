@@ -9,6 +9,7 @@ use App\Services\MasterSoldeService;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
 use App\Support\Mobile\Fcfa;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
 
@@ -70,7 +71,7 @@ class Approvisionnements extends MobileResource
             'Référence' => (string) $record->reference,
             'Fournisseur' => (string) $record->fournisseur?->name,
             'Montant' => Fcfa::format($record->amount),
-            'Date et heure' => \Carbon\Carbon::parse($record->date_approvisionnement)->translatedFormat('j F Y, H:i'),
+            'Date et heure' => Carbon::parse($record->date_approvisionnement)->translatedFormat('j F Y, H:i'),
             'Enregistré par' => (string) $record->user?->name,
             'Notes' => (string) $record->notes,
         ];
@@ -78,7 +79,7 @@ class Approvisionnements extends MobileResource
 
     public static function save(array $data, ?Model $record): Model
     {
-        if (\Carbon\Carbon::parse($data['date_approvisionnement'])->isFuture()) {
+        if (Carbon::parse($data['date_approvisionnement'])->isFuture()) {
             throw ValidationException::withMessages(['date_approvisionnement' => 'La date et l’heure ne peuvent pas être dans le futur.']);
         }
 

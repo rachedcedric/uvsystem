@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Contracts\PushNotification as PushNotificationContract;
 use App\Models\Agent;
 use App\Notifications\Channels\FirebasePushChannel;
+use App\Notifications\Concerns\RequiresPlanFeature;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -24,7 +25,7 @@ class DebtAlertNotification extends Notification implements PushNotificationCont
             : 0);
     }
 
-    use \App\Notifications\Concerns\RequiresPlanFeature;
+    use RequiresPlanFeature;
 
     protected function requiredFeature(): string
     {

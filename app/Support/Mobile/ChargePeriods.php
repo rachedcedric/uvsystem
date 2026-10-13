@@ -3,6 +3,7 @@
 namespace App\Support\Mobile;
 
 use App\Services\ChargeStatisticsService;
+use Carbon\Carbon;
 
 /**
  * Périodes de la page Charges (mêmes bornes que le filtre de la page « Gestion des Charges » du bureau),
@@ -29,7 +30,7 @@ final class ChargePeriods
     /**
      * Revenu / Charges / Net et bornes de la période (« all » = depuis le début jusqu'à aujourd'hui).
      *
-     * @return array{revenue: float, charges: float, net: float, period_label: string, start: \Carbon\Carbon, end: \Carbon\Carbon}
+     * @return array{revenue: float, charges: float, net: float, period_label: string, start: Carbon, end: Carbon}
      */
     public static function summary(string $period): array
     {

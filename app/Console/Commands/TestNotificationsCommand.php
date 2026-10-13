@@ -9,6 +9,7 @@ use App\Notifications\DebtAlertNotification;
 use App\Notifications\PaymentReminderNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class TestNotificationsCommand extends Command
 {
@@ -55,7 +56,7 @@ class TestNotificationsCommand extends Command
             [
                 'name' => 'Test User',
                 // Compte de test : aucun mot de passe connu (il ne sert qu'à recevoir la notification, jamais à se connecter).
-                'password' => \Illuminate\Support\Str::random(64),
+                'password' => Str::random(64),
             ]
         );
 

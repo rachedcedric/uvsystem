@@ -3,12 +3,19 @@
 namespace Tests\Feature;
 
 use App\Livewire\Mobile\Home;
+use App\Livewire\Mobile\HomeActivity;
+use App\Livewire\Mobile\HomeAlerts;
+use App\Livewire\Mobile\HomeChart;
+use App\Livewire\Mobile\HomeTopAgents;
 use App\Livewire\Mobile\Login;
 use App\Livewire\Mobile\More;
 use App\Models\Agent;
 use App\Models\User;
 use App\Support\Mobile\Fcfa;
+use App\Support\Mobile\Nav;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -124,10 +131,10 @@ class MobileFoundationTest extends TestCase
             return Livewire::actingAs($user)->test($component);
         };
 
-        $render(\App\Livewire\Mobile\HomeAlerts::class)->assertSee('Awa Koné')->assertSee('95 %');
-        $render(\App\Livewire\Mobile\HomeChart::class)->assertOk();
-        $render(\App\Livewire\Mobile\HomeActivity::class)->assertSee('Activité récente');
-        $render(\App\Livewire\Mobile\HomeTopAgents::class)->assertSee('Meilleurs agents du mois');
+        $render(HomeAlerts::class)->assertSee('Awa Koné')->assertSee('95 %');
+        $render(HomeChart::class)->assertOk();
+        $render(HomeActivity::class)->assertSee('Activité récente');
+        $render(HomeTopAgents::class)->assertSee('Meilleurs agents du mois');
     }
 
     public function test_more_page_lists_full_version_screens_and_logout(): void
@@ -162,14 +169,14 @@ class MobileFoundationTest extends TestCase
         $response->assertNoContent();
         $this->assertSame([], $response->headers->getCookies());
         $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
-        $this->assertSame(0, \Illuminate\Support\Facades\DB::table('sessions')->count());
+        $this->assertSame(0, DB::table('sessions')->count());
     }
 
     public function test_accueil_is_always_the_centre_tab(): void
     {
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
-        $labels = fn (User $u) => array_column(\App\Support\Mobile\Nav::tabs($u), 'label');
+        $labels = fn (User $u) => array_column(Nav::tabs($u), 'label');
 
         // Tous les onglets : Agents, Ventes, [Accueil], Caisse, Plus.
         $master = User::factory()->create();

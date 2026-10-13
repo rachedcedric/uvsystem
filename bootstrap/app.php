@@ -1,8 +1,14 @@
 <?php
 
+use App\Http\Middleware\CheckTransactionSecurity;
+use App\Http\Middleware\DenyReadOnly;
+use App\Http\Middleware\EnforceTwoFactor;
+use App\Http\Middleware\EnsureStaffUser;
+use App\Http\Middleware\MobileAccess;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -23,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // CORS pour les requêtes API
         $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\HandleCors::class,
+            HandleCors::class,
         ]);
 
         // Invité sur une route web protégée => page de connexion Filament (il n'existe pas de route "login" nommée).
@@ -34,11 +40,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Middleware de sécurité pour les transactions financières
         $middleware->alias([
-            'transaction.security' => \App\Http\Middleware\CheckTransactionSecurity::class,
-            'mobile.access' => \App\Http\Middleware\MobileAccess::class,
-            'staff' => \App\Http\Middleware\EnsureStaffUser::class,
-            'not.read-only' => \App\Http\Middleware\DenyReadOnly::class,
-            '2fa' => \App\Http\Middleware\EnforceTwoFactor::class,
+            'transaction.security' => CheckTransactionSecurity::class,
+            'mobile.access' => MobileAccess::class,
+            'staff' => EnsureStaffUser::class,
+            'not.read-only' => DenyReadOnly::class,
+            '2fa' => EnforceTwoFactor::class,
         ]);
 
         // Exclure les webhooks de la vérification CSRF

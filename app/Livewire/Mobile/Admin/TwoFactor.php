@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Mobile\Admin;
 
+use App\Security\TwoFactorGate;
 use App\Services\TwoFactorAuthService;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -58,9 +60,9 @@ class TwoFactor extends Component
     {
         // Désactiver est refusé si le rôle impose la 2FA ; sinon on exige le mot de passe (une session
         // volée ne doit pas pouvoir retirer le second facteur).
-        abort_unless(app(\App\Security\TwoFactorGate::class)->mayDisable(auth()->user()), 403);
+        abort_unless(app(TwoFactorGate::class)->mayDisable(auth()->user()), 403);
 
-        if (! \Illuminate\Support\Facades\Hash::check($this->password, auth()->user()->password)) {
+        if (! Hash::check($this->password, auth()->user()->password)) {
             $this->addError('password', 'Mot de passe incorrect.');
 
             return;

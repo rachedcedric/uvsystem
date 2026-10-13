@@ -3,6 +3,7 @@
 use Database\Seeders\SubscriptionPlanSeeder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -127,7 +128,7 @@ return new class extends Migration
             $legacy = $tenant->plan !== null ? Str::slug((string) $tenant->plan) : '';
             $planId = $plans[$legacy] ?? $defaultId;
 
-            $trialEnds = $tenant->trial_ends_at ? \Illuminate\Support\Carbon::parse($tenant->trial_ends_at) : null;
+            $trialEnds = $tenant->trial_ends_at ? Carbon::parse($tenant->trial_ends_at) : null;
             $status = match (true) {
                 $trialEnds === null => 'active',
                 $trialEnds->isFuture() => 'trialing',

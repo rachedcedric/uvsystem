@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Agent\Pages\AgentDashboard;
+use App\Filament\Agent\Widgets\AgentStatsOverview;
 use App\Http\Middleware\EnforceTwoFactor;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -11,6 +13,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Assets\Css;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -39,18 +42,18 @@ class AgentPanelProvider extends PanelProvider
             ->favicon(asset('favicon-32.png'))
             // Pont Capacitor (APK Android) : bouton retour natif et lien « ← Application » ; inactif dans un navigateur classique.
             ->renderHook(
-                \Filament\View\PanelsRenderHook::BODY_END,
+                PanelsRenderHook::BODY_END,
                 fn (): string => '<script src="'.e(asset('js/capacitor-bridge.js')).'?v='
                     .(@filemtime(public_path('js/capacitor-bridge.js')) ?: 1).'"></script>',
             )
             ->discoverResources(in: app_path('Filament/Agent/Resources'), for: 'App\\Filament\\Agent\\Resources')
             ->discoverPages(in: app_path('Filament/Agent/Pages'), for: 'App\\Filament\\Agent\\Pages')
             ->pages([
-                \App\Filament\Agent\Pages\AgentDashboard::class,
+                AgentDashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Agent/Widgets'), for: 'App\\Filament\\Agent\\Widgets')
             ->widgets([
-                \App\Filament\Agent\Widgets\AgentStatsOverview::class,
+                AgentStatsOverview::class,
             ])
             ->middleware([
                 EncryptCookies::class,

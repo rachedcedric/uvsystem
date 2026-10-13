@@ -9,6 +9,8 @@ use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions;
 use Filament\Pages\Page;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -115,7 +117,7 @@ class AgentDebtDetailPage extends Page
      * (sans snapshot de solde), restreinte à cet agent — même schéma que
      * RealTimeActivityWidget::buildUnionQuery(), scopé par agent_id.
      */
-    private function buildHistoryUnionQuery(): \Illuminate\Database\Query\Builder
+    private function buildHistoryUnionQuery(): Builder
     {
         $ventes = TenantContext::table('uv_transactions')
             ->where('agent_id', $this->agent->id)
@@ -159,7 +161,7 @@ class AgentDebtDetailPage extends Page
     }
 
     /**
-     * @return array{items: \Illuminate\Support\Collection, total: int, page: int, totalPages: int}
+     * @return array{items: Collection, total: int, page: int, totalPages: int}
      */
     public function getHistory(): array
     {
@@ -193,7 +195,7 @@ class AgentDebtDetailPage extends Page
      * fichier exporté doit contenir toutes les lignes de cet agent, jamais
      * seulement la page actuellement affichée à l'écran.
      */
-    public function getFullHistory(): \Illuminate\Support\Collection
+    public function getFullHistory(): Collection
     {
         $union = $this->buildHistoryUnionQuery();
 

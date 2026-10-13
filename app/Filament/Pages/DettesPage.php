@@ -11,6 +11,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -163,7 +164,7 @@ class DettesPage extends Page implements HasTable
                         $record->last_repayment_today_at,
                     ])->filter()->max())
                     ->formatStateUsing(fn ($state) => $state
-                        ? \Illuminate\Support\Carbon::parse($state)->translatedFormat('d/m/Y').' '.\Illuminate\Support\Carbon::parse($state)->format('H:i')
+                        ? Carbon::parse($state)->translatedFormat('d/m/Y').' '.Carbon::parse($state)->format('H:i')
                         : '—'),
 
                 Tables\Columns\TextColumn::make('debt_status')

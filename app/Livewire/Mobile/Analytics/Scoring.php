@@ -3,6 +3,7 @@
 namespace App\Livewire\Mobile\Analytics;
 
 use App\Services\AnalyticsService;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -26,7 +27,7 @@ class Scoring extends Component
     public function mount(): void
     {
         abort_unless(auth()->user()->can('view_statistics') || auth()->user()->can('view_agents'), 403);
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
     }
 
     private static function band(string $grade): string

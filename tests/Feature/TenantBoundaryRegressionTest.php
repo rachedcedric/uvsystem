@@ -10,6 +10,7 @@ use App\Models\Remboursement;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Tenancy\CrossTenantReference;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -176,7 +177,7 @@ class TenantBoundaryRegressionTest extends TestCase
         $agentA = TenantContext::runAs($this->a->id, fn () => Agent::factory()->create());
         $this->actingAs($this->userIn($this->a, 'master'));
 
-        $this->expectException(\App\Tenancy\CrossTenantReference::class);
+        $this->expectException(CrossTenantReference::class);
         UvTransaction::create([
             'agent_id' => $this->agentB->id, 'fournisseur_id' => $this->fournisseurB->id, 'user_id' => $agentA->user_id,
             'transaction_type' => 'distribution', 'amount' => 1000, 'transaction_date' => now(), 'status' => 'completed', 'reference' => 'V-CROSS',

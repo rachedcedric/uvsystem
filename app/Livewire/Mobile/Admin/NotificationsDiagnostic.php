@@ -7,6 +7,7 @@ use App\Notifications\TestNotification;
 use App\Services\FirebaseMessaging;
 use App\Services\NotificationDiagnostics;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -53,7 +54,7 @@ class NotificationsDiagnostic extends Component
                 app(FirebaseMessaging::class)->send($device, $payload);
                 $this->results[] = ['ok' => true, 'text' => 'Push envoyé à l\'appareil #'.$device->id.' (arrivée sur le téléphone sous quelques secondes).'];
             } catch (\Throwable $e) {
-                $this->results[] = ['ok' => false, 'text' => 'Push refusé pour l\'appareil #'.$device->id.' : '.\Illuminate\Support\Str::limit($e->getMessage(), 160)];
+                $this->results[] = ['ok' => false, 'text' => 'Push refusé pour l\'appareil #'.$device->id.' : '.Str::limit($e->getMessage(), 160)];
             }
         }
     }
@@ -69,7 +70,7 @@ class NotificationsDiagnostic extends Component
             });
             $this->results = [['ok' => true, 'text' => 'E-mail de test envoyé à '.$user->email.'. Vérifiez votre boîte (et les courriers indésirables).']];
         } catch (\Throwable $e) {
-            $this->results = [['ok' => false, 'text' => 'Envoi impossible : '.\Illuminate\Support\Str::limit($e->getMessage(), 200)]];
+            $this->results = [['ok' => false, 'text' => 'Envoi impossible : '.Str::limit($e->getMessage(), 200)]];
         }
     }
 

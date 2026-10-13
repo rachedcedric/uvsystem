@@ -20,8 +20,10 @@ use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
 use App\Services\Mobile\AgentHistory;
 use App\Services\Mobile\PeriodStats;
+use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Support\Mobile\ChargePeriods;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -156,7 +158,7 @@ class ExportController extends Controller
      */
     public function period(string $module, string $period, string $format)
     {
-        app(\App\Services\Subscriptions\SubscriptionEntitlements::class)->abortUnlessFeature('exports_avances');
+        app(SubscriptionEntitlements::class)->abortUnlessFeature('exports_avances');
         abort_unless(in_array($module, PeriodStats::MODULES, true) && array_key_exists($period, PeriodStats::PERIODS) && in_array($format, ['pdf', 'xlsx'], true), 404);
 
         $user = request()->user();
@@ -373,7 +375,7 @@ class ExportController extends Controller
         abort_unless(request()->user()->can('view_caisse'), 403);
 
         try {
-            $day = \Carbon\Carbon::createFromFormat('Y-m-d', $date, CaissePeriodResolver::TIMEZONE)->startOfDay();
+            $day = Carbon::createFromFormat('Y-m-d', $date, CaissePeriodResolver::TIMEZONE)->startOfDay();
         } catch (\Throwable) {
             abort(404);
         }

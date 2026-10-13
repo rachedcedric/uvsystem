@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
 use Resend\Laravel\Facades\Resend as ResendFacade;
 
@@ -103,13 +104,13 @@ class ResendService
      * Envoyer un email à partir d'un Mailable Laravel
      *
      * @param  string|array  $to  Email(s) destinataire(s)
-     * @param  \Illuminate\Mail\Mailable  $mailable  Instance de Mailable
+     * @param  Mailable  $mailable  Instance de Mailable
      * @param  array  $options  Options supplémentaires
      * @return array Response de Resend
      */
     public function sendMailable(
         string|array $to,
-        \Illuminate\Mail\Mailable $mailable,
+        Mailable $mailable,
         array $options = []
     ): array {
         try {

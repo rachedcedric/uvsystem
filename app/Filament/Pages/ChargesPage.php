@@ -8,6 +8,7 @@ use App\Models\ChargeCategorie;
 use App\Services\ChargeStatisticsService;
 use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Get;
 use Filament\Pages\Page;
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Gestion des Charges : suivi des charges d'exploitation et du revenu net
@@ -149,7 +152,7 @@ class ChargesPage extends Page implements HasTable
 
                 Tables\Columns\TextColumn::make('heure_charge')
                     ->label('Heure')
-                    ->formatStateUsing(fn ($state) => $state ? \Carbon\Carbon::parse($state)->format('H:i') : '—'),
+                    ->formatStateUsing(fn ($state) => $state ? Carbon::parse($state)->format('H:i') : '—'),
 
                 Tables\Columns\TextColumn::make('libelle')
                     ->label('Libellé')
@@ -308,7 +311,7 @@ class ChargesPage extends Page implements HasTable
             ->emptyStateIcon('heroicon-o-receipt-percent');
     }
 
-    protected function exportPeriode(string $format, string $extension): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    protected function exportPeriode(string $format, string $extension): BinaryFileResponse
     {
         $summary = $this->getSummary();
         $periodFilter = $this->tableFilters['period'] ?? [];
@@ -328,7 +331,7 @@ class ChargesPage extends Page implements HasTable
         );
     }
 
-    protected function exportPdf(): \Symfony\Component\HttpFoundation\StreamedResponse
+    protected function exportPdf(): StreamedResponse
     {
         $summary = $this->getSummary();
         $categoryId = $this->tableFilters['category_id']['value'] ?? null;

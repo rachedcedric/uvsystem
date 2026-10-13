@@ -13,6 +13,7 @@
  * Écrit dans la base visée : réservé à une base jetable (refuse de tourner si son nom ne contient pas « scratch »).
  */
 
+use App\Enums\SubscriptionCycle;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
@@ -22,6 +23,7 @@ use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 
 require __DIR__.'/../vendor/autoload.php';
 $app = require __DIR__.'/../bootstrap/app.php';
@@ -43,7 +45,7 @@ if (($argv[1] ?? '') === '--worker') {
     try {
         app(TenantSignupService::class)->complete($token, $created);
         echo $created ? "CREATED\n" : "REPLAY\n";
-    } catch (\Illuminate\Validation\ValidationException $e) {
+    } catch (ValidationException $e) {
         echo 'REFUSED '.collect($e->errors())->flatten()->first()."\n";
     } catch (Throwable $e) {
         echo 'ERROR '.get_class($e).': '.$e->getMessage()."\n";
@@ -77,7 +79,7 @@ $count = fn (array $out, string $prefix) => count(array_filter($out, fn ($o) => 
 
 // A : même lien, N processus
 $data = ['company_name' => "Course A {$run}", 'name' => 'Gérant A', 'email' => "a-{$run}@scratch.example", 'phone' => '0700000001', 'password' => 'Un-Mot-De-Passe-12'];
-$token = $service->request($plan, \App\Enums\SubscriptionCycle::Monthly, $data, '203.0.113.1');
+$token = $service->request($plan, SubscriptionCycle::Monthly, $data, '203.0.113.1');
 $outA = $fire(array_fill(1, $workers, $token));
 $tenantsA = Tenant::where('contact_email', $data['email'])->count();
 $usersA = User::withoutGlobalScopes()->where('email', $data['email'])->count();
@@ -86,7 +88,7 @@ $subsA = DB::table('tenant_subscriptions')->whereIn('tenant_id', Tenant::where('
 // B : N prospects distincts, même nom d'entreprise
 $tokensB = [];
 for ($i = 1; $i <= $workers; $i++) {
-    $tokensB[$i] = $service->request($plan, \App\Enums\SubscriptionCycle::Monthly, ['company_name' => "Course B {$run}", 'name' => "Gérant B{$i}", 'email' => "b{$i}-{$run}@scratch.example", 'phone' => sprintf('07100000%02d', $i), 'password' => 'Un-Mot-De-Passe-12'], "203.0.113.{$i}");
+    $tokensB[$i] = $service->request($plan, SubscriptionCycle::Monthly, ['company_name' => "Course B {$run}", 'name' => "Gérant B{$i}", 'email' => "b{$i}-{$run}@scratch.example", 'phone' => sprintf('07100000%02d', $i), 'password' => 'Un-Mot-De-Passe-12'], "203.0.113.{$i}");
 }
 $outB = $fire($tokensB);
 $tenantsB = Tenant::where('name', "Course B {$run}")->count();

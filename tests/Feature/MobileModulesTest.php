@@ -6,22 +6,32 @@ use App\Livewire\Mobile\Agents;
 use App\Livewire\Mobile\Approvisionnements;
 use App\Livewire\Mobile\Caisse;
 use App\Livewire\Mobile\Charges;
+use App\Livewire\Mobile\More;
 use App\Livewire\Mobile\Notifications;
 use App\Livewire\Mobile\Remboursements;
 use App\Livewire\Mobile\Ventes;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\CaisseMouvement;
+use App\Models\Charge;
+use App\Models\ChargeCategorie;
 use App\Models\Fournisseur;
 use App\Models\PaymentMethod;
 use App\Models\Remboursement;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Services\CaissePeriodResolver;
+use App\Services\CaisseService;
 use App\Services\MasterSoldeService;
+use App\Services\UvDistributionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class MobileModulesTest extends TestCase
@@ -126,7 +136,7 @@ class MobileModulesTest extends TestCase
     {
         $this->user->syncRoles([]);
         $this->user->syncPermissions(['view_uv_transactions']);
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         Livewire::test(Ventes\Create::class)->assertForbidden();
     }
@@ -136,7 +146,7 @@ class MobileModulesTest extends TestCase
         $this->fund(2000000);
         $awa = $this->agent();
         $moussa = $this->agent(['name' => 'Moussa Traoré']);
-        $service = new \App\Services\UvDistributionService;
+        $service = new UvDistributionService;
         $service->distribute($awa, 100000);
         $service->distribute($moussa, 50000);
 
@@ -150,7 +160,7 @@ class MobileModulesTest extends TestCase
     {
         $this->fund(1000000);
         $agent = $this->agent();
-        $tx = (new \App\Services\UvDistributionService)->distribute($agent, 200000);
+        $tx = (new UvDistributionService)->distribute($agent, 200000);
 
         Livewire::test(Ventes\Show::class, ['transaction' => $tx])->call('cancel');
 
@@ -164,7 +174,7 @@ class MobileModulesTest extends TestCase
     {
         $this->fund(1000000);
         $agent = $this->agent();
-        (new \App\Services\UvDistributionService)->distribute($agent, 300000);
+        (new UvDistributionService)->distribute($agent, 300000);
         $operationAt = now()->subMinute()->startOfMinute();
 
         Livewire::test(Remboursements\Create::class)
@@ -186,7 +196,7 @@ class MobileModulesTest extends TestCase
     {
         $this->fund(1000000);
         $agent = $this->agent();
-        (new \App\Services\UvDistributionService)->distribute($agent, 120000);
+        (new UvDistributionService)->distribute($agent, 120000);
 
         Livewire::test(Remboursements\Create::class)
             ->set('agentId', $agent->id)
@@ -209,7 +219,7 @@ class MobileModulesTest extends TestCase
         $this->fund(1000000);
         $debtor = $this->agent();
         $clean = $this->agent(['name' => 'Fatou Bamba']);
-        (new \App\Services\UvDistributionService)->distribute($debtor, 80000);
+        (new UvDistributionService)->distribute($debtor, 80000);
 
         Livewire::test(Remboursements\Create::class)
             ->assertSee('Awa Koné')->assertDontSee('Fatou Bamba');
@@ -222,7 +232,7 @@ class MobileModulesTest extends TestCase
         $this->fund(1000000);
         $debtor = $this->agent();
         $this->agent(['name' => 'Fatou Bamba']);
-        (new \App\Services\UvDistributionService)->distribute($debtor, 90000);
+        (new UvDistributionService)->distribute($debtor, 90000);
 
         Livewire::test(Agents\Index::class)->assertSee('Awa Koné')->assertSee('Fatou Bamba')
             ->set('filter', 'debt')->assertSee('Awa Koné')->assertDontSee('Fatou Bamba');
@@ -252,10 +262,10 @@ class MobileModulesTest extends TestCase
 
         $this->assertSame(2, CaisseMouvement::count());
         $this->assertTrue(CaisseMouvement::oldest('id')->firstOrFail()->date_mouvement->equalTo($operationAt));
-        $this->assertEquals(30000, app(\App\Services\CaisseService::class)->soldeActuel());
+        $this->assertEquals(30000, app(CaisseService::class)->soldeActuel());
 
         Livewire::test(Caisse\Index::class)->assertSee('30');
-        $today = app(\App\Services\CaissePeriodResolver::class)->currentDate()->toDateString();
+        $today = app(CaissePeriodResolver::class)->currentDate()->toDateString();
         Livewire::test(Caisse\Jour::class, ['date' => $today])->assertSee('Apport')->assertSee('Carburant');
     }
 
@@ -279,7 +289,7 @@ class MobileModulesTest extends TestCase
             CaisseMouvement::all()->map(fn ($m) => $m->date_mouvement->toDateString())->unique()->values()->all()
         );
         $this->assertSame('reçu en espèces', CaisseMouvement::where('libelle', 'Versement Awa')->value('notes'));
-        $this->assertEquals(110000, app(\App\Services\CaisseService::class)->dayTotals($day)['solde']);
+        $this->assertEquals(110000, app(CaisseService::class)->dayTotals($day)['solde']);
     }
 
     public function test_caisse_lines_are_all_or_nothing_and_errors_point_to_the_line(): void
@@ -325,7 +335,7 @@ class MobileModulesTest extends TestCase
         $buy = function (Agent $agent, $date, string $status = 'completed', string $type = 'distribution') {
             UvTransaction::withoutEvents(fn () => UvTransaction::create([
                 'agent_id' => $agent->id, 'user_id' => $this->user->id, 'transaction_type' => $type, 'amount' => 10000,
-                'transaction_date' => $date, 'status' => $status, 'reference' => 'V-'.\Illuminate\Support\Str::random(6),
+                'transaction_date' => $date, 'status' => $status, 'reference' => 'V-'.Str::random(6),
             ]));
         };
 
@@ -378,7 +388,7 @@ class MobileModulesTest extends TestCase
     public function test_notification_is_marked_read_when_opened(): void
     {
         $this->user->notifications()->create([
-            'id' => (string) \Illuminate\Support\Str::uuid(),
+            'id' => (string) Str::uuid(),
             'type' => 'Filament\Notifications\DatabaseNotification',
             'data' => ['title' => 'Rappel de dette', 'body' => 'Awa Koné doit 90 000 FCFA', 'color' => 'warning'],
         ]);
@@ -433,8 +443,8 @@ class MobileModulesTest extends TestCase
 
     public function test_charge_is_recorded_with_a_private_receipt_photo(): void
     {
-        \Illuminate\Support\Facades\Storage::fake('local');
-        $category = \App\Models\ChargeCategorie::create(['code' => 'TRANSPORT', 'name' => 'Transport', 'is_active' => true]);
+        Storage::fake('local');
+        $category = ChargeCategorie::create(['code' => 'TRANSPORT', 'name' => 'Transport', 'is_active' => true]);
         $operationAt = now()->subMinute()->startOfMinute();
 
         Livewire::test(Charges\Create::class)
@@ -443,21 +453,21 @@ class MobileModulesTest extends TestCase
             ->set('amount', '15000')
             ->set('date', $operationAt->toDateString())
             ->set('time', $operationAt->format('H:i'))
-            ->set('justificatif', \Illuminate\Http\UploadedFile::fake()->image('recu.jpg'))
+            ->set('justificatif', UploadedFile::fake()->image('recu.jpg'))
             ->call('save')
             ->assertHasNoErrors()
             ->assertRedirect();
 
-        $charge = \App\Models\Charge::firstOrFail();
+        $charge = Charge::firstOrFail();
         $this->assertEquals(15000, $charge->montant);
         $this->assertSame($operationAt->toDateString(), $charge->date_charge->toDateString());
         $this->assertSame($operationAt->format('H:i'), substr($charge->heure_charge, 0, 5));
         $this->assertNotNull($charge->justificatif_path);
-        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($charge->justificatif_path);
+        Storage::disk('local')->assertExists($charge->justificatif_path);
 
         Livewire::test(Charges\Create::class)
             ->set('libelle', 'X')->set('categoryId', $category->id)->set('amount', '1000')
-            ->set('justificatif', \Illuminate\Http\UploadedFile::fake()->create('virus.exe', 10))
+            ->set('justificatif', UploadedFile::fake()->create('virus.exe', 10))
             ->call('save')
             ->assertHasErrors('justificatif');
 
@@ -484,7 +494,7 @@ class MobileModulesTest extends TestCase
 
     public function test_more_page_offers_native_sections_without_duplicating_ported_screens(): void
     {
-        Livewire::test(\App\Livewire\Mobile\More::class)
+        Livewire::test(More::class)
             ->assertSee('Opérations')->assertSee('Remboursements')->assertSee('Approvisionnements')->assertSee('Charges');
     }
 
@@ -492,7 +502,7 @@ class MobileModulesTest extends TestCase
     {
         $this->fund(1000000);
         $agent = $this->agent();
-        $tx = (new \App\Services\UvDistributionService)->distribute($agent, 100000);
+        $tx = (new UvDistributionService)->distribute($agent, 100000);
 
         foreach (['/m/ventes', '/m/ventes/nouvelle', "/m/ventes/{$tx->id}", '/m/remboursements', '/m/remboursements/nouveau',
             '/m/agents', "/m/agents/{$agent->id}", '/m/caisse', '/m/caisse/mouvement', '/m/notifications', '/m/plus',

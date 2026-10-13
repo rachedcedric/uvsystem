@@ -7,12 +7,15 @@ use App\Enums\SubscriptionStatus;
 use App\Filament\Platform\Resources\SubscriptionPlanResource\Pages\CreateSubscriptionPlan;
 use App\Filament\Platform\Resources\SubscriptionPlanResource\Pages\EditSubscriptionPlan;
 use App\Filament\Platform\Resources\SubscriptionPlanResource\Pages\ListSubscriptionPlans;
+use App\Filament\Platform\Resources\TenantResource\Pages\CreateTenant;
 use App\Filament\Platform\Resources\TenantSubscriptionResource\Pages\ListTenantSubscriptions;
 use App\Filament\Platform\Widgets\SubscriptionStatsOverview;
 use App\Filament\Platform\Widgets\TenantHealthOverview;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\TenantSubscription;
 use App\Services\Subscriptions\SubscriptionManager;
+use App\Services\Subscriptions\SubscriptionMetrics;
 use Filament\Facades\Filament;
 use Livewire\Livewire;
 
@@ -82,7 +85,7 @@ class SubscriptionPlatformTest extends SubscriptionTestCase
         $this->assertFalse($masterA->can('view', $subB), 'jamais l\'abonnement d\'un autre tenant');
         $this->assertFalse($comptable->can('view', $subA));
         $this->assertFalse($masterA->can('update', $subA));
-        $this->assertFalse($masterA->can('create', \App\Models\TenantSubscription::class));
+        $this->assertFalse($masterA->can('create', TenantSubscription::class));
         $this->assertFalse($super->can('delete', $subA), 'l\'historique ne se supprime jamais');
         $this->assertFalse($masterA->can('viewAny', SubscriptionPlan::class));
         $this->assertTrue($super->can('viewAny', SubscriptionPlan::class));
@@ -188,7 +191,7 @@ class SubscriptionPlatformTest extends SubscriptionTestCase
     {
         $this->actingAs($this->superAdmin());
 
-        Livewire::test(\App\Filament\Platform\Resources\TenantResource\Pages\CreateTenant::class)
+        Livewire::test(CreateTenant::class)
             ->fillForm([
                 'name' => 'Société Offre', 'status' => 'active', 'subscription_plan_id' => $this->plan('essentiel')->id,
                 'subscription_cycle' => 'yearly', 'subscription_mode' => 'trial',
@@ -216,7 +219,7 @@ class SubscriptionPlatformTest extends SubscriptionTestCase
         // Mentir sur la colonne héritée ne change rien : les chiffres viennent des abonnements.
         Tenant::query()->whereKey($trial->id)->update(['plan' => 'entreprise-payante']);
 
-        $m = app(\App\Services\Subscriptions\SubscriptionMetrics::class)->snapshot();
+        $m = app(SubscriptionMetrics::class)->snapshot();
 
         $this->assertSame(55000, $m['mrr']);
         $this->assertSame(660000, $m['arr']);
@@ -236,7 +239,7 @@ class SubscriptionPlatformTest extends SubscriptionTestCase
         $this->manager()->activate($later, $this->plan('pro'), SubscriptionCycle::Monthly);                      // fin dans 1 mois
         $this->manager()->startTrial($trial, $this->plan('pro'), days: 3);
 
-        $m = app(\App\Services\Subscriptions\SubscriptionMetrics::class)->snapshot();
+        $m = app(SubscriptionMetrics::class)->snapshot();
 
         $this->assertSame(1, $m['expiring_soon']);
         $this->assertSame(1, $m['trials_expiring_soon']);

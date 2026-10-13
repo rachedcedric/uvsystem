@@ -4,15 +4,22 @@ namespace Tests\Feature\Subscriptions;
 
 use App\Enums\SubscriptionCycle;
 use App\Livewire\Mobile\Admin\Import;
+use App\Livewire\Mobile\Analytics\Scoring;
 use App\Livewire\Mobile\Crud;
 use App\Livewire\Mobile\Subscription\Show;
 use App\Models\Agent;
+use App\Models\SubscriptionNotificationLog;
+use App\Models\SubscriptionPayment;
+use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\TenantSubscription;
 use App\Models\User;
+use App\Services\Mobile\DataImporter;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantContext;
 use Laravel\Sanctum\Sanctum;
 use Livewire\Livewire;
+use Maatwebsite\Excel\Excel;
 
 /** Application réelle des droits côté serveur (API, /m, Livewire) et isolation des abonnements entre tenants. */
 class SubscriptionTenantAccessTest extends SubscriptionTestCase
@@ -89,12 +96,12 @@ class SubscriptionTenantAccessTest extends SubscriptionTestCase
         $essentiel = $this->tenantOn('essentiel');
         $this->actingAs($this->userIn($essentiel));
         Livewire::test(Import::class)->assertForbidden();
-        Livewire::test(\App\Livewire\Mobile\Analytics\Scoring::class)->assertForbidden();
+        Livewire::test(Scoring::class)->assertForbidden();
 
         $pro = $this->tenantOn('pro');
         $this->actingAs($this->userIn($pro));
         Livewire::test(Import::class)->assertSuccessful();
-        Livewire::test(\App\Livewire\Mobile\Analytics\Scoring::class)->assertSuccessful();
+        Livewire::test(Scoring::class)->assertSuccessful();
     }
 
     public function test_the_mobile_import_stops_at_the_agent_limit_and_reports_the_rows(): void
@@ -105,7 +112,7 @@ class SubscriptionTenantAccessTest extends SubscriptionTestCase
         $csv = tempnam(sys_get_temp_dir(), 'imp').'.csv';
         file_put_contents($csv, "nom,prenom,telephone\nAlpha,Un,0701000001\nBeta,Deux,0701000002\n");
 
-        $result = app(\App\Services\Mobile\DataImporter::class)->import('agents', $csv, \Maatwebsite\Excel\Excel::CSV);
+        $result = app(DataImporter::class)->import('agents', $csv, Excel::CSV);
 
         $this->assertSame(1, $result['success']);
         $this->assertCount(1, $result['failures']);
@@ -177,14 +184,14 @@ class SubscriptionTenantAccessTest extends SubscriptionTestCase
         $userA = $this->userIn($a);
         $this->actingAs($userA);
 
-        $visible = \App\Models\TenantSubscription::query()->pluck('tenant_id')->unique()->all();
+        $visible = TenantSubscription::query()->pluck('tenant_id')->unique()->all();
         $this->assertSame([$a->id], $visible);
-        $this->assertSame(0, \App\Models\TenantSubscription::query()->where('tenant_id', $b->id)->count());
-        $this->assertSame(0, \App\Models\SubscriptionPayment::count());
-        $this->assertSame(0, \App\Models\SubscriptionNotificationLog::count());
+        $this->assertSame(0, TenantSubscription::query()->where('tenant_id', $b->id)->count());
+        $this->assertSame(0, SubscriptionPayment::count());
+        $this->assertSame(0, SubscriptionNotificationLog::count());
 
         // Écrire dans le tenant B est refusé quoi qu'on fournisse.
-        $foreign = new \App\Models\TenantSubscription(['subscription_plan_id' => $this->plan('pro')->id, 'cycle' => 'monthly', 'status' => 'active']);
+        $foreign = new TenantSubscription(['subscription_plan_id' => $this->plan('pro')->id, 'cycle' => 'monthly', 'status' => 'active']);
         $foreign->forceFill(['tenant_id' => $b->id]);
         $this->assertThrows(fn () => $foreign->save(), \LogicException::class);
     }
@@ -195,8 +202,8 @@ class SubscriptionTenantAccessTest extends SubscriptionTestCase
         $master = $this->userIn($tenant);
         $this->actingAs($master);
 
-        $this->assertGreaterThanOrEqual(3, \App\Models\SubscriptionPlan::count());
-        $this->assertFalse($master->can('create', \App\Models\SubscriptionPlan::class));
+        $this->assertGreaterThanOrEqual(3, SubscriptionPlan::count());
+        $this->assertFalse($master->can('create', SubscriptionPlan::class));
         $this->assertFalse($master->can('update', $this->plan('pro')));
     }
 }

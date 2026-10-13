@@ -3,6 +3,7 @@
 namespace App\Support\Mobile\Crud\Resources;
 
 use App\Models\Agent;
+use App\Models\User;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
 use App\Support\Mobile\Fcfa;
@@ -67,7 +68,7 @@ class Agents extends MobileResource
             // Master et admin : lier la fiche à un compte de l'entreprise (le sien compris) pour qu'il retrouve ses propres
             // opérations. Le champ n'existe pas pour les autres rôles : une valeur forgée est ignorée.
             ...(auth()->user()?->isAdmin() ? [
-                Field::select('user_id', 'Compte de connexion lié', fn (): array => ['' => 'Aucun compte'] + \App\Models\User::query()->orderBy('name')->pluck('name', 'id')->all())
+                Field::select('user_id', 'Compte de connexion lié', fn (): array => ['' => 'Aucun compte'] + User::query()->orderBy('name')->pluck('name', 'id')->all())
                     ->unique('agents', 'user_id')->hint('Facultatif : donne à ce compte l\'accès à son espace agent.'),
             ] : []),
         ];

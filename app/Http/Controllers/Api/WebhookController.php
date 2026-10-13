@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\User;
+use App\Services\SecurityService;
 use App\Tenancy\TenantContext;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +24,7 @@ class WebhookController extends Controller
     /**
      * Traite les webhooks Resend
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function resend(Request $request)
     {
@@ -116,7 +118,7 @@ class WebhookController extends Controller
     /**
      * Traite les webhooks Mailtrap
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function mailtrap(Request $request)
     {
@@ -579,7 +581,7 @@ class WebhookController extends Controller
     private function notifyAdminEmailIssue(string $type, array $data): void
     {
         try {
-            $securityService = app(\App\Services\SecurityService::class);
+            $securityService = app(SecurityService::class);
             $securityService->sendSecurityAlert('email_issue_'.$type, $data);
         } catch (\Exception $e) {
             Log::error('Failed to notify admin of email issue', [

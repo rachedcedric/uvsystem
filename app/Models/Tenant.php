@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -101,7 +102,7 @@ class Tenant extends Model
 
         // canAccessPanel() bloque déjà les requêtes ; on supprime aussi sessions et tokens pour que
         // rien ne subsiste (cookies « rester connecté », jetons API).
-        \App\Tenancy\TenantContext::withoutTenancy(
+        TenantContext::withoutTenancy(
             fn () => $this->users()->get()->each->revokeAllAccess()
         );
     }

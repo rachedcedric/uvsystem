@@ -15,6 +15,7 @@
  */
 
 use App\Enums\SubscriptionCycle;
+use App\Exceptions\SubscriptionLimitReached;
 use App\Models\Agent;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
@@ -50,7 +51,7 @@ if (($argv[1] ?? '') === '--worker') {
             DB::table('agents')->insert(['tenant_id' => $tenantId, 'name' => "Naïf {$index}", 'phone' => sprintf('06%08d', $index), 'type' => 'standard', 'debt_limit' => 0, 'status' => 'active', 'created_at' => now(), 'updated_at' => now()]);
         }
         echo "OK\n";
-    } catch (\App\Exceptions\SubscriptionLimitReached) {
+    } catch (SubscriptionLimitReached) {
         echo "REFUSED\n";
     } catch (Throwable $e) {
         echo 'ERROR '.get_class($e).': '.$e->getMessage()."\n";

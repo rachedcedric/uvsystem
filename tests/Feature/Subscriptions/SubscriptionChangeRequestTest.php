@@ -19,6 +19,7 @@ use App\Tenancy\TenantContext;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /** Risques « pas de libre-service », « pas de proratisation » et « auto_renew sans effet ». */
 class SubscriptionChangeRequestTest extends SubscriptionTestCase
@@ -189,7 +190,7 @@ class SubscriptionChangeRequestTest extends SubscriptionTestCase
     {
         $request = $this->billing->requestChange($this->tenant, $this->plan('entreprise'), SubscriptionCycle::Monthly, $this->master);
 
-        $this->assertThrows(fn () => $this->billing->rejectChange($request, $this->master), \Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->assertThrows(fn () => $this->billing->rejectChange($request, $this->master), HttpException::class);
     }
 
     public function test_requests_for_unavailable_or_identical_offers_or_expired_subscriptions_are_refused(): void

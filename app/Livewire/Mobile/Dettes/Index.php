@@ -5,6 +5,7 @@ namespace App\Livewire\Mobile\Dettes;
 use App\Filament\Pages\DettesPage;
 use App\Models\Fournisseur;
 use App\Services\FournisseurDebtService;
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -57,7 +58,7 @@ class Index extends Component
         abort_unless(auth()->user()->hasAnyRole(['master', 'admin']), 403);
 
         try {
-            $result = app(\App\Services\NotificationService::class)->checkAndSendDebtReminders();
+            $result = app(NotificationService::class)->checkAndSendDebtReminders();
             $this->dispatch('m-toast', message: "{$result['sent']} rappel(s) envoyé(s), {$result['skipped_duplicate']} déjà notifié(s) pendant ce cycle.");
         } catch (\Throwable $e) {
             $this->dispatch('m-toast', message: 'Rappels impossibles : '.$e->getMessage(), type: 'error');

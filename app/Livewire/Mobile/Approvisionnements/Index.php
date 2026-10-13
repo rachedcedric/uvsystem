@@ -4,6 +4,7 @@ namespace App\Livewire\Mobile\Approvisionnements;
 
 use App\Models\Approvisionnement;
 use App\Services\Mobile\PeriodStats;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -57,7 +58,7 @@ class Index extends Component
         $summary = $this->filtered()->selectRaw('COUNT(*) as n, COALESCE(SUM(amount), 0) as total')->first();
 
         return view('livewire.mobile.approvisionnements.index', [
-            'groups' => $rows->take($this->limit)->groupBy(fn (Approvisionnement $a) => \Carbon\Carbon::parse($a->date_approvisionnement)->toDateString()),
+            'groups' => $rows->take($this->limit)->groupBy(fn (Approvisionnement $a) => Carbon::parse($a->date_approvisionnement)->toDateString()),
             'hasMore' => $rows->count() > $this->limit,
             'count' => (int) $summary->n,
             'total' => (float) $summary->total,

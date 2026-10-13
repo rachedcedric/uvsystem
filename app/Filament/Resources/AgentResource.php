@@ -7,6 +7,8 @@ use App\Filament\Resources\AgentResource\Pages;
 use App\Filament\Resources\AgentResource\RelationManagers;
 use App\Models\Agent;
 use App\Models\User;
+use App\Notifications\PaymentReminderNotification;
+use App\Services\SmsService;
 use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
@@ -20,7 +22,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AgentResource extends Resource
@@ -131,7 +135,7 @@ class AgentResource extends Resource
                             ->placeholder('Aucun compte')
                             ->rules([
                                 // Uniquement un compte de CETTE entreprise (jamais un compte d'une autre).
-                                fn (): \Illuminate\Validation\Rules\In => Rule::in(User::query()->pluck('id')->all()),
+                                fn (): In => Rule::in(User::query()->pluck('id')->all()),
                                 fn (?Agent $record) => Rule::unique('agents', 'user_id')->ignore($record?->getKey())->whereNull('deleted_at')->where('tenant_id', TenantContext::id()),
                             ])
                             ->validationMessages(['unique' => 'Ce compte est déjà lié à un autre agent.', 'in' => 'Ce compte n\'appartient pas à votre entreprise.']),
@@ -289,7 +293,7 @@ class AgentResource extends Resource
                         ->action(function (Agent $record, array $data) {
                             $channel = $data['channel'];
                             $customMessage = $data['custom_message'] ?? null;
-                            $smsService = app(\App\Services\SmsService::class);
+                            $smsService = app(SmsService::class);
                             $sentChannels = [];
 
                             try {
@@ -305,7 +309,7 @@ class AgentResource extends Resource
 
                                 // Envoi Email
                                 if (in_array($channel, ['email', 'both']) && $record->email) {
-                                    $record->notify(new \App\Notifications\PaymentReminderNotification($record, $customMessage));
+                                    $record->notify(new PaymentReminderNotification($record, $customMessage));
                                     $sentChannels[] = 'Email';
                                 }
 
@@ -319,7 +323,7 @@ class AgentResource extends Resource
                                     // Log l'action
                                     activity()
                                         ->performedOn($record)
-                                        ->causedBy(\Illuminate\Support\Facades\Auth::user())
+                                        ->causedBy(Auth::user())
                                         ->withProperties([
                                             'channels' => $sentChannels,
                                             'debt' => $record->current_debt,

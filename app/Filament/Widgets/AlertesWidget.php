@@ -3,6 +3,10 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Agent;
+use App\Notifications\PaymentReminderNotification;
+use App\Services\SmsService;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -112,7 +116,7 @@ class AlertesWidget extends BaseWidget
                     ->color('warning')
                     ->size('sm')
                     ->form([
-                        \Filament\Forms\Components\Select::make('channel')
+                        Select::make('channel')
                             ->label('Canal')
                             ->options([
                                 'sms' => 'SMS',
@@ -128,7 +132,7 @@ class AlertesWidget extends BaseWidget
                     )
                     ->action(function (Agent $record, array $data) {
                         $channel = $data['channel'];
-                        $smsService = app(\App\Services\SmsService::class);
+                        $smsService = app(SmsService::class);
                         $sentChannels = [];
 
                         try {
@@ -144,25 +148,25 @@ class AlertesWidget extends BaseWidget
 
                             // Envoi Email
                             if (in_array($channel, ['email', 'both']) && $record->email) {
-                                $record->notify(new \App\Notifications\PaymentReminderNotification($record));
+                                $record->notify(new PaymentReminderNotification($record));
                                 $sentChannels[] = 'Email';
                             }
 
                             if (count($sentChannels) > 0) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('Rappel envoyé')
                                     ->body(implode(' + ', $sentChannels)." à {$record->name}")
                                     ->success()
                                     ->send();
                             } else {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('Échec')
                                     ->body("Vérifiez la config SMS ou l'email de l'agent")
                                     ->warning()
                                     ->send();
                             }
                         } catch (\Exception $e) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Erreur')
                                 ->body($e->getMessage())
                                 ->danger()

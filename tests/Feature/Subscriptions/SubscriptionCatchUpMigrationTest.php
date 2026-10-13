@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Subscriptions;
 
+use App\Services\Subscriptions\SubscriptionManager;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 
 /** Rattrapage du journal de notifications pour les bases créées avec l'ancienne version de la migration d'abonnements. */
@@ -56,8 +58,8 @@ class SubscriptionCatchUpMigrationTest extends SubscriptionTestCase
 
         $tenant = $this->tenant();
         $this->userIn($tenant);
-        \Illuminate\Support\Facades\Notification::fake();
-        $subscription = app(\App\Services\Subscriptions\SubscriptionManager::class)->startTrial($tenant, $this->plan('pro'));
+        Notification::fake();
+        $subscription = app(SubscriptionManager::class)->startTrial($tenant, $this->plan('pro'));
 
         $log = DB::table('subscription_notification_logs')->where('tenant_subscription_id', $subscription->id)->first();
         $this->assertNotNull($log->sent_at);

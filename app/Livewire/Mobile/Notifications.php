@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Mobile;
 
+use App\Support\Mobile\AdminUrl;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -37,7 +38,7 @@ class Notifications extends Component
         $notification->markAsRead();
         $url = collect($notification->data['actions'] ?? [])->pluck('url')->filter()->first();
 
-        return $url ? redirect()->to(\App\Support\Mobile\AdminUrl::toMobile($url)) : null;
+        return $url ? redirect()->to(AdminUrl::toMobile($url)) : null;
     }
 
     public function render()

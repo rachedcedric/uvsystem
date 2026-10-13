@@ -7,16 +7,21 @@ use App\Livewire\Mobile\Remboursements;
 use App\Livewire\Mobile\Ventes;
 use App\Models\Activity;
 use App\Models\Agent;
+use App\Models\AgentPartenaire;
 use App\Models\Approvisionnement;
+use App\Models\CaisseCategorie;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
 use App\Models\Commission;
 use App\Models\Fournisseur;
+use App\Models\PalierCommission;
 use App\Models\PaymentMethod;
 use App\Models\Remboursement;
+use App\Models\SousDistributeur;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\UvTransaction;
+use App\Notifications\TestNotification;
 use App\Services\CaisseService;
 use App\Services\RemboursementService;
 use App\Services\UvDistributionService;
@@ -24,10 +29,12 @@ use App\Support\Mobile\Crud\Registry;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Sanctum;
 use Livewire\Livewire;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 /**
@@ -65,7 +72,7 @@ class TenantPenetrationTest extends TestCase
 
         $this->actingAs($this->victim);
         $this->populate('Victime');
-        $this->victim->notify(new \App\Notifications\TestNotification);
+        $this->victim->notify(new TestNotification);
         $this->victimNotificationId = $this->victim->notifications()->value('id');
 
         // Données de l'attaquant : témoin positif (il doit, lui, accéder à ses propres ressources).
@@ -103,10 +110,10 @@ class TenantPenetrationTest extends TestCase
         app(CaisseService::class)->enregistrer('entree', 40000, "Apport {$label}");
         Commission::create(['is_global' => true, 'date_commission' => today(), 'volume_total_jour' => 1200000, 'commission_globale' => 6360, 'montant_vente' => 1200000, 'montant_commission' => 6360, 'nombre_transactions' => 3, 'seuil_min' => 1000000, 'seuil_max' => 1499999]);
         activity()->causedBy($user)->log("Action {$label}");
-        \App\Models\PalierCommission::create(['seuil_min' => 1000000, 'seuil_max' => 1499999, 'commission' => 6360, 'is_active' => true]);
-        \App\Models\CaisseCategorie::create(['name' => "Catégorie {$label}", 'sort_order' => 1, 'is_active' => true, 'is_system' => false]);
-        \App\Models\SousDistributeur::create(['agent_id' => $agent->id, 'nom' => "Sous-dist {$label}", 'telephone' => '07'.random_int(10000000, 99999999), 'type' => 'standard', 'statut' => 'actif']);
-        \App\Models\AgentPartenaire::create(['nom_entreprise' => "Partenaire {$label}", 'numero_telephone' => '05'.random_int(10000000, 99999999), 'lieu' => 'Abidjan', 'is_active' => true]);
+        PalierCommission::create(['seuil_min' => 1000000, 'seuil_max' => 1499999, 'commission' => 6360, 'is_active' => true]);
+        CaisseCategorie::create(['name' => "Catégorie {$label}", 'sort_order' => 1, 'is_active' => true, 'is_system' => false]);
+        SousDistributeur::create(['agent_id' => $agent->id, 'nom' => "Sous-dist {$label}", 'telephone' => '07'.random_int(10000000, 99999999), 'type' => 'standard', 'statut' => 'actif']);
+        AgentPartenaire::create(['nom_entreprise' => "Partenaire {$label}", 'numero_telephone' => '05'.random_int(10000000, 99999999), 'lieu' => 'Abidjan', 'is_active' => true]);
     }
 
     // ---- 1. balayage de TOUTES les routes avec l'identifiant d'un autre tenant ------------------------------
@@ -337,7 +344,7 @@ class TenantPenetrationTest extends TestCase
                 try {
                     Livewire::test($component, ['resource' => $resource::slug(), 'id' => (string) $id]);
                     $this->fail("{$component} a rendu l'enregistrement {$resource::slug()}#{$id} d'un autre tenant.");
-                } catch (\Illuminate\Database\Eloquent\ModelNotFoundException|\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+                } catch (ModelNotFoundException|HttpException $e) {
                     $this->assertTrue(true); // 404/403 : refusé
                 }
             }

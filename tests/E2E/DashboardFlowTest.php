@@ -9,6 +9,7 @@ use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DashboardFlowTest extends TestCase
@@ -99,7 +100,7 @@ class DashboardFlowTest extends TestCase
         $this->app['auth']->shouldUse('web');
         $roleless = User::factory()->create();
         $roleless->assignRole('commercial');
-        \Spatie\Permission\Models\Role::findByName('commercial')->revokePermissionTo('view_dashboard');
+        Role::findByName('commercial')->revokePermissionTo('view_dashboard');
         $this->app['auth']->forgetGuards();
         Sanctum::actingAs($roleless->fresh());
 

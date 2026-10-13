@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Models\RemboursementFournisseur;
 use Carbon\Carbon;
@@ -61,7 +62,7 @@ class FournisseurDebtService
     {
         $fournisseurIds = Fournisseur::query()->creditFournisseurs()->pluck('id');
 
-        $totalDette = (float) \App\Models\Approvisionnement::query()
+        $totalDette = (float) Approvisionnement::query()
             ->whereIn('fournisseur_id', $fournisseurIds)
             ->sum('amount');
 

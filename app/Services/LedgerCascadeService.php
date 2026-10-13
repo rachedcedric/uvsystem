@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Approvisionnement;
 use App\Models\UvTransaction;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -113,8 +114,8 @@ class LedgerCascadeService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, UvTransaction>  $ventes
-     * @param  \Illuminate\Support\Collection<int, Approvisionnement>  $approvisionnements
+     * @param  Collection<int, UvTransaction>  $ventes
+     * @param  Collection<int, Approvisionnement>  $approvisionnements
      * @return array<int, array{model: UvTransaction|Approvisionnement, timestamp: int, kindOrder: int, id: int, sign: int, amount: float}>
      */
     protected function mergeChronologically($ventes, $approvisionnements): array

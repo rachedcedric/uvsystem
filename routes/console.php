@@ -1,6 +1,10 @@
 <?php
 
+use App\Models\Activity;
+use App\Services\NotificationDiagnostics;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +21,7 @@ use Illuminate\Support\Facades\Schedule;
 
 // Battement de cœur : prouve que le cron « schedule:run » tourne (voir l'écran
 // « Diagnostic des notifications »).
-Schedule::call(fn () => \Illuminate\Support\Facades\Cache::put(\App\Services\NotificationDiagnostics::HEARTBEAT_KEY, now()->timestamp, now()->addHour()))
+Schedule::call(fn () => Cache::put(NotificationDiagnostics::HEARTBEAT_KEY, now()->timestamp, now()->addHour()))
     ->name('scheduler-heartbeat')
     ->everyMinute();
 
@@ -206,12 +210,12 @@ Schedule::command('exports:cleanup --days=1')
 
 // Nettoyage des anciennes activités (>90 jours) - Chaque dimanche à 3h30
 Schedule::call(function () {
-    \App\Models\Activity::where('created_at', '<', now()->subDays(90))->delete();
+    Activity::where('created_at', '<', now()->subDays(90))->delete();
 })->weekly()->sundays()->at('03:30');
 
 // Nettoyage des tokens API expirés - Tous les jours à 4h30
 Schedule::call(function () {
-    \Laravel\Sanctum\PersonalAccessToken::where('expires_at', '<', now())->delete();
+    PersonalAccessToken::where('expires_at', '<', now())->delete();
 })->dailyAt('04:30');
 
 // Purge des tokens API expirés (config/sanctum.php : expiration 7 jours par défaut).

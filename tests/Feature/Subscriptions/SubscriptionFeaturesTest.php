@@ -2,8 +2,13 @@
 
 namespace Tests\Feature\Subscriptions;
 
+use App\Contracts\PushNotification;
 use App\Enums\SubscriptionCycle;
 use App\Exceptions\SubscriptionLimitReached;
+use App\Exports\AgentsExport;
+use App\Filament\Pages\RapportStatistiques;
+use App\Filament\Pages\StatisticsPage;
+use App\Livewire\Mobile\Analytics\Statistics;
 use App\Models\Agent;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
@@ -13,6 +18,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\Channels\FirebasePushChannel;
 use App\Notifications\DebtAlertNotification;
+use App\Notifications\DebtReminderNotification;
 use App\Notifications\PaymentReminderNotification;
 use App\Services\FirebaseMessaging;
 use App\Services\Subscriptions\FeatureCatalog;
@@ -22,6 +28,8 @@ use App\Support\Subscriptions\ExportGate;
 use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Facades\Filament;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -91,13 +99,13 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
         [, $with] = $this->tenantWith(['statistiques_essentielles']);
 
         $this->actingAs($without);
-        Livewire::test(\App\Livewire\Mobile\Analytics\Statistics::class)->assertForbidden();
+        Livewire::test(Statistics::class)->assertForbidden();
         Filament::setCurrentPanel(Filament::getPanel('admin'));
-        Livewire::test(\App\Filament\Pages\StatisticsPage::class)->assertForbidden();
+        Livewire::test(StatisticsPage::class)->assertForbidden();
 
         $this->actingAs($with);
-        Livewire::test(\App\Livewire\Mobile\Analytics\Statistics::class)->assertSuccessful();
-        Livewire::test(\App\Filament\Pages\StatisticsPage::class)->assertSuccessful();
+        Livewire::test(Statistics::class)->assertSuccessful();
+        Livewire::test(StatisticsPage::class)->assertSuccessful();
     }
 
     public function test_statistiques_avancees(): void
@@ -107,10 +115,10 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
         Filament::setCurrentPanel(Filament::getPanel('admin'));
 
         $this->actingAs($without);
-        Livewire::test(\App\Filament\Pages\RapportStatistiques::class)->assertForbidden();
+        Livewire::test(RapportStatistiques::class)->assertForbidden();
 
         $this->actingAs($with);
-        Livewire::test(\App\Filament\Pages\RapportStatistiques::class)->assertSuccessful();
+        Livewire::test(RapportStatistiques::class)->assertSuccessful();
     }
 
     // ---------------------------------------------------------------- exports
@@ -142,8 +150,8 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
 
         // Filament, API, commandes : tout passe par les mêmes facades Pdf / Excel liées au conteneur.
         $this->assertThrows(fn () => Pdf::loadView('exports.transactions-pdf', []), HttpException::class);
-        $this->assertThrows(fn () => Excel::download(new \App\Exports\AgentsExport(null, null), 'x.xlsx'), HttpException::class);
-        $this->assertThrows(fn () => Excel::raw(new \App\Exports\AgentsExport(null, null), \Maatwebsite\Excel\Excel::XLSX), HttpException::class);
+        $this->assertThrows(fn () => Excel::download(new AgentsExport(null, null), 'x.xlsx'), HttpException::class);
+        $this->assertThrows(fn () => Excel::raw(new AgentsExport(null, null), \Maatwebsite\Excel\Excel::XLSX), HttpException::class);
         // Documents transactionnels (reçus) : jamais bloqués.
         $this->assertNull(ExportGate::featureForPdfView('receipts.remboursement'));
     }
@@ -172,7 +180,7 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
 
         $this->assertSame([], (new DebtAlertNotification($agentWithout, 'warning'))->via($without));
         $this->assertSame([], (new PaymentReminderNotification($agentWithout))->via($agentWithout), 'rappel adressé à un agent du tenant');
-        $this->assertSame([], (new \App\Notifications\DebtReminderNotification($agentWithout, 'J+1', 1000.0, 0.0, 1000.0, 'en retard'))->via($without));
+        $this->assertSame([], (new DebtReminderNotification($agentWithout, 'J+1', 1000.0, 0.0, 1000.0, 'en retard'))->via($without));
 
         $this->assertNotEmpty((new DebtAlertNotification($agentWith, 'warning'))->via($with));
         $this->assertNotEmpty((new PaymentReminderNotification($agentWith))->via($agentWith));
@@ -184,7 +192,7 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
         [$tWith, $with] = $this->tenantWith(['notifications_dettes', 'notifications_push']);
         $messaging = $this->mock(FirebaseMessaging::class);
         $messaging->shouldReceive('send')->once(); // une seule fois : pour le tenant qui a la fonctionnalité
-        $notification = new class extends \Illuminate\Notifications\Notification implements \App\Contracts\PushNotification
+        $notification = new class extends Notification implements PushNotification
         {
             public function pushPayload(): array
             {
@@ -266,7 +274,7 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
         $this->assertCount(3, $files);
         $this->assertStringContainsString('20261015', implode(' ', $files), 'les plus récentes sont gardées');
         $this->assertStringNotContainsString('20261011', implode(' ', $files));
-        \Illuminate\Support\Carbon::setTestNow();
+        Carbon::setTestNow();
     }
 
     // ---------------------------------------------------------------- stockage

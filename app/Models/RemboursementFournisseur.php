@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ShortReferenceGenerator;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -54,7 +55,7 @@ class RemboursementFournisseur extends Model
 
         static::creating(function (self $remboursement) {
             if (! $remboursement->reference) {
-                $remboursement->reference = app(\App\Services\ShortReferenceGenerator::class)->generate('R', 'remboursements_fournisseurs');
+                $remboursement->reference = app(ShortReferenceGenerator::class)->generate('R', 'remboursements_fournisseurs');
             }
             if (! $remboursement->payment_date) {
                 $remboursement->payment_date = now();

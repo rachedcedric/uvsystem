@@ -18,6 +18,8 @@ use App\Models\User;
 use App\Models\UvTransaction;
 use App\Services\BusinessPeriodResolver;
 use App\Services\Mobile\MonthOverview;
+use App\Support\Mobile\ChargePeriods;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -40,7 +42,7 @@ class MobileMonthOverviewTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         $this->user = User::factory()->create();
         $this->user->assignRole('master');
         $this->actingAs($this->user);
@@ -172,7 +174,7 @@ class MobileMonthOverviewTest extends TestCase
 
         Livewire::test(Charges\Index::class)->assertSee('Total revenu')->assertSee('Total charges')->assertSee('Exporter en PDF ou Excel')->assertSee('CSV');
 
-        foreach (array_keys(\App\Support\Mobile\ChargePeriods::LABELS) as $period) {
+        foreach (array_keys(ChargePeriods::LABELS) as $period) {
             $pdf = $this->get(route('m.exports.charges', [$period, 'pdf']));
             $pdf->assertOk();
             $this->assertStringStartsWith('%PDF', $pdf->streamedContent(), "$period pdf");
@@ -184,8 +186,8 @@ class MobileMonthOverviewTest extends TestCase
         $this->get('/m/exports/charges/decade/pdf')->assertNotFound();
 
         // Le total de l'export « Tout » reprend celui de la carte.
-        $this->assertSame(23000.0, \App\Support\Mobile\ChargePeriods::summary('all')['charges']);
-        $this->assertSame(12000.0, \App\Support\Mobile\ChargePeriods::summary('today')['charges']);
+        $this->assertSame(23000.0, ChargePeriods::summary('all')['charges']);
+        $this->assertSame(12000.0, ChargePeriods::summary('today')['charges']);
     }
 
     public function test_charges_export_requires_the_export_permission(): void

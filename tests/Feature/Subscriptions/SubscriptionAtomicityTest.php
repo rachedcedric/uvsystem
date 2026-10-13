@@ -8,6 +8,10 @@ use App\Models\Agent;
 use App\Models\Tenant;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Tenancy\TenantContext;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\Events\TransactionBeginning;
+use Illuminate\Database\Events\TransactionCommitted;
+use Illuminate\Database\Events\TransactionRolledBack;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -31,16 +35,16 @@ class SubscriptionAtomicityTest extends SubscriptionTestCase
     {
         $sequence = [];
         $events = app('events');
-        $events->listen(\Illuminate\Database\Events\QueryExecuted::class, function ($e) use (&$sequence) {
+        $events->listen(QueryExecuted::class, function ($e) use (&$sequence) {
             $sequence[] = $e->sql;
         });
-        $events->listen(\Illuminate\Database\Events\TransactionBeginning::class, function () use (&$sequence) {
+        $events->listen(TransactionBeginning::class, function () use (&$sequence) {
             $sequence[] = 'begin';
         });
-        $events->listen(\Illuminate\Database\Events\TransactionCommitted::class, function () use (&$sequence) {
+        $events->listen(TransactionCommitted::class, function () use (&$sequence) {
             $sequence[] = 'commit';
         });
-        $events->listen(\Illuminate\Database\Events\TransactionRolledBack::class, function () use (&$sequence) {
+        $events->listen(TransactionRolledBack::class, function () use (&$sequence) {
             $sequence[] = 'rollback';
         });
 

@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Subscriptions;
 
+use App\Exceptions\InvalidSubscriptionTransition;
 use App\Models\SubscriptionPlan;
 use App\Services\Subscriptions\SubscriptionManager;
 use Database\Seeders\SubscriptionPlanSeeder;
+use Illuminate\Database\UniqueConstraintViolationException;
 use LogicException;
 
 class SubscriptionPlansTest extends SubscriptionTestCase
@@ -57,7 +59,7 @@ class SubscriptionPlansTest extends SubscriptionTestCase
 
     public function test_the_slug_is_unique(): void
     {
-        $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+        $this->expectException(UniqueConstraintViolationException::class);
         SubscriptionPlan::create(['name' => 'Doublon', 'slug' => 'pro', 'monthly_price' => 1, 'yearly_price' => 1]);
     }
 
@@ -83,7 +85,7 @@ class SubscriptionPlansTest extends SubscriptionTestCase
     {
         $this->plan('pro')->update(['is_active' => false]);
 
-        $this->expectException(\App\Exceptions\InvalidSubscriptionTransition::class);
+        $this->expectException(InvalidSubscriptionTransition::class);
         app(SubscriptionManager::class)->startTrial($this->tenant(), $this->plan('pro'));
     }
 

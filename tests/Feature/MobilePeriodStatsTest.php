@@ -13,7 +13,12 @@ use App\Models\User;
 use App\Models\UvTransaction;
 use App\Services\BusinessPeriodResolver;
 use App\Services\Mobile\PeriodStats;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -33,7 +38,7 @@ class MobilePeriodStatsTest extends TestCase
     {
         parent::setUp();
 
-        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+        $this->seed(RolesAndPermissionsSeeder::class);
         $this->user = User::factory()->create();
         $this->user->assignRole(Role::where('name', 'master')->first() ?? Role::first());
         $this->actingAs($this->user);
@@ -47,7 +52,7 @@ class MobilePeriodStatsTest extends TestCase
         UvTransaction::withoutEvents(fn () => UvTransaction::create([
             'agent_id' => $this->agent->id, 'fournisseur_id' => $this->fournisseur->id, 'user_id' => $this->user->id,
             'transaction_type' => $type, 'amount' => $amount, 'transaction_date' => $date, 'status' => $status,
-            'reference' => 'V-'.strtoupper(\Illuminate\Support\Str::random(6)),
+            'reference' => 'V-'.strtoupper(Str::random(6)),
         ]));
     }
 
@@ -77,7 +82,7 @@ class MobilePeriodStatsTest extends TestCase
             foreach ([[40000, now()], [60000, now()->subWeek()], [10000, now()->subMonths(2)]] as [$amount, $date]) {
                 Remboursement::create([
                     'agent_id' => $this->agent->id, 'user_id' => $this->user->id, 'amount' => $amount,
-                    'payment_date' => $date, 'payment_method' => 'cash', 'reference' => 'R-'.strtoupper(\Illuminate\Support\Str::random(6)),
+                    'payment_date' => $date, 'payment_method' => 'cash', 'reference' => 'R-'.strtoupper(Str::random(6)),
                 ]);
             }
         });
@@ -85,7 +90,7 @@ class MobilePeriodStatsTest extends TestCase
             foreach ([300000, 200000] as $amount) {
                 Approvisionnement::create([
                     'user_id' => $this->user->id, 'fournisseur_id' => $this->fournisseur->id, 'amount' => $amount,
-                    'date_approvisionnement' => now(), 'reference' => 'A-'.strtoupper(\Illuminate\Support\Str::random(6)),
+                    'date_approvisionnement' => now(), 'reference' => 'A-'.strtoupper(Str::random(6)),
                 ]);
             }
         });
@@ -105,8 +110,8 @@ class MobilePeriodStatsTest extends TestCase
 
     public function test_yesterday_and_month_evolution_have_explicit_zero_days(): void
     {
-        $now = \Illuminate\Support\Carbon::parse('2026-10-15 10:00:00');
-        \Illuminate\Support\Carbon::setTestNow($now);
+        $now = Carbon::parse('2026-10-15 10:00:00');
+        Carbon::setTestNow($now);
 
         Remboursement::withoutEvents(function () {
             foreach ([['2026-10-14 09:00', 70000], ['2026-10-14 15:00', 30000], ['2026-10-03 12:00', 50000], ['2026-09-30 12:00', 99000]] as $i => [$date, $amount]) {
@@ -132,7 +137,7 @@ class MobilePeriodStatsTest extends TestCase
         Livewire::test(Remboursements\Index::class)
             ->assertSee('Évolution')->assertSee('Hier')->assertSee('Moy.');
 
-        \Illuminate\Support\Carbon::setTestNow();
+        Carbon::setTestNow();
     }
 
     public function test_period_exports_download_pdf_and_excel_for_every_module(): void
@@ -186,8 +191,8 @@ class MobilePeriodStatsTest extends TestCase
 
     public function test_a_pdf_failure_is_logged_and_returns_a_clear_error_not_a_blank_500(): void
     {
-        \Illuminate\Support\Facades\Log::shouldReceive('error')->once()->withArgs(fn ($m) => str_contains($m, 'Export PDF'));
-        \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('loadView')->andThrow(new \RuntimeException('Allowed memory size exhausted'));
+        Log::shouldReceive('error')->once()->withArgs(fn ($m) => str_contains($m, 'Export PDF'));
+        Pdf::shouldReceive('loadView')->andThrow(new \RuntimeException('Allowed memory size exhausted'));
 
         $this->get(route('m.exports.period', ['ventes', 'all', 'pdf']))
             ->assertStatus(500)->assertJsonPath('message', fn ($m) => str_contains($m, "Le PDF n'a pas pu être généré"));

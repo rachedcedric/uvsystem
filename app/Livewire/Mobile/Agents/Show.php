@@ -3,6 +3,10 @@
 namespace App\Livewire\Mobile\Agents;
 
 use App\Models\Agent;
+use App\Models\Remboursement;
+use App\Models\UvTransaction;
+use App\Notifications\PaymentReminderNotification;
+use App\Services\SmsService;
 use App\Services\UvDistributionService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -45,12 +49,12 @@ class Show extends Component
         try {
             if (in_array($this->channel, ['sms', 'both'], true)) {
                 $sms = $message ?: "Bonjour {$agent->name}, vous avez une dette de ".number_format($agent->current_debt, 0, ',', ' ').' FCFA en attente. Merci de régulariser votre situation. - '.config('branding.name');
-                if (app(\App\Services\SmsService::class)->sendToAgent($agent, $sms)) {
+                if (app(SmsService::class)->sendToAgent($agent, $sms)) {
                     $sent[] = 'SMS';
                 }
             }
             if (in_array($this->channel, ['email', 'both'], true) && $agent->email) {
-                $agent->notify(new \App\Notifications\PaymentReminderNotification($agent, $message));
+                $agent->notify(new PaymentReminderNotification($agent, $message));
                 $sent[] = 'E-mail';
             }
         } catch (\Throwable $e) {
@@ -119,8 +123,8 @@ class Show extends Component
             'canRemind' => $agent->current_debt > 0 && $user->can('view', $agent),
             'canEdit' => $user->can('update', $agent),
             'canDelete' => $user->can('delete', $agent),
-            'canSell' => $agent->status === 'active' && $user->can('create', \App\Models\UvTransaction::class),
-            'canCollect' => $agent->status === 'active' && $agent->current_debt > 0 && $user->can('create', \App\Models\Remboursement::class),
+            'canSell' => $agent->status === 'active' && $user->can('create', UvTransaction::class),
+            'canCollect' => $agent->status === 'active' && $agent->current_debt > 0 && $user->can('create', Remboursement::class),
         ]);
     }
 }

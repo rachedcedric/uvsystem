@@ -6,6 +6,7 @@ use App\Models\Agent;
 use App\Models\PushToken;
 use App\Models\User;
 use App\Notifications\DebtReminderNotification;
+use Carbon\Carbon;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +70,7 @@ class NotificationDiagnostics
                 'Ajoutez une tâche cron chez l\'hébergeur, chaque minute : php /chemin/du/site/artisan schedule:run >> /dev/null 2>&1');
         }
 
-        $minutes = (int) now()->diffInMinutes(\Carbon\Carbon::createFromTimestamp((int) $last), true);
+        $minutes = (int) now()->diffInMinutes(Carbon::createFromTimestamp((int) $last), true);
 
         return $minutes <= 3
             ? $this->check('scheduler', 'Planificateur (cron)', 'ok', 'Actif — dernière exécution il y a '.($minutes === 0 ? 'moins d\'une minute' : $minutes.' min').'.')
@@ -90,7 +91,7 @@ class NotificationDiagnostics
 
         $pending = DB::table(config('queue.connections.database.table', 'jobs'))->count();
         $oldest = DB::table(config('queue.connections.database.table', 'jobs'))->min('created_at');
-        $age = $oldest ? (int) now()->diffInMinutes(\Carbon\Carbon::createFromTimestamp((int) $oldest), true) : 0;
+        $age = $oldest ? (int) now()->diffInMinutes(Carbon::createFromTimestamp((int) $oldest), true) : 0;
         $failed = Schema::hasTable('failed_jobs') ? DB::table('failed_jobs')->count() : 0;
 
         if ($pending > 0 && $age >= 3) {
@@ -119,7 +120,7 @@ class NotificationDiagnostics
             return $this->check('reminders', 'Rappels de dette', 'warn', "{$debtors} agent(s) endetté(s) mais aucun rappel n'a encore été envoyé.", 'Lancez « Envoyer les rappels maintenant » depuis Dettes, ou vérifiez le planificateur.');
         }
 
-        $hours = (int) now()->diffInHours(\Carbon\Carbon::parse($last), true);
+        $hours = (int) now()->diffInHours(Carbon::parse($last), true);
 
         return $hours <= 3
             ? $this->check('reminders', 'Rappels de dette', 'ok', 'Dernier rappel il y a '.($hours === 0 ? 'moins d\'une heure' : "{$hours} h").' (cycle de 2 h).')

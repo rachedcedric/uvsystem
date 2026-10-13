@@ -5,6 +5,7 @@ namespace App\Livewire\Mobile\Ventes;
 use App\Models\UvTransaction;
 use App\Services\UvDistributionService;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -49,7 +50,7 @@ class Show extends Component
             $new = $t->transaction_type === 'retour'
                 ? $service->processReturn($t->agent, (float) $t->amount, now(), $t->notes)
                 : $service->distribute($t->agent, (float) $t->amount, $t->fournisseur, now(), $t->notes);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $this->dispatch('m-toast', message: 'Duplication impossible : '.collect($e->errors())->flatten()->implode(' '), type: 'error');
 
             return null;

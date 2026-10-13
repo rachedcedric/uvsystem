@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Exports\VentesUvExport;
 use App\Filament\Resources\VenteUvResource\Pages;
 use App\Models\VenteUv;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -87,7 +88,7 @@ class VenteUvResource extends Resource
                             ->minValue(1)
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
-                                $montant = \App\Support\Money::toFloat($get('montant_total'));
+                                $montant = Money::toFloat($get('montant_total'));
                                 if ($state > 0 && $montant > 0) {
                                     $prixUnitaire = $montant / $state;
                                     $set('_prix_unitaire_display', number_format($prixUnitaire, 2).' FCFA/UV');
@@ -102,7 +103,7 @@ class VenteUvResource extends Resource
                             ->live(onBlur: true)
                             ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 $quantity = $get('quantity_uv');
-                                $montant = \App\Support\Money::toFloat($state);
+                                $montant = Money::toFloat($state);
                                 if ($quantity > 0 && $montant > 0) {
                                     $prixUnitaire = $montant / $quantity;
                                     $set('_prix_unitaire_display', number_format($prixUnitaire, 2).' FCFA/UV');

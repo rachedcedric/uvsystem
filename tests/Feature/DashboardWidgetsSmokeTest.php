@@ -2,7 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Widgets\CaChartWidget;
+use App\Filament\Widgets\CommissionKpisWidget;
+use App\Filament\Widgets\CommissionMonthlyChartWidget;
+use App\Filament\Widgets\MainKpisWidget;
+use App\Filament\Widgets\MonthlyChartWidget;
+use App\Filament\Widgets\MonthlyPerformanceWidget;
 use App\Filament\Widgets\NotificationsRecentesWidget;
+use App\Filament\Widgets\RealTimeActivityWidget;
+use App\Filament\Widgets\RemboursementsStatsWidget;
+use App\Filament\Widgets\VentesUvStatsWidget;
 use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
@@ -47,19 +56,19 @@ class DashboardWidgetsSmokeTest extends TestCase
         // (ils vivent sur d'autres pages) : ils doivent quand même rester
         // résolubles par Livewire, ce qui exige que discoverWidgets() reste
         // actif sur le panel en plus de la liste curée du Dashboard.
-        Livewire::test(\App\Filament\Widgets\RemboursementsStatsWidget::class)->assertOk();
-        Livewire::test(\App\Filament\Widgets\VentesUvStatsWidget::class)->assertOk();
+        Livewire::test(RemboursementsStatsWidget::class)->assertOk();
+        Livewire::test(VentesUvStatsWidget::class)->assertOk();
     }
 
     public function test_transaction_widgets_use_the_compact_layout(): void
     {
-        Livewire::test(\App\Filament\Widgets\VentesUvStatsWidget::class)
+        Livewire::test(VentesUvStatsWidget::class)
             ->assertSeeHtml('compact-stat-card');
-        Livewire::test(\App\Filament\Widgets\RemboursementsStatsWidget::class)
+        Livewire::test(RemboursementsStatsWidget::class)
             ->assertSeeHtml('compact-stat-card');
-        Livewire::test(\App\Filament\Widgets\CommissionKpisWidget::class)
+        Livewire::test(CommissionKpisWidget::class)
             ->assertSeeHtml('compact-stat-card');
-        Livewire::test(\App\Filament\Widgets\CommissionMonthlyChartWidget::class)
+        Livewire::test(CommissionMonthlyChartWidget::class)
             ->assertSeeHtml('max-height: 200px');
     }
 
@@ -126,22 +135,22 @@ class DashboardWidgetsSmokeTest extends TestCase
 
         $this->actingAs($user);
 
-        Livewire::test(\App\Filament\Widgets\MainKpisWidget::class)
+        Livewire::test(MainKpisWidget::class)
             ->assertSee('Solde UV Disponible')
             ->assertSee('Ventes aujourd\'hui')
             ->assertSee('Commission prévisionnelle');
 
-        Livewire::test(\App\Filament\Widgets\RealTimeActivityWidget::class)
+        Livewire::test(RealTimeActivityWidget::class)
             ->assertSee('Activité récente')
             ->assertSee($uvTransaction->reference);
 
-        Livewire::test(\App\Filament\Widgets\CaChartWidget::class)
+        Livewire::test(CaChartWidget::class)
             ->assertSee('Chiffre d\'affaires');
 
-        Livewire::test(\App\Filament\Widgets\MonthlyPerformanceWidget::class)
+        Livewire::test(MonthlyPerformanceWidget::class)
             ->assertSee('Performance mensuelle');
 
-        Livewire::test(\App\Filament\Widgets\MonthlyChartWidget::class)
+        Livewire::test(MonthlyChartWidget::class)
             ->assertSee('Évolution du CA');
     }
 }

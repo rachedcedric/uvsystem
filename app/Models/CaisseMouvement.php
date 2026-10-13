@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ShortReferenceGenerator;
 use App\Tenancy\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -57,7 +58,7 @@ class CaisseMouvement extends Model
 
         static::creating(function (self $mouvement) {
             if (! $mouvement->reference) {
-                $mouvement->reference = app(\App\Services\ShortReferenceGenerator::class)->generate('C', 'caisse_mouvements');
+                $mouvement->reference = app(ShortReferenceGenerator::class)->generate('C', 'caisse_mouvements');
             }
             if (! $mouvement->date_mouvement) {
                 $mouvement->date_mouvement = now();

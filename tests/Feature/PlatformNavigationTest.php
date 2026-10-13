@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Tenant;
 use App\Models\User;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -65,7 +66,7 @@ class PlatformNavigationTest extends TestCase
 
     public function test_a_tenant_user_sees_no_platform_menu_and_cannot_open_it(): void
     {
-        $tenant = \App\Models\Tenant::create(['name' => 'Société Test']);
+        $tenant = Tenant::create(['name' => 'Société Test']);
         $master = TenantContext::runAs($tenant->id, function () {
             $user = User::factory()->create();
             $user->assignRole('master');

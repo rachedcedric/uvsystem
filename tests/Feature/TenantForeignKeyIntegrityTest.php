@@ -12,6 +12,7 @@ use App\Models\AgentSolde;
 use App\Models\Approvisionnement;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
+use App\Models\Commission;
 use App\Models\Fournisseur;
 use App\Models\SousDistributeur;
 use App\Models\Tenant;
@@ -210,7 +211,7 @@ class TenantForeignKeyIntegrityTest extends TestCase
         $this->assertEqualsCanonicalizing(['fournisseur_id', 'user_id'], $protected(Approvisionnement::class));
         $this->assertEqualsCanonicalizing(['category_id', 'created_by', 'updated_by'], $protected(Charge::class));
         $this->assertEqualsCanonicalizing(['agent_id'], $protected(SousDistributeur::class));
-        $this->assertContains('commission_globale_id', $protected(\App\Models\Commission::class));
+        $this->assertContains('commission_globale_id', $protected(Commission::class));
     }
 
     // ---- par les surfaces d'entrée -------------------------------------------------------------------------------

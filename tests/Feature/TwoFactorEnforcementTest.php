@@ -7,6 +7,7 @@ use App\Security\TwoFactorGate;
 use App\Services\TwoFactorAuthService;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Cookie\CookieValuePrefix;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -114,7 +115,7 @@ class TwoFactorEnforcementTest extends TestCase
         $response = $this->actingAs($user)->post('/2fa/verify', ['code' => $this->otp($user), 'trust_device' => '1']);
         $cookie = collect($response->headers->getCookies())->first(fn ($c) => $c->getName() === TwoFactorGate::COOKIE);
         $this->assertNotNull($cookie);
-        $token = \Illuminate\Cookie\CookieValuePrefix::remove($this->app['encrypter']->decrypt($cookie->getValue(), false));
+        $token = CookieValuePrefix::remove($this->app['encrypter']->decrypt($cookie->getValue(), false));
 
         // Nouvelle session (le cookie de confiance est conservé par l'appareil) : pas de nouveau code.
         session()->flush();

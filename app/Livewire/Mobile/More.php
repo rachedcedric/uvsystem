@@ -2,6 +2,39 @@
 
 namespace App\Livewire\Mobile;
 
+use App\Filament\Pages\ActivityLogPage;
+use App\Filament\Pages\AgentScoringPage;
+use App\Filament\Pages\ChargesPage;
+use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\DettesFournisseursPage;
+use App\Filament\Pages\DettesPage;
+use App\Filament\Pages\ImportPage;
+use App\Filament\Pages\MaCaissePage;
+use App\Filament\Pages\NotificationsPage;
+use App\Filament\Pages\RapportStatistiques;
+use App\Filament\Pages\ReportsPage;
+use App\Filament\Pages\StatisticsPage;
+use App\Filament\Pages\SubscriptionPage;
+use App\Filament\Pages\TenantProfilePage;
+use App\Filament\Pages\TwoFactorAuthPage;
+use App\Filament\Resources\ActivityLogResource;
+use App\Filament\Resources\AgentPartenaireResource;
+use App\Filament\Resources\AgentResource;
+use App\Filament\Resources\ApprovisionnementResource;
+use App\Filament\Resources\CaisseCategorieResource;
+use App\Filament\Resources\ChargeCategorieResource;
+use App\Filament\Resources\CommissionResource;
+use App\Filament\Resources\FournisseurResource;
+use App\Filament\Resources\PalierCommissionResource;
+use App\Filament\Resources\PaymentMethodResource;
+use App\Filament\Resources\RemboursementFournisseurResource;
+use App\Filament\Resources\RemboursementResource;
+use App\Filament\Resources\SousDistributeurResource;
+use App\Filament\Resources\UserResource;
+use App\Filament\Resources\UvTransactionResource;
+use App\Services\TenantDocumentBranding;
+use App\Support\Mobile\Crud\Registry;
+use App\Support\Mobile\Nav;
 use Filament\Facades\Filament;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -25,36 +58,36 @@ class More extends Component
 
             // Écrans déjà disponibles en natif : inutile de les proposer en version complète.
             $ported = [
-                \App\Filament\Pages\Dashboard::getUrl(),
-                \App\Filament\Resources\UvTransactionResource::getUrl('index'),
-                \App\Filament\Resources\RemboursementResource::getUrl('index'),
-                \App\Filament\Resources\AgentResource::getUrl('index'),
-                \App\Filament\Resources\ApprovisionnementResource::getUrl('index'),
-                \App\Filament\Pages\ChargesPage::getUrl(),
-                \App\Filament\Pages\MaCaissePage::getUrl(),
-                \App\Filament\Pages\NotificationsPage::getUrl(),
-                \App\Filament\Resources\FournisseurResource::getUrl('index'),
-                \App\Filament\Resources\PalierCommissionResource::getUrl('index'),
-                \App\Filament\Resources\PaymentMethodResource::getUrl('index'),
-                \App\Filament\Resources\ChargeCategorieResource::getUrl('index'),
-                \App\Filament\Resources\UserResource::getUrl('index'),
-                \App\Filament\Resources\SousDistributeurResource::getUrl('index'),
-                \App\Filament\Resources\AgentPartenaireResource::getUrl('index'),
-                \App\Filament\Resources\CaisseCategorieResource::getUrl('index'),
-                \App\Filament\Resources\CommissionResource::getUrl('index'),
-                \App\Filament\Resources\ActivityLogResource::getUrl('index'),
-                \App\Filament\Resources\RemboursementFournisseurResource::getUrl('index'),
-                \App\Filament\Pages\DettesPage::getUrl(),
-                \App\Filament\Pages\DettesFournisseursPage::getUrl(),
-                \App\Filament\Pages\StatisticsPage::getUrl(),
-                \App\Filament\Pages\RapportStatistiques::getUrl(),
-                \App\Filament\Pages\AgentScoringPage::getUrl(),
-                \App\Filament\Pages\ReportsPage::getUrl(),
-                \App\Filament\Pages\ImportPage::getUrl(),
-                \App\Filament\Pages\TwoFactorAuthPage::getUrl(),
-                \App\Filament\Pages\ActivityLogPage::getUrl(),
-                \App\Filament\Pages\SubscriptionPage::getUrl(),
-                \App\Filament\Pages\TenantProfilePage::getUrl(),
+                Dashboard::getUrl(),
+                UvTransactionResource::getUrl('index'),
+                RemboursementResource::getUrl('index'),
+                AgentResource::getUrl('index'),
+                ApprovisionnementResource::getUrl('index'),
+                ChargesPage::getUrl(),
+                MaCaissePage::getUrl(),
+                NotificationsPage::getUrl(),
+                FournisseurResource::getUrl('index'),
+                PalierCommissionResource::getUrl('index'),
+                PaymentMethodResource::getUrl('index'),
+                ChargeCategorieResource::getUrl('index'),
+                UserResource::getUrl('index'),
+                SousDistributeurResource::getUrl('index'),
+                AgentPartenaireResource::getUrl('index'),
+                CaisseCategorieResource::getUrl('index'),
+                CommissionResource::getUrl('index'),
+                ActivityLogResource::getUrl('index'),
+                RemboursementFournisseurResource::getUrl('index'),
+                DettesPage::getUrl(),
+                DettesFournisseursPage::getUrl(),
+                StatisticsPage::getUrl(),
+                RapportStatistiques::getUrl(),
+                AgentScoringPage::getUrl(),
+                ReportsPage::getUrl(),
+                ImportPage::getUrl(),
+                TwoFactorAuthPage::getUrl(),
+                ActivityLogPage::getUrl(),
+                SubscriptionPage::getUrl(),
+                TenantProfilePage::getUrl(),
                 '/agent', // « Mon espace agent » : déjà proposé en natif
             ];
 
@@ -82,15 +115,15 @@ class More extends Component
         $user = auth()->user();
 
         $company = $user->tenant;
-        $hasLogo = $company && app(\App\Services\TenantDocumentBranding::class)->storedLogoPath($company) !== null;
+        $hasLogo = $company && app(TenantDocumentBranding::class)->storedLogoPath($company) !== null;
 
         return view('livewire.mobile.more', [
             'user' => $user,
             'company' => $company,
             'companyLogo' => $hasLogo ? route('tenant.branding.logo', ['v' => $company->updated_at?->timestamp], false) : null,
             'role' => $user->getRoleNames()->first(),
-            'native' => \App\Support\Mobile\Nav::moreItems($user),
-            'resourceGroups' => \App\Support\Mobile\Crud\Registry::menuFor($user),
+            'native' => Nav::moreItems($user),
+            'resourceGroups' => Registry::menuFor($user),
             'groups' => $this->fullVersionGroups(),
         ]);
     }

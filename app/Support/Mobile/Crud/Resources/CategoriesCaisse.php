@@ -8,6 +8,7 @@ use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\ValidationException;
 
 class CategoriesCaisse extends MobileResource
 {
@@ -93,7 +94,7 @@ class CategoriesCaisse extends MobileResource
     public static function save(array $data, ?Model $record): Model
     {
         if (CaisseCategorie::nameIsTaken((string) $data['name'], $record?->getKey())) {
-            throw \Illuminate\Validation\ValidationException::withMessages(['name' => 'Une catégorie portant ce nom existe déjà.']);
+            throw ValidationException::withMessages(['name' => 'Une catégorie portant ce nom existe déjà.']);
         }
 
         return parent::save($data, $record);

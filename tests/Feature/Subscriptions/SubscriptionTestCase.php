@@ -5,9 +5,12 @@ namespace Tests\Feature\Subscriptions;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Subscriptions\SubscriptionAccessPolicy;
 use App\Tenancy\TenantContext;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 abstract class SubscriptionTestCase extends TestCase
@@ -21,7 +24,7 @@ abstract class SubscriptionTestCase extends TestCase
         // Ici on teste l'isolation et les droits : aucun tenant de repli pour les requêtes anonymes.
         TenantContext::setFallback(null);
         // Aucun test n'écrit dans le vrai stockage du projet.
-        \Illuminate\Support\Facades\Storage::fake('local');
+        Storage::fake('local');
     }
 
     protected function plan(string $slug): SubscriptionPlan
@@ -55,7 +58,7 @@ abstract class SubscriptionTestCase extends TestCase
     /** Fait avancer l'horloge ET vide le mémo de la politique d'accès (en production, une requête dure quelques ms). */
     protected function travelToDate(string $date): void
     {
-        \Illuminate\Support\Carbon::setTestNow($date);
-        \App\Services\Subscriptions\SubscriptionAccessPolicy::flush();
+        Carbon::setTestNow($date);
+        SubscriptionAccessPolicy::flush();
     }
 }
