@@ -410,7 +410,7 @@
                     @endif
                     <a href="{{ route('filament.admin.auth.login', [], false) }}">Espace web</a>
                 </div>
-                <p>© {{ date('Y') }} {{ config('branding.name') }}</p>
+                <p>© {{ date('Y') }} {{ cms('settings.brand.legal_name') }}</p>
             </div>
         </footer>
     </body>

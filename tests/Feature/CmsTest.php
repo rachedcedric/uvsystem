@@ -337,11 +337,11 @@ class CmsTest extends TestCase
 
         $this->actingAs($this->superAdmin());
         $this->edit(LandingContent::class, ['landing.hero.title' => "Nouveau titre\nDeuxième ligne", 'landing.cta.primary' => 'Lancez-vous', 'landing.footer.tagline' => 'Notre slogan']);
-        $this->edit(SaasSettings::class, ['settings.contact.email' => 'hello@acme.example', 'settings.contact.phone' => '+225 01 02 03 04']);
+        $this->edit(SaasSettings::class, ['settings.contact.email' => 'hello@acme.example', 'settings.contact.phone' => '+225 01 02 03 04', 'settings.brand.legal_name' => 'ACME SARL']);
         auth()->logout();
 
         $this->get('/')->assertOk()->assertSee('Nouveau titre<br>Deuxième ligne', false)->assertSee('Lancez-vous')->assertSee('Notre slogan')
-            ->assertSee('mailto:hello@acme.example', false)->assertSee('tel:+225', false)->assertDontSee('Vos flux UV.');
+            ->assertSee('mailto:hello@acme.example', false)->assertSee('tel:+225', false)->assertSee('ACME SARL')->assertDontSee('Vos flux UV.');
     }
 
     public function test_edited_email_texts_are_the_ones_sent(): void
