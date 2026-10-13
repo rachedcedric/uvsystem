@@ -142,7 +142,7 @@ Rien de ce qui suit n'a été exécuté sur la production ni sur un serveur rée
 | 3 | Suite de tests SQLite | VALIDÉ | 1248 réussis, 1 ignoré, 0 échec |
 | 4 | Suite de tests MySQL 8.0.46 | VALIDÉ | 1233 réussis, 16 ignorés (tests de DDL propres à SQLite, déjà exercés par la vraie migration sur MySQL), 0 échec |
 | 5 | Dépendances (`composer audit`) | VALIDÉ | 0 avis après mise à jour (Laravel 12.69, Filament 3.3.56, Livewire 3.8) ; `npm audit --omit=dev` : 0 vulnérabilité |
-| 6 | Style (Pint) | ÉCHEC (préexistant) | `pint --test` signale 182 fichiers dont beaucoup non modifiés ici ; non corrigé pour ne pas mélanger un reformatage global à la migration |
+| 6 | Style (Pint) | VALIDÉ | `pint --test` passe (mise en forme appliquée sur tout le dépôt, sans changement de comportement) |
 | 7 | Image Docker, pile complète, HTTPS, en-têtes, redirection 80→443, un seul service publié (Caddy), workers et planificateur sains | VALIDÉ (local) | `healthcheck.sh` = 0 |
 | 8 | Redirection `www` → apex | VALIDÉ (local, règle Caddy) / NON TESTÉ en réel | dépend du DNS |
 | 9 | Sauvegarde → préflight → migration sur base vide | VALIDÉ (local) | |
