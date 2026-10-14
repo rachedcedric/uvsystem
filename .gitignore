@@ -31,6 +31,7 @@
 /storage/app/public/*
 !storage/app/public/.gitkeep
 /vendor
+**/.engram/
 Homestead.json
 Homestead.yaml
 Thumbs.db
