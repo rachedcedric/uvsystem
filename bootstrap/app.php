@@ -9,6 +9,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -33,7 +34,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         // Invité sur une route web protégée => page de connexion Filament (il n'existe pas de route "login" nommée).
-        $middleware->redirectGuestsTo(fn () => route('filament.admin.auth.login'));
+        // L'application Android (agent utilisateur « UvmasterApp », voir capacitor.config.json) retrouve sa connexion mobile :
+        // sinon une session expirée sur /security/sessions la jetait sur la page de bureau (« Commencer gratuitement »).
+        $middleware->redirectGuestsTo(fn (Request $request) => str_contains((string) $request->userAgent(), 'UvmasterApp')
+            ? route('m.login')
+            : route('filament.admin.auth.login'));
 
         // Stateful API pour Sanctum (frontend SPA)
         $middleware->statefulApi();

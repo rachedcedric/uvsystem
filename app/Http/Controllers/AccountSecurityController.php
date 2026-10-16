@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
@@ -53,11 +54,18 @@ class AccountSecurityController extends Controller
 
         abort_unless($this->usesDatabaseSessions(), 404);
 
-        DB::table(config('session.table', 'sessions'))
+        $closed = DB::table(config('session.table', 'sessions'))
             ->where('id', $request->session_id)
             ->where('user_id', $request->user()->getKey())
             ->where('id', '!=', $request->session()->getId())
             ->delete();
+
+        // Supprimer la ligne ne suffit pas : un appareil connecté avec « Rester connecté » se reconnecte seul grâce
+        // au cookie « se souvenir de moi ». Le jeton est unique par compte : on le fait tourner (les cookies déjà émis
+        // cessent de valoir, les sessions encore ouvertes continuent jusqu'à leur expiration).
+        if ($closed > 0) {
+            $request->user()->forceFill(['remember_token' => Str::random(60)])->saveQuietly();
+        }
 
         return back()->with('status', 'Appareil déconnecté.');
     }

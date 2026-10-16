@@ -119,6 +119,44 @@ class AccountSecurityTest extends TestCase
         $this->assertDatabaseMissing('sessions', ['id' => 'mine-other-device']);
     }
 
+    public function test_closing_a_device_also_cancels_its_remember_me_cookie(): void
+    {
+        config(['session.driver' => 'database']);
+        $me = $this->userWith();
+        $me->forceFill(['remember_token' => 'ancien-jeton'])->saveQuietly();
+        $this->fakeSession($me, 'mine-other-device');
+
+        // Sans rotation du jeton, l'appareil fermé se reconnectait aussitôt avec son cookie « Rester connecté ».
+        $this->actingAs($me)->post('/security/sessions/revoke', ['session_id' => 'mine-other-device'])->assertRedirect();
+
+        $this->assertDatabaseMissing('sessions', ['id' => 'mine-other-device']);
+        $this->assertNotSame('ancien-jeton', $me->fresh()->remember_token);
+    }
+
+    public function test_a_refused_revocation_leaves_the_remember_token_alone(): void
+    {
+        config(['session.driver' => 'database']);
+        $me = $this->userWith();
+        $other = $this->userWith('commercial');
+        $me->forceFill(['remember_token' => 'ancien-jeton'])->saveQuietly();
+        $this->fakeSession($other, 'theirs');
+
+        $this->actingAs($me)->post('/security/sessions/revoke', ['session_id' => 'theirs'])->assertRedirect();
+
+        $this->assertSame('ancien-jeton', $me->fresh()->remember_token);
+    }
+
+    public function test_a_signed_out_android_app_goes_back_to_the_mobile_login_not_the_desktop_one(): void
+    {
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (Linux; Android 16) UvmasterApp')
+            ->get('/security/sessions')
+            ->assertRedirect(route('m.login'));
+
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (Macintosh) Chrome/130')
+            ->get('/security/sessions')
+            ->assertRedirect(route('filament.admin.auth.login'));
+    }
+
     public function test_signing_out_everywhere_requires_the_password_and_keeps_only_this_session(): void
     {
         config(['session.driver' => 'database']);
