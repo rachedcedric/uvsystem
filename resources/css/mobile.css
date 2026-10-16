@@ -1206,6 +1206,15 @@ button.m-row:active {
     transform: none;
 }
 
+/* La bande est fixe : tant qu'elle est affichée on réserve sa hauteur, sinon elle recouvre le titre et la cloche. */
+body:has(.m-offline[data-show]) .m-main {
+    padding-top: 32px;
+}
+
+body:has(.m-offline[data-show]) .m-appbar {
+    top: 32px;
+}
+
 .m-ptr {
     position: fixed;
     top: calc(var(--sat) + 8px);
@@ -1689,8 +1698,8 @@ button.m-row:active {
     display: none;
 }
 
-/* Bannière de notification (touchable) */
-.m-toast[data-url] {
+/* Bannière de notification (touchable seulement tant qu'elle est affichée : cachée, elle ne doit pas capter les taps) */
+.m-toast[data-url][data-show] {
     pointer-events: auto;
     cursor: pointer;
 }

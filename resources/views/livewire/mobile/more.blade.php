@@ -5,7 +5,7 @@
         <div class="m-group" style="margin-top:4px">
             @php
                 $leadHtml = $companyLogo
-                    ? new \Illuminate\Support\HtmlString('<img src="'.e($companyLogo).'" alt="" style="max-width:100%;max-height:100%;object-fit:contain">')
+                    ? new \Illuminate\Support\HtmlString('<img src="'.e($companyLogo).'" alt="" style="width:100%;aspect-ratio:1;object-fit:contain;border-radius:inherit">')
                     : mb_strtoupper(mb_substr($company->name, 0, 2));
             @endphp
             <x-m.row :lead="$leadHtml" :title="$company->name" sub="Entreprise" :chevron="false" />

@@ -224,4 +224,33 @@ class MobileDesignSystemTest extends TestCase
         $this->assertMatchesRegularExpression('/\.m-link\s*\{[^}]*min-height:\s*44px/s', $css);
         $this->assertMatchesRegularExpression('/\.m-danger-link\s*\{[^}]*height:\s*52px/s', $css);
     }
+
+    public function test_a_hidden_toast_never_captures_taps(): void
+    {
+        $css = (string) file_get_contents(base_path('resources/css/mobile.css'));
+
+        // Cachée (sans data-show), la bannière de notification est transparente : elle ne doit pas rester cliquable,
+        // sinon elle recouvre le bouton flottant et ouvre les notifications à la place de l'action visée.
+        $this->assertMatchesRegularExpression('/\.m-toast\s*\{[^}]*pointer-events:\s*none/s', $css);
+        $this->assertMatchesRegularExpression('/\.m-toast\[data-url\]\[data-show\]\s*\{[^}]*pointer-events:\s*auto/s', $css);
+        $this->assertDoesNotMatchRegularExpression('/\.m-toast\[data-url\]\s*\{[^}]*pointer-events:\s*auto/s', $css);
+    }
+
+    public function test_the_offline_banner_reserves_its_height_instead_of_covering_the_header(): void
+    {
+        $css = (string) file_get_contents(base_path('resources/css/mobile.css'));
+
+        $this->assertMatchesRegularExpression('/body:has\(\.m-offline\[data-show\]\)\s+\.m-main\s*\{[^}]*padding-top:\s*32px/s', $css);
+        $this->assertMatchesRegularExpression('/body:has\(\.m-offline\[data-show\]\)\s+\.m-appbar\s*\{[^}]*top:\s*32px/s', $css);
+    }
+
+    public function test_the_company_logo_in_the_more_screen_has_an_explicit_size(): void
+    {
+        $view = (string) file_get_contents(resource_path('views/livewire/mobile/more.blade.php'));
+
+        // max-height:100% ou height:100% ne bornent rien dans une cellule de grille à hauteur automatique : le logo
+        // gardait son ratio (40×53) et débordait de la carte. aspect-ratio:1 le force à rester dans la case carrée.
+        $this->assertStringContainsString('width:100%;aspect-ratio:1;object-fit:contain', $view);
+        $this->assertStringNotContainsString('max-height:100%;object-fit', $view);
+    }
 }
