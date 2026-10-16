@@ -249,7 +249,7 @@ final class Field
             'toggle' => ['boolean'],
             'multi' => ['array'],
             'color' => ['regex:/^#[0-9a-fA-F]{6}$/'],
-            'password' => ['string', 'min:8'],
+            'password' => ['string', 'min:12'],
             'select' => [Rule::in(array_map('strval', array_keys($this->resolveOptions())))],
             default => ['string'],
         });

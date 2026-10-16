@@ -67,8 +67,8 @@ return new class extends Migration
         });
 
         $tenantId = DB::table('tenants')->insertGetId([
-            'name' => env('DEFAULT_TENANT_NAME', 'MODELEC CI'),
-            'slug' => 'modelec-ci',
+            'name' => env('DEFAULT_TENANT_NAME', 'UVMASTER CI'),
+            'slug' => 'uvmaster-ci',
             'status' => 'active',
             'created_at' => now(),
             'updated_at' => now(),

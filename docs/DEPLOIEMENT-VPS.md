@@ -57,7 +57,7 @@ dc exec -u www-data app php artisan platform:super-admin votre@email.com --name=
 ## Sauvegardes et restauration
 
 Deux niveaux complémentaires :
-1. **Applicatives** (planifiées par Laravel, `backup:run` à heures fixes) : archives dans `storage/app/MODELEC CI/` (dossier fixé par `APP_NAME`, d'où sa conservation), consultables par le super admin.
+1. **Applicatives** (planifiées par Laravel, `backup:run` à heures fixes) : archives dans `storage/app/UVMASTER CI/` (dossier fixé par `APP_NAME` : ne plus modifier cette valeur une fois en production), consultables par le super admin.
 2. **Système** (`deploy/scripts/backup.sh`) : dump MySQL en transaction unique + archive des fichiers + empreintes `SHA256SUMS` + comptages de contrôle, rétention `BACKUP_KEEP_DAYS` (14 j).
 
 ```bash

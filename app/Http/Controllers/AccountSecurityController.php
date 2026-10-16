@@ -83,7 +83,7 @@ class AccountSecurityController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers(), 'different:current_password'],
+            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols(), 'different:current_password'],
         ]);
 
         $this->confirmPassword($request, 'current_password');

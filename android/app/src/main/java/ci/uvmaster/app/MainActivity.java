@@ -1,4 +1,4 @@
-package pro.uvsystem.app;
+package ci.uvmaster.app;
 
 import android.os.Bundle;
 
@@ -11,6 +11,6 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
 
         // La page web interroge cette interface avant d'activer les notifications push.
-        getBridge().getWebView().addJavascriptInterface(new ModelecNative(this), "ModelecNative");
+        getBridge().getWebView().addJavascriptInterface(new UvmasterNative(this), "UvmasterNative");
     }
 }

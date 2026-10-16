@@ -38,7 +38,7 @@ class BackupPage extends Page
         $this->backups = [];
         $disk = Storage::disk('local');
 
-        $backupPath = config('app.name', 'uv-system');
+        $backupPath = config('app.name', 'UVMASTER CI');
 
         if ($disk->exists($backupPath)) {
             $files = $disk->files($backupPath);
@@ -141,7 +141,7 @@ class BackupPage extends Page
     {
         $name = basename($path);
 
-        return Str::endsWith($name, '.zip') ? config('app.name', 'uv-system').'/'.$name : '';
+        return Str::endsWith($name, '.zip') ? config('app.name', 'UVMASTER CI').'/'.$name : '';
     }
 
     public function downloadBackup(string $path): void

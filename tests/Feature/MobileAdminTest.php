@@ -69,7 +69,7 @@ class MobileAdminTest extends TestCase
     {
         // Une sauvegarde contient les données de TOUS les tenants : même un master de tenant est refusé.
         Storage::fake('local');
-        $dir = config('app.name', 'uv-system');
+        $dir = config('app.name', 'UVMASTER CI');
         Storage::disk('local')->put("{$dir}/2026-10-04-backup.zip", 'zip-bytes');
 
         Livewire::test(Admin\Backups::class)->assertForbidden();
@@ -81,7 +81,7 @@ class MobileAdminTest extends TestCase
     {
         Storage::fake('local');
         Storage::disk('local')->put('secret.txt', 'top secret');
-        $dir = config('app.name', 'uv-system');
+        $dir = config('app.name', 'UVMASTER CI');
         Storage::disk('local')->put("{$dir}/ok.zip", 'zip');
 
         Role::firstOrCreate(['name' => User::ROLE_SUPER_ADMIN, 'guard_name' => 'web']);

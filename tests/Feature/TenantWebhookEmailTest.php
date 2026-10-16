@@ -19,7 +19,8 @@ class TenantWebhookEmailTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const SECRET = 'secret-de-test';
+    /** Clé HMAC synthétique ; le secret configuré est « whsec_ » + cette clé en base64, comme chez Resend/Svix. */
+    private const KEY = 'cle-synthetique-de-test-0123456789';
 
     private Tenant $a;
 
@@ -30,7 +31,12 @@ class TenantWebhookEmailTest extends TestCase
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
         TenantContext::setFallback(null);
-        config(['services.resend.webhook_secret' => self::SECRET]);
+        config([
+            'services.resend.webhook_secret' => 'whsec_'.base64_encode(self::KEY),
+            // Les rebonds « Permanent » déclenchent une alerte admin : aucun appel sortant vers l'API Resend.
+            'services.resend.key' => null,
+            'security.audit.notification_emails' => [],
+        ]);
 
         $this->a = Tenant::create(['name' => 'Société A']);
         $this->b = Tenant::create(['name' => 'Société B']);
@@ -50,9 +56,9 @@ class TenantWebhookEmailTest extends TestCase
     private function bounce(array|string $to): void
     {
         $body = json_encode(['type' => 'email.bounced', 'data' => ['email_id' => 'e1', 'to' => $to, 'bounce_type' => 'Permanent']]);
-        $id = 'msg_1';
+        $id = 'msg_'.bin2hex(random_bytes(6)); // un svix-id par événement : le même identifiant serait un rejeu
         $timestamp = (string) time();
-        $signature = 'v1='.base64_encode(hash_hmac('sha256', "{$id}.{$timestamp}.{$body}", self::SECRET, true));
+        $signature = 'v1,'.base64_encode(hash_hmac('sha256', "{$id}.{$timestamp}.{$body}", self::KEY, true));
 
         $this->call('POST', '/api/webhooks/resend', [], [], [], [
             'CONTENT_TYPE' => 'application/json',

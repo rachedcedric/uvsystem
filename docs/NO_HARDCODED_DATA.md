@@ -24,7 +24,7 @@ Ce document explique les changements effectués pour éliminer toutes les donné
 
 ```php
 'company' => [
-    'name' => 'MODELEC CI',
+    'name' => 'UVMASTER CI',
     'phone' => '+225 XX XX XX XX XX',
     'email' => 'contact@uvmaster.ci',
     // ...
@@ -35,7 +35,7 @@ Ce document explique les changements effectués pour éliminer toutes les donné
 
 ```php
 'company' => [
-    'name' => env('COMPANY_NAME', 'MODELEC CI'),
+    'name' => env('COMPANY_NAME', 'UVMASTER CI'),
     'phone' => env('COMPANY_PHONE', ''),
     'email' => env('COMPANY_EMAIL', 'contact@company.com'),
     // ...
@@ -84,14 +84,14 @@ $demoCount = (int) env('DEMO_AGENTS_COUNT', 5);
 # ============================================
 # COMPANY BRANDING (Personnalisable)
 # ============================================
-COMPANY_NAME="MODELEC CI"
+COMPANY_NAME="UVMASTER CI"
 COMPANY_TAGLINE="Système de Gestion UV"
 COMPANY_ADDRESS=""
 COMPANY_CITY=""
 COMPANY_COUNTRY="Côte d'Ivoire"
 COMPANY_PHONE=""
-COMPANY_EMAIL="contact@uv-system.local"
-COMPANY_WEBSITE="www.uv-system.local"
+COMPANY_EMAIL="contact@uvmaster.ci"
+COMPANY_WEBSITE="uvmaster.ci"
 
 # ============================================
 # DEMO DATA CONFIGURATION (Development only)

@@ -76,7 +76,7 @@ MAILTRAP_INBOX_ID=987654
 
 # Sender information
 MAILTRAP_FROM_EMAIL="noreply@votreentreprise.ci"
-MAILTRAP_FROM_NAME="MODELEC CI"
+MAILTRAP_FROM_NAME="UVMASTER CI"
 
 # Mode Sandbox (true = testing, false = production)
 MAILTRAP_SANDBOX=true

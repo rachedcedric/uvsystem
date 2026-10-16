@@ -42,7 +42,7 @@ class MobileNotificationsHealthTest extends TestCase
         $key = openssl_pkey_new(['private_key_bits' => 2048]);
         openssl_pkey_export($key, $privateKey);
         $path = tempnam(sys_get_temp_dir(), 'firebase-');
-        file_put_contents($path, json_encode(['type' => 'service_account', 'project_id' => 'modelec-test', 'client_email' => 'fb@example.iam.gserviceaccount.com', 'private_key' => $privateKey]));
+        file_put_contents($path, json_encode(['type' => 'service_account', 'project_id' => 'uvmaster-test', 'client_email' => 'fb@example.iam.gserviceaccount.com', 'private_key' => $privateKey]));
 
         return $path;
     }
@@ -165,7 +165,7 @@ class MobileNotificationsHealthTest extends TestCase
         PushToken::create(['user_id' => $admin->id, 'token' => 'device-1', 'platform' => 'android']);
 
         Livewire::test(NotificationsDiagnostic::class)->call('sendTest')->assertSee('Push envoyé');
-        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'messages:send') && $r['message']['android']['notification']['channel_id'] === 'debt-alerts-v2' && $r['message']['android']['notification']['sound'] === 'modelec_alert');
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'messages:send') && $r['message']['android']['notification']['channel_id'] === 'debt-alerts-v2' && $r['message']['android']['notification']['sound'] === 'uvmaster_alert');
 
         Livewire::test(NotificationsDiagnostic::class)->call('sendTest')->assertSee('Push refusé');
     }

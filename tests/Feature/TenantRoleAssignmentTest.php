@@ -235,13 +235,13 @@ class TenantRoleAssignmentTest extends TestCase
 
         Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
             ->set('data.name', 'Mobile comptable')->set('data.email', 'mobile-compta@example.test')
-            ->set('data.password', 'motdepasse1')->set('data.password_confirmation', 'motdepasse1')
+            ->set('data.password', 'motdepasse1234')->set('data.password_confirmation', 'motdepasse1234')
             ->call('toggleChoice', 'roles', 'comptable')->call('save')->assertHasNoErrors();
         $this->assertTrue(User::where('email', 'mobile-compta@example.test')->firstOrFail()->hasRole('comptable'));
 
         Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
             ->set('data.name', 'Mobile faux master')->set('data.email', 'mobile-faux@example.test')
-            ->set('data.password', 'motdepasse1')->set('data.password_confirmation', 'motdepasse1')
+            ->set('data.password', 'motdepasse1234')->set('data.password_confirmation', 'motdepasse1234')
             ->set('data.roles', ['master'])->call('save')->assertHasErrors(['data.roles']);
         $this->assertNull(User::where('email', 'mobile-faux@example.test')->first());
     }

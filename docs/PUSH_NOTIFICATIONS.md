@@ -8,7 +8,7 @@ appareil ou Firebase ne répond pas.
 ## Configuration Firebase requise
 
 1. Créer un projet Firebase et enregistrer une application Android avec
-   l'identifiant `pro.uvsystem.app`.
+   l'identifiant `ci.uvmaster.app`.
 2. Activer Firebase Cloud Messaging (FCM) et télécharger
    `google-services.json` dans `android/app/`. Ne pas le copier dans le
    répertoire web `public/`.
@@ -43,7 +43,7 @@ envoyées ; les notifications en base continuent à fonctionner.
   nouvelles notifications, les succès et les erreurs, réglables dans
   **Plus → Préférences** (Sons, Sons des touches, Vibrations).
 - **Notifications push (appli fermée)** : canal Android `debt-alerts-v2` avec le
-  son `modelec_alert` (`android/app/src/main/res/raw/modelec_alert.wav`) et
+  son `uvmaster_alert` (`android/app/src/main/res/raw/uvmaster_alert.wav`) et
   l'icône de barre d'état `ic_stat_uvmaster`. Android ne permet pas de changer le
   son d'un canal existant : pour un autre son, créez un nouveau canal
   (`debt-alerts-v3`) dans `resources/js/mobile.js`,
@@ -55,7 +55,7 @@ envoyées ; les notifications en base continuent à fonctionner.
 ### Sans `google-services.json`
 Une APK construite sans `google-services.json` fonctionne : la cloche, les sons
 et la surveillance restent actifs, mais les notifications push sont désactivées
-(`window.ModelecNative.hasFirebase()` renvoie `false`). Auparavant, une telle
+(`window.UvmasterNative.hasFirebase()` renvoie `false`). Auparavant, une telle
 APK plantait à la connexion d'un master/admin.
 
 ### Vérifier la configuration

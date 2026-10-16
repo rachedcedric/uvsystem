@@ -26,11 +26,9 @@ storage/framework/sessions/*
 storage/framework/views/*
 storage/app/private/*
 storage/app/public/*
-storage/app/MODELEC CI
+storage/app/UVMASTER CI
 storage/*.key
-# Résidus à la racine nommés d'après l'ancienne infrastructure (vides) et fichiers inutiles en production
-c2723058c_uvsystem
-uvsystem.pro
+# Fichiers inutiles en production
 scripts
 phpunit.xml
 README.md

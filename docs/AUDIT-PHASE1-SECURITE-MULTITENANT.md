@@ -1,4 +1,4 @@
-# MODELEC CI — Audit Phase 1 (sécurité, isolation, mobile)
+# UVMASTER CI — Audit Phase 1 (sécurité, isolation, mobile)
 
 Date : 2026-10-06 · Périmètre : dépôt complet · **Aucun fichier de code modifié par cet audit.**
 
@@ -130,7 +130,7 @@ Principes :
 - Journal d'audit enrichi (`tenant_id`, `user_id`, action, ressource, IP, résultat) sans données sensibles.
 - Rôles : `SUPER_ADMIN` (plateforme, hors tenant) / `TENANT_ADMIN` (=master) / `MANAGER` (=admin) / `USER`(comptable, commercial) / `READ_ONLY`, en conservant les permissions Spatie existantes pour la compatibilité.
 
-Migration des données existantes : créer le tenant n°1 "MODELEC CI", y rattacher **toutes** les lignes existantes dans l'ordre users → agents → chaînes dépendantes, puis ajouter `NOT NULL` + FK + index, avec rollback par migration réversible et sauvegarde préalable (`spatie/laravel-backup` déjà présent). Aucune suppression.
+Migration des données existantes : créer le tenant n°1 "UVMASTER CI", y rattacher **toutes** les lignes existantes dans l'ordre users → agents → chaînes dépendantes, puis ajouter `NOT NULL` + FK + index, avec rollback par migration réversible et sauvegarde préalable (`spatie/laravel-backup` déjà présent). Aucune suppression.
 
 ## 8. Décisions à confirmer avant de coder
 

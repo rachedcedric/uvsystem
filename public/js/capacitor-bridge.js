@@ -16,8 +16,8 @@
 
     var cap = window.Capacitor;
     if (!cap || typeof cap.isNativePlatform !== 'function' || !cap.isNativePlatform()) return;
-    if (window.__modelecBridge) return;
-    window.__modelecBridge = true;
+    if (window.__uvmasterBridge) return;
+    window.__uvmasterBridge = true;
 
     var plugins = {};
     function plugin(name) {
@@ -244,10 +244,10 @@
 
     function addAppLink() {
         if (currentPath().indexOf('/master') !== 0 && currentPath().indexOf('/agent') !== 0) return;
-        if (document.getElementById('modelec-app-link')) return;
+        if (document.getElementById('uvmaster-app-link')) return;
         if (currentPath() === '/master/login' || currentPath() === '/agent/login') return;
         var link = document.createElement('a');
-        link.id = 'modelec-app-link';
+        link.id = 'uvmaster-app-link';
         link.href = '/m';
         link.textContent = "← Application";
         link.style.cssText = 'position:fixed;left:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);z-index:60;padding:10px 16px;border-radius:999px;background:#0b6b3a;color:#fff;font:600 14px system-ui,sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25)';
@@ -278,7 +278,7 @@
     function makePhotoButton(input) {
         var button = document.createElement('button');
         button.type = 'button';
-        button.setAttribute('data-modelec-camera', '');
+        button.setAttribute('data-uvmaster-camera', '');
         button.textContent = '📷 Prendre une photo';
         button.style.cssText = 'margin:0 0 8px;padding:10px 14px;font-size:14px;font-weight:600;border:1px solid rgba(128,128,128,.5);border-radius:10px;background:transparent;color:inherit;';
         button.addEventListener('click', function () { takePhotoInto(input); });
@@ -290,14 +290,14 @@
         var input = root.querySelector('input[type="file"]');
         var accept = input && input.getAttribute('accept');
         if (!accept || accept.indexOf('image/') === -1 || input.disabled) return;
-        if (root.previousElementSibling && root.previousElementSibling.hasAttribute('data-modelec-camera')) return;
+        if (root.previousElementSibling && root.previousElementSibling.hasAttribute('data-uvmaster-camera')) return;
         root.parentNode.insertBefore(makePhotoButton(input), root);
     }
 
     // Champs de fichier de l'interface mobile : <input type="file" data-camera>.
     function addCameraButtonToPlainInput(input) {
         var anchor = input.closest('label') || input;
-        if (anchor.previousElementSibling && anchor.previousElementSibling.hasAttribute('data-modelec-camera')) return;
+        if (anchor.previousElementSibling && anchor.previousElementSibling.hasAttribute('data-uvmaster-camera')) return;
         anchor.parentNode.insertBefore(makePhotoButton(input), anchor);
     }
 

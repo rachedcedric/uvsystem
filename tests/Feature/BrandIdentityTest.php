@@ -40,9 +40,7 @@ class BrandIdentityTest extends TestCase
                 continue;
             }
             $source = (string) preg_replace(['/\{\{--.*?--\}\}/s', '#/\*.*?\*/#s', '#^\s*(//|\*|\#).*$#m'], '', (string) file_get_contents($file->getPathname()));
-            // Identifiants techniques conservés (ressource sonore Android, interface JS native, classes CSS, clés internes).
-            $source = (string) preg_replace('/modelec_alert|modelec-[a-z-]+|ModelecNative|__modelecBridge/i', '', $source);
-            if (preg_match('/MODELEC|UV Distribution System|uvsystem|uv-system\.com/i', $source)) {
+            if (preg_match('/'.self::oldNamesPattern().'/i', $source)) {
                 $offenders[] = $path;
             }
         }
@@ -66,8 +64,7 @@ class BrandIdentityTest extends TestCase
             $html = $this->get($url)->assertOk()->getContent();
             $visible = strip_tags((string) preg_replace('#<(style|script)\b.*?</\1>#is', '', $html));
             $this->assertStringContainsString('UVMASTER', $html, $url);
-            // Seule mention conservée : la raison sociale par défaut du CMS (mention légale, décision en attente).
-            $this->assertStringNotContainsStringIgnoringCase('modelec', str_replace("MODELEC Côte d'Ivoire", '', html_entity_decode($visible, ENT_QUOTES)), $url);
+            $this->assertStringNotContainsStringIgnoringCase(self::oldName(), html_entity_decode($visible, ENT_QUOTES), $url);
         }
     }
 
@@ -76,6 +73,60 @@ class BrandIdentityTest extends TestCase
         $sms = file_get_contents(base_path('app/Services/SmsService.php'));
 
         $this->assertStringContainsString("config('branding.name').\": Alerte dette!", $sms);
-        $this->assertSame(0, preg_match('/"MODELEC/i', $sms));
+        $this->assertSame(0, preg_match('/"'.self::oldName().'/i', $sms));
+    }
+
+    public function test_the_old_name_exists_nowhere_in_the_repository(): void
+    {
+        $pattern = '/'.self::oldNamesPattern().'/i';
+        $roots = ['app', 'config', 'database', 'resources', 'routes', 'tests', 'docs', 'deploy', 'docker', 'scripts', 'lang', 'android/app/src', 'public/js', 'public/css', 'capacitor-www'];
+        $files = ['.dockerignore', '.gitignore', 'Dockerfile', 'README.md', 'composer.json', 'package.json', 'package-lock.json', 'capacitor.config.json'];
+        $extensions = ['php', 'js', 'css', 'md', 'json', 'xml', 'yml', 'yaml', 'java', 'kt', 'gradle', 'properties', 'sh', 'txt', 'example', 'html', 'svg', 'csv', 'conf', 'ini', 'dockerignore', 'gitignore'];
+        $paths = array_map(fn (string $file): string => base_path($file), $files);
+
+        foreach ($roots as $root) {
+            if (! is_dir(base_path($root))) {
+                continue;
+            }
+
+            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(base_path($root), \FilesystemIterator::SKIP_DOTS)) as $file) {
+                $relative = str_replace(base_path().'/', '', $file->getPathname());
+                if (preg_match('#/(build|node_modules|vendor|\.engram|\.gradle)/#', '/'.$relative) === 1) {
+                    continue;
+                }
+
+                $paths[] = $file->getPathname();
+            }
+        }
+
+        // Fichiers et dossiers à la racine du projet (hors dépendances) : leur nom compte aussi.
+        foreach (array_diff((array) scandir(base_path()), ['.', '..', '.git', 'node_modules', 'vendor']) as $entry) {
+            $paths[] = base_path($entry);
+        }
+
+        $offenders = [];
+        foreach ($paths as $path) {
+            $relative = str_replace(base_path().'/', '', $path);
+            $scanned = is_file($path) && in_array(pathinfo($path, PATHINFO_EXTENSION), array_merge($extensions, ['']), true) && filesize($path) < 2_000_000;
+
+            // Le nom de fichier compte aussi (classe Java, ressource sonore...).
+            if (preg_match($pattern, $relative) === 1 || ($scanned && preg_match($pattern, (string) file_get_contents($path)) === 1)) {
+                $offenders[] = $relative;
+            }
+        }
+
+        $this->assertSame([], $offenders, 'L\'ancien nom ne doit exister nulle part dans le dépôt.');
+    }
+
+    /** L'ancien nom, assemblé à l'exécution : ce fichier ne doit pas le contenir lui-même. */
+    private static function oldName(): string
+    {
+        return 'MODEL'.'EC';
+    }
+
+    /** Toute l'ancienne identité (première marque, puis second nom du produit sous toutes ses graphies), assemblée à l'exécution. */
+    private static function oldNamesPattern(): string
+    {
+        return self::oldName().'|uv[-_ ]?sys'.'tem|UV Distri'.'bution System';
     }
 }

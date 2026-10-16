@@ -240,7 +240,7 @@ class MigrationPreflight
     {
         // 1. Sauvegarde spatie récente (< 24 h, archive valide)
         $disk = Storage::disk('local');
-        $dir = config('app.name', 'uv-system');
+        $dir = config('app.name', 'UVMASTER CI');
         $best = collect($disk->exists($dir) ? $disk->files($dir) : [])
             ->filter(fn ($f) => str_ends_with($f, '.zip') && $disk->size($f) > 0 && $disk->lastModified($f) >= now()->subDay()->getTimestamp())
             ->sortByDesc(fn ($f) => $disk->lastModified($f))->first();

@@ -1,4 +1,4 @@
-# Commandes Artisan - MODELEC CI
+# Commandes Artisan - UVMASTER CI
 
 Ce document décrit toutes les commandes Artisan personnalisées du système UV.
 

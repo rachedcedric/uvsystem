@@ -110,7 +110,7 @@ class TenantExportAndBackupTest extends TestCase
     public function test_backups_live_in_the_platform_panel_and_only_the_super_admin_sees_them(): void
     {
         Storage::fake('local');
-        $dir = config('app.name', 'uv-system');
+        $dir = config('app.name', 'UVMASTER CI');
         Storage::disk('local')->put("{$dir}/backup-1.zip", 'zip');
 
         Filament::setCurrentPanel(Filament::getPanel('platform'));
@@ -128,7 +128,7 @@ class TenantExportAndBackupTest extends TestCase
     public function test_backup_deletion_cannot_reach_files_outside_the_backup_folder(): void
     {
         Storage::fake('local');
-        $dir = config('app.name', 'uv-system');
+        $dir = config('app.name', 'UVMASTER CI');
         Storage::disk('local')->put("{$dir}/backup-1.zip", 'zip');
         Storage::disk('local')->put('secret.txt', 'top secret');
         Storage::disk('local')->put("tenants/{$this->a->id}/exports/a.xlsx", 'données de A');

@@ -358,7 +358,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
     /* -------------------------------------------- notifications push */
 
     var pushInitialized = false;
-    var pushTokenKey = 'modelec-push-token';
+    var pushTokenKey = 'uvmaster-push-token';
 
     function savePushToken(token) {
         if (!token) return;
@@ -390,7 +390,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
     // Vrai seulement si l'APK embarque Firebase (google-services.json). Sinon PushNotifications.register()
     // fait planter l'application : on n'y touche pas.
     function firebaseAvailable() {
-        try { return !!(window.ModelecNative && window.ModelecNative.hasFirebase()); } catch (e) { return false; }
+        try { return !!(window.UvmasterNative && window.UvmasterNative.hasFirebase()); } catch (e) { return false; }
     }
 
     function syncPushNotifications() {
@@ -429,7 +429,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
                 name: 'Dettes agents',
                 description: 'Alertes et rappels de dettes des agents',
                 importance: 5,
-                sound: 'modelec_alert',
+                sound: 'uvmaster_alert',
                 vibration: true,
                 visibility: 1
             });

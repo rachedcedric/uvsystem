@@ -1,11 +1,11 @@
-# MODELEC CI — Architecture SaaS multi-tenant
+# UVMASTER CI — Architecture SaaS multi-tenant
 
 ## Modèle
 
 ```
 Plateforme (/platform)  ← SUPER_ADMIN (rôle super_admin, tenant_id NULL)
    │  crée / suspend / réactive les tenants, gère leurs comptes
-   ├── Tenant 1 « MODELEC CI »  ← users (master, admin, comptable, commercial), agents, ventes, caisse…
+   ├── Tenant 1 « UVMASTER CI »  ← users (master, admin, comptable, commercial), agents, ventes, caisse…
    ├── Tenant 2 …
    └── Tenant N …
 ```
@@ -56,7 +56,7 @@ Tenant suspendu : `User::canAccessPanel()` refuse → blocage immédiat du web (
 | agents.phone, sous_distributeurs.telephone, payment_methods.code, caisse_categories.normalized_name, charge_categories.code | unique global → unique `(tenant_id, colonne)` | deux sociétés peuvent partager ces valeurs | 000002 |
 | uv_transactions, remboursements, approvisionnements, caisse_mouvements, charges, commissions, agents, activity_log | index `(tenant_id, created_at)` / `(tenant_id, status)` | performance par tenant | 000001 |
 
-Migration des données existantes : les lignes des **tables cœur** sont rattachées au tenant n°1 « MODELEC CI » (`DEFAULT_TENANT_NAME` pour le nom) — c'était la seule société — et la migration s'interrompt s'il reste une ligne orpheline. Rien n'est supprimé. **Les tables héritées `clients*` ne sont jamais attribuées automatiquement** : voir « Contrôle préalable de migration ». Rollback : `php artisan migrate:rollback --step=2` (les données restent ; le retour des uniques globaux échoue volontairement s'il existe déjà des doublons entre tenants). Testé sur SQLite et sur MariaDB 12.3 avec une copie de données réelles (montée, descente, remontée) ; **non testé sur un MySQL 5.7/8 de production**.
+Migration des données existantes : les lignes des **tables cœur** sont rattachées au tenant n°1 « UVMASTER CI » (`DEFAULT_TENANT_NAME` pour le nom) — c'était la seule société — et la migration s'interrompt s'il reste une ligne orpheline. Rien n'est supprimé. **Les tables héritées `clients*` ne sont jamais attribuées automatiquement** : voir « Contrôle préalable de migration ». Rollback : `php artisan migrate:rollback --step=2` (les données restent ; le retour des uniques globaux échoue volontairement s'il existe déjà des doublons entre tenants). Testé sur SQLite et sur MariaDB 12.3 avec une copie de données réelles (montée, descente, remontée) ; **non testé sur un MySQL 5.7/8 de production**.
 
 ## Contrôle préalable de migration (`tenancy:preflight`)
 

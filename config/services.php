@@ -21,6 +21,12 @@ return [
     'resend' => [
         'key' => env('RESEND_KEY'),
         'webhook_secret' => env('RESEND_WEBHOOK_SECRET'),
+        // Écart maximal (secondes, passé ou futur) entre svix-timestamp et l'heure du serveur.
+        'webhook_tolerance' => (int) env('RESEND_WEBHOOK_TOLERANCE', 300),
+        // Durée de mémorisation d'un événement traité (anti-rejeu). Jamais inférieure à 2 × la tolérance.
+        'webhook_dedup_ttl' => (int) env('RESEND_WEBHOOK_DEDUP_TTL', 86400),
+        // Durée du bail posé pendant le traitement : si le processus meurt, l'événement redevient réessayable après ce délai.
+        'webhook_lease' => (int) env('RESEND_WEBHOOK_LEASE', 120),
     ],
 
     'mailtrap' => [

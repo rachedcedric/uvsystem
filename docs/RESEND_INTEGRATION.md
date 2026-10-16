@@ -82,7 +82,7 @@ composer require resend/resend-laravel
 # RESEND API CONFIGURATION
 # ==============================================
 # API Key (from https://resend.com/api-keys)
-RESEND_API_KEY=re_your_actual_api_key_here
+RESEND_KEY=re_your_actual_api_key_here
 
 # Mail Configuration
 MAIL_MAILER=resend
@@ -442,7 +442,7 @@ Le secret webhook est **déjà configuré** dans le projet :
 ```bash
 # Webhook Configuration (from https://resend.com/webhooks)
 # URL: https://uvmaster.ci/api/webhooks/resend
-RESEND_WEBHOOK_SECRET=whsec_zN7XWq+9fr288g9dsMFBwlq1Cjzljeve
+RESEND_WEBHOOK_SECRET=whsec_votre_secret_webhook
 ```
 
 #### 3. Route webhook (✅ déjà créée)
@@ -515,7 +515,7 @@ La sécurité du webhook utilise le protocole **Svix** (standard industrie) :
 
     ```bash
     svix listen http://localhost:8000/api/webhooks/resend \
-        --secret whsec_zN7XWq+9fr288g9dsMFBwlq1Cjzljeve
+        --secret whsec_votre_secret_webhook
     ```
 
 3. Envoyez un email test depuis Resend Dashboard
@@ -762,7 +762,7 @@ Consultez régulièrement le dashboard Resend :
 **Solution :**
 
 ```bash
-# Vérifier que RESEND_API_KEY est dans .env
+# Vérifier que RESEND_KEY est dans .env
 php artisan config:clear
 php artisan resend:check
 ```

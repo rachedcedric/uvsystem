@@ -20,7 +20,7 @@ class BackupController extends Controller
         abort_unless(request()->user()?->isSuperAdmin(), 403); // Les sauvegardes contiennent les données de TOUS les tenants : réservées au super admin de plateforme.
 
         $disk = Storage::disk('local');
-        $directory = config('app.name', 'uv-system');
+        $directory = config('app.name', 'UVMASTER CI');
         $decodedPath = $directory.'/'.basename((string) base64_decode($path, true));
 
         if (! Str::endsWith($decodedPath, '.zip') || ! $disk->exists($decodedPath)) {

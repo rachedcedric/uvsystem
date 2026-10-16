@@ -39,7 +39,7 @@ class FirebaseMessaging
                         'priority' => 'high',
                         'notification' => [
                             'channel_id' => 'debt-alerts-v2',
-                            'sound' => 'modelec_alert',
+                            'sound' => 'uvmaster_alert',
                         ],
                     ],
                 ],

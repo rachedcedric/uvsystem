@@ -13,7 +13,7 @@ push, ni le bouton retour matériel, ni le téléchargement/partage de fichiers.
 | Serveur de démonstration | Voir [DEMO.md](DEMO.md). Il écoute **uniquement** `127.0.0.1:8770` : ne pas l'ouvrir au réseau local (comptes de démo). On le joint par USB : `adb reverse tcp:8770 tcp:8770` |
 | APK de debug | JDK 21 (`/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home`), `ANDROID_HOME=~/Library/Android/sdk`. `npm run build && npx cap sync android`, puis dans `android/` : `./gradlew assembleDebug`. Fichier : `android/app/build/outputs/apk/debug/app-debug.apk` (**celui du 5 octobre est périmé : le reconstruire**, le manifeste a changé : `adjustResize`) |
 | Adresse de l'app | Après `cap sync`, remplacer `server.url` par `http://localhost:8770/m` dans `android/app/src/main/assets/capacitor.config.json` (le réglage debug autorise le HTTP vers `localhost` et `10.0.2.2`). **Ne pas committer ce changement**, ne pas l'utiliser en release |
-| Installation | `adb install -r app-debug.apk` (si une version « release » est déjà installée : `adb uninstall pro.uvsystem.app` d'abord) |
+| Installation | `adb install -r app-debug.apk` (si une version « release » est déjà installée : `adb uninstall ci.uvmaster.app` d'abord) |
 | Comptes | `master@demo.test`, `lecture@demo.test`, `superadmin@demo.test` (mots de passe transmis hors dépôt). Pour comptable/commercial/admin : les créer depuis l'écran Utilisateurs du master |
 | Noter | Modèle, version Android, clavier utilisé (Gboard / Samsung Keyboard), taille de police système, thème clair/sombre |
 
@@ -23,7 +23,7 @@ push, ni le bouton retour matériel, ni le téléchargement/partage de fichiers.
 |---|---|
 | Fichier | `android/app/build/outputs/apk/debug/app-debug.apk` (≈ 10,6 Mo, build **local**, non versionné par git) |
 | Empreinte SHA-256 (début) | `cd89ea3b7fc05815…` |
-| Identité | `pro.uvsystem.app`, versionCode 14, versionName 4.0 (inchangés : un build de debug ne change pas la version) |
+| Identité | `ci.uvmaster.app`, versionCode 14, versionName 4.0 (inchangés : un build de debug ne change pas la version) |
 | Clavier | `windowSoftInputMode = adjustResize` **présent** (vérifié dans le manifeste compilé) |
 | Adresse embarquée | `http://localhost:8770/m`, HTTP autorisé : **réservé à la validation via `adb reverse`** ; fichier `assets/capacitor.config.json` ignoré par git |
 | Réseau | configuration de debug : HTTP autorisé vers `localhost` et `10.0.2.2` uniquement |

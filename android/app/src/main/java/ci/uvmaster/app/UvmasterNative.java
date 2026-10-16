@@ -1,4 +1,4 @@
-package pro.uvsystem.app;
+package ci.uvmaster.app;
 
 import android.content.Context;
 import android.webkit.JavascriptInterface;
@@ -6,18 +6,18 @@ import android.webkit.JavascriptInterface;
 import java.util.List;
 
 /**
- * Informations natives exposées à la page web (window.ModelecNative).
+ * Informations natives exposées à la page web (window.UvmasterNative).
  *
  * hasFirebase() dit si cet APK a été construit avec google-services.json. Sans
  * cela, l'appel PushNotifications.register() du plugin lève une exception non
  * rattrapable et fait planter toute l'application : la page ne doit donc
  * l'appeler que lorsque cette méthode renvoie true.
  */
-public class ModelecNative {
+public class UvmasterNative {
 
     private final Context context;
 
-    public ModelecNative(Context context) {
+    public UvmasterNative(Context context) {
         this.context = context.getApplicationContext();
     }
 

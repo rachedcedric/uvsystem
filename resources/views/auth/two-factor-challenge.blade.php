@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vérification 2FA - {{ config('branding.name') }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite('resources/css/app.css')
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="max-w-md w-full mx-4">
@@ -43,11 +43,11 @@
                     <label for="code" class="block text-sm font-medium text-gray-700 mb-2">
                         Code à 6 chiffres
                     </label>
-                    <input 
-                        type="text" 
-                        name="code" 
-                        id="code" 
-                        maxlength="6" 
+                    <input
+                        type="text"
+                        name="code"
+                        id="code"
+                        maxlength="6"
                         pattern="[0-9]{6}"
                         inputmode="numeric"
                         autocomplete="one-time-code"
@@ -60,8 +60,8 @@
                     <input type="checkbox" name="trust_device" value="1" checked>
                     Faire confiance à cet appareil pendant {{ (int) config('security.authentication.2fa_trusted_device_days', 30) }} jours
                 </label>
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
                 >
                     Vérifier
@@ -79,37 +79,36 @@
             </div>
 
             <!-- Recovery Code Form -->
-            <div x-data="{ showRecovery: false }">
-                <button 
-                    @click="showRecovery = !showRecovery"
+            <div>
+                <button
                     type="button"
+                    onclick="document.getElementById('recoveryForm').classList.toggle('hidden')"
                     class="w-full text-gray-600 hover:text-gray-900 text-sm font-medium"
                 >
                     Utiliser un code de récupération
                 </button>
 
-                <form 
-                    method="POST" 
-                    action="{{ route('2fa.verify.recovery') }}" 
-                    x-show="showRecovery" 
-                    x-transition
-                    class="mt-4"
+                <form
+                    method="POST"
+                    action="{{ route('2fa.verify.recovery') }}"
+                    id="recoveryForm"
+                    class="mt-4 hidden"
                 >
                     @csrf
                     <div class="mb-4">
                         <label for="recovery_code" class="block text-sm font-medium text-gray-700 mb-2">
                             Code de récupération
                         </label>
-                        <input 
-                            type="text" 
-                            name="recovery_code" 
+                        <input
+                            type="text"
+                            name="recovery_code"
                             id="recovery_code"
                             class="w-full px-4 py-3 text-center font-mono border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                             placeholder="XXXX-XXXX-XXXX"
                         >
                     </div>
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         class="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
                     >
                         Utiliser le code de récupération
@@ -130,12 +129,11 @@
 
         <!-- Help Text -->
         <p class="text-center text-gray-500 text-sm mt-6">
-            Ouvrez votre application d'authentification (Google Authenticator, Authy, etc.) 
+            Ouvrez votre application d'authentification (Google Authenticator, Authy, etc.)
             et entrez le code affiché pour {{ config('branding.name') }}.
         </p>
     </div>
 
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script>
         // Auto-submit when 6 digits are entered
         document.getElementById('code').addEventListener('input', function(e) {

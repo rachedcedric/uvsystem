@@ -109,7 +109,7 @@ class PushNotificationsTest extends TestCase
         $path = tempnam(sys_get_temp_dir(), 'firebase-credentials-');
         file_put_contents($path, json_encode([
             'type' => 'service_account',
-            'project_id' => 'modelec-test',
+            'project_id' => 'uvmaster-test',
             'client_email' => 'firebase-test@example.iam.gserviceaccount.com',
             'private_key' => $privateKey,
         ], JSON_THROW_ON_ERROR));
@@ -117,7 +117,7 @@ class PushNotificationsTest extends TestCase
         Cache::forget('firebase:access-token:'.sha1('firebase-test@example.iam.gserviceaccount.com'));
         Http::fake([
             'https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'test-access-token'], 200),
-            'https://fcm.googleapis.com/v1/projects/modelec-test/messages:send' => Http::response(['name' => 'projects/modelec-test/messages/1'], 200),
+            'https://fcm.googleapis.com/v1/projects/uvmaster-test/messages:send' => Http::response(['name' => 'projects/uvmaster-test/messages/1'], 200),
         ]);
 
         try {
@@ -135,7 +135,7 @@ class PushNotificationsTest extends TestCase
                 'type' => 'agent_debt_alert',
             ]);
 
-            Http::assertSent(fn (Request $request) => $request->url() === 'https://fcm.googleapis.com/v1/projects/modelec-test/messages:send'
+            Http::assertSent(fn (Request $request) => $request->url() === 'https://fcm.googleapis.com/v1/projects/uvmaster-test/messages:send'
                 && $request->hasHeader('Authorization', 'Bearer test-access-token')
                 && $request['message']['token'] === 'valid-device-token'
                 && $request['message']['notification']['title'] === 'Dette critique'
@@ -153,7 +153,7 @@ class PushNotificationsTest extends TestCase
         $path = tempnam(sys_get_temp_dir(), 'firebase-credentials-');
         file_put_contents($path, json_encode([
             'type' => 'service_account',
-            'project_id' => 'modelec-test',
+            'project_id' => 'uvmaster-test',
             'client_email' => 'firebase-test@example.iam.gserviceaccount.com',
             'private_key' => $privateKey,
         ], JSON_THROW_ON_ERROR));
@@ -161,7 +161,7 @@ class PushNotificationsTest extends TestCase
         Cache::forget('firebase:access-token:'.sha1('firebase-test@example.iam.gserviceaccount.com'));
         Http::fake([
             'https://oauth2.googleapis.com/token' => Http::response(['access_token' => 'test-access-token'], 200),
-            'https://fcm.googleapis.com/v1/projects/modelec-test/messages:send' => Http::response([
+            'https://fcm.googleapis.com/v1/projects/uvmaster-test/messages:send' => Http::response([
                 'error' => [
                     'details' => [['errorCode' => 'UNREGISTERED']],
                 ],

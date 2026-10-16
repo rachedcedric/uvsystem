@@ -17,7 +17,7 @@ class Backups extends Component
 {
     public static function directory(): string
     {
-        return config('app.name', 'uv-system');
+        return config('app.name', 'UVMASTER CI');
     }
 
     public function mount(): void

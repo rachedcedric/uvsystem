@@ -15,7 +15,7 @@ return [
 
     'backup' => [
 
-        'name' => env('APP_NAME', 'uv-system'),
+        'name' => env('APP_NAME', 'UVMASTER CI'),
 
         'source' => [
 
@@ -115,7 +115,7 @@ return [
 
     'monitor_backups' => [
         [
-            'name' => env('APP_NAME', 'uv-system'),
+            'name' => env('APP_NAME', 'UVMASTER CI'),
             'disks' => ['local'],
             'health_checks' => [
                 MaximumAgeInDays::class => 1,

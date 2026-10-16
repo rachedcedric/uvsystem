@@ -348,7 +348,7 @@ class ExportController extends Controller
     {
         abort_unless(request()->user()->isSuperAdmin(), 403); // Les sauvegardes contiennent les données de TOUS les tenants : réservées au super admin de plateforme.
 
-        $path = config('app.name', 'uv-system').'/'.basename((string) request('name'));
+        $path = config('app.name', 'UVMASTER CI').'/'.basename((string) request('name'));
         abort_unless(Str::endsWith($path, '.zip') && Storage::disk('local')->exists($path), 404);
 
         return Storage::disk('local')->download($path, basename($path));

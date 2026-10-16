@@ -1,5 +1,5 @@
 {
-  "appId": "pro.uvsystem.app",
+  "appId": "ci.uvmaster.app",
   "appName": "UVMASTER",
   "webDir": "capacitor-www",
   "appendUserAgent": "UvmasterApp",

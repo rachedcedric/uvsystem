@@ -96,8 +96,8 @@ class TenancyDeployCheckCommand extends Command
             ? $this->add('ATTENTION', 'Anciens fichiers à ranger', "{$legacy} fichier(s) hors dossier de tenant", 'php artisan tenancy:relocate-files (simulation), puis --apply.')
             : $this->add('OK', 'Anciens fichiers à ranger', 'aucun');
 
-        $backups = $local->exists(config('app.name', 'uv-system')) ? count($local->files(config('app.name', 'uv-system'))) : 0;
-        $this->add($backups > 0 ? 'OK' : 'ATTENTION', 'Sauvegardes', "{$backups} fichier(s) dans ".config('app.name', 'uv-system').'/', $backups > 0 ? '' : 'Faire une sauvegarde avant de migrer.');
+        $backups = $local->exists(config('app.name', 'UVMASTER CI')) ? count($local->files(config('app.name', 'UVMASTER CI'))) : 0;
+        $this->add($backups > 0 ? 'OK' : 'ATTENTION', 'Sauvegardes', "{$backups} fichier(s) dans ".config('app.name', 'UVMASTER CI').'/', $backups > 0 ? '' : 'Faire une sauvegarde avant de migrer.');
     }
 
     // ------------------------------------------------------------------ migration

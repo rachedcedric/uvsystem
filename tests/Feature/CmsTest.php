@@ -95,9 +95,9 @@ class CmsTest extends TestCase
 
     public function test_an_override_replaces_the_default_and_removing_it_restores_the_default(): void
     {
-        CmsEntry::create(['key' => 'landing.cta.primary', 'value' => 'Essayer MODELEC']);
+        CmsEntry::create(['key' => 'landing.cta.primary', 'value' => 'Essayer UVMASTER']);
         Content::flush();
-        $this->assertSame('Essayer MODELEC', cms('landing.cta.primary'));
+        $this->assertSame('Essayer UVMASTER', cms('landing.cta.primary'));
 
         CmsEntry::where('key', 'landing.cta.primary')->delete();
         Content::flush();
@@ -216,23 +216,23 @@ class CmsTest extends TestCase
         $this->actingAs($this->superAdmin());
 
         $this->edit(LandingContent::class, [
-            'landing.cta.primary' => 'Essayer MODELEC',
+            'landing.cta.primary' => 'Essayer UVMASTER',
             'landing.cta.discover' => 'Découvrir la plateforme', // identique à l'origine : rien n'est stocké
             'landing.cta.login' => '',
         ]);
 
-        $this->assertSame(['landing.cta.primary' => 'Essayer MODELEC'], CmsEntry::pluck('value', 'key')->all());
+        $this->assertSame(['landing.cta.primary' => 'Essayer UVMASTER'], CmsEntry::pluck('value', 'key')->all());
         $log = Activity::withoutGlobalScopes()->where('log_name', 'cms')->latest('id')->firstOrFail();
         $this->assertStringContainsString('1 élément', $log->description);
-        $this->assertSame('Essayer MODELEC', $log->properties['modifications']['landing.cta.primary']['vers']);
+        $this->assertSame('Essayer UVMASTER', $log->properties['modifications']['landing.cta.primary']['vers']);
         $this->assertNull($log->tenant_id, 'action de plateforme : invisible des entreprises');
     }
 
     public function test_emptying_a_field_restores_the_original_text(): void
     {
         $this->actingAs($this->superAdmin());
-        $this->edit(LandingContent::class, ['landing.cta.primary' => 'Essayer MODELEC']);
-        $this->assertSame('Essayer MODELEC', cms('landing.cta.primary'));
+        $this->edit(LandingContent::class, ['landing.cta.primary' => 'Essayer UVMASTER']);
+        $this->assertSame('Essayer UVMASTER', cms('landing.cta.primary'));
 
         $this->edit(LandingContent::class, ['landing.cta.primary' => '']);
 
@@ -268,18 +268,18 @@ class CmsTest extends TestCase
         $this->actingAs($this->superAdmin());
 
         $this->edit(SaasSettings::class, [
-            'settings.contact.email' => 'support@modelec.example', 'settings.contact.phone' => '+225 07 00 00 00 00',
-            'settings.links.terms_url' => 'https://modelec.example/conditions', 'settings.links.privacy_url' => '/confidentialite',
+            'settings.contact.email' => 'support@uvmaster.example', 'settings.contact.phone' => '+225 07 00 00 00 00',
+            'settings.links.terms_url' => 'https://uvmaster.example/conditions', 'settings.links.privacy_url' => '/confidentialite',
         ]);
 
-        $this->assertSame('https://modelec.example/conditions', cms('settings.links.terms_url'));
+        $this->assertSame('https://uvmaster.example/conditions', cms('settings.links.terms_url'));
         $this->assertSame('/confidentialite', cms('settings.links.privacy_url'));
     }
 
     public function test_reset_restores_every_text_of_the_section_and_only_that_section(): void
     {
         $this->actingAs($this->superAdmin());
-        $this->edit(LandingContent::class, ['landing.cta.primary' => 'Essayer MODELEC']);
+        $this->edit(LandingContent::class, ['landing.cta.primary' => 'Essayer UVMASTER']);
         $this->edit(PublicPagesContent::class, ['public.offres.title' => 'Nos formules']);
 
         Livewire::test(LandingContent::class)->callAction('reset');

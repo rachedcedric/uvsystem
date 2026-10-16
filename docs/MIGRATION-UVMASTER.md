@@ -1,4 +1,4 @@
-# Migration UVSYSTEM → UVMASTER (marque, domaine, VPS, Android)
+# Migration de l'ancienne marque vers UVMASTER (marque, domaine, VPS, Android)
 
 Plan de bascule global unique vers **https://uvmaster.ci**. Les valeurs de ce document sont celles qui ont été **vérifiées** ;
 tout ce qui dépend d'un accès externe est marqué **BLOQUÉ** avec l'action exacte. Statuts : VALIDÉ · ÉCHEC · BLOQUÉ · NON TESTÉ.
@@ -9,20 +9,20 @@ tout ce qui dépend d'un accès externe est marqué **BLOQUÉ** avec l'action ex
 |---|---|
 | Marque visible | **UVMASTER**, slogan « La gestion des UV simplifiée » — source unique : `config/branding.php` (`BRAND_*`) |
 | Domaine | `https://uvmaster.ci` (apex canonique) ; `www.uvmaster.ci` redirigé en 301 vers l'apex (Caddy) |
-| `APP_NAME` | **Inchangé** (`MODELEC CI`) : il fixe le dossier des sauvegardes (`storage/app/MODELEC CI/`), le nom du cookie de session et le préfixe de cache. Le changer rendrait les sauvegardes introuvables et bloquerait la garde de migration (`tenancy:preflight`) |
-| Nom d'entreprise en base | **Jamais modifié** (donnée métier, tenant n°1 « MODELEC CI ») ; se renomme depuis « Profil de l'entreprise » |
-| Android | `pro.uvsystem.app` conservé, même clé de signature, version 4.1 (code 15), URL `https://uvmaster.ci/m` |
+| `APP_NAME` | **`UVMASTER CI`** (l'ancien nom ne subsiste plus dans le dépôt). Valeur technique : elle fixe le dossier des sauvegardes (`storage/app/UVMASTER CI/`), le nom du cookie de session et le préfixe de cache. Conséquences au premier déploiement avec cette valeur : les sessions ouvertes sont fermées (nouveau nom de cookie), et les sauvegardes faites sous l'ancien nom de dossier ne sont plus listées ni reconnues par la garde de migration (`tenancy:preflight`) — faire une sauvegarde fraîche sous le nouveau nom, ou déplacer l'ancien dossier, avant de migrer |
+| Nom d'entreprise en base | **Jamais modifié automatiquement** (donnée métier : le tenant n°1 d'une base existante garde son ancien nom) ; se renomme depuis « Profil de l'entreprise ». Une base neuve reçoit `UVMASTER CI` (`DEFAULT_TENANT_NAME`) |
+| Android | Identifiant de paquet `ci.uvmaster.app` (l'APK n'était pas encore diffusé : aucune continuité d'installation à préserver), version 4.1 (code 15), URL `https://uvmaster.ci/m`. Clé de signature : décision en attente (le certificat actuel porte l'ancien nom ; seule une nouvelle clé le remplace). Firebase : `google-services.json` à régénérer pour ce paquet |
 | Ancien domaine | Abandonné : aucun maintien de service prévu. Les APK non mis à jour (pointant sur l'ancien domaine) cesseront de fonctionner |
 | Identifiant d'expéditeur SMS | **Inchangé** tant que l'opérateur n'a pas enregistré « UVMASTER » (le texte des SMS, lui, porte la nouvelle marque) |
 
-> Écart de cadrage constaté : les demandes successives nommaient `uvsystem.pro` puis `uvsystem.org` comme ancien domaine.
-> Le code et l'APK installé ne contiennent que `uvsystem.pro` ; `uvsystem.org` n'apparaît nulle part et n'a pas été touché.
+> Écart de cadrage constaté : les demandes successives nommaient deux domaines différents comme ancien domaine.
+> Le code et l'APK installé ne contiennent que l'un des deux (l'ancien domaine d'origine) ; l'autre n'apparaît nulle part et n'a pas été touché.
 > **Confirmer** lequel est le domaine de production actuel avant de couper quoi que ce soit.
 
 ## 2. Ce qui a été fait dans le dépôt
 
 - Marque centralisée et remplacée dans 21 vues Blade (connexion, 2FA, accueil, mobile, reçu, 12 PDF, e-mails), les 3 panneaux Filament, les SMS, les notifications, l'émetteur 2FA (TOTP), l'export Excel des charges, le CMS (valeurs par défaut) et les commandes de test.
-- Adresses par défaut `@uvsystem.pro`, `@uv-system.com` → `@uvmaster.ci` ; CORS par défaut → `uvmaster.ci`.
+- Adresses par défaut de l'ancienne marque (anciens domaines) → `@uvmaster.ci` ; CORS par défaut → `uvmaster.ci`.
 - Android : libellé, URL, page hors-ligne, version.
 - **Corrections découvertes pendant la migration** (existaient avant, indépendantes de la marque) :
   - `config/backup.php` figeait `databases => ['sqlite']` : `backup:run` ne sauvegardait **pas** une base MySQL (corrigé : suit `DB_CONNECTION`).
@@ -33,16 +33,16 @@ tout ce qui dépend d'un accès externe est marqué **BLOQUÉ** avec l'action ex
 
 | Variable | Ancienne valeur (typique) | Nouvelle valeur |
 |---|---|---|
-| `APP_URL` | `https://uvsystem.pro` | `https://uvmaster.ci` |
+| `APP_URL` | l'ancien domaine (en `https`) | `https://uvmaster.ci` |
 | `APP_DOMAIN`, `BRAND_DOMAIN` | — | `uvmaster.ci` |
 | `BRAND_*` | — | voir `deploy/.env.production.example` |
-| **`COMPANY_NAME`, `COMPANY_TAGLINE`, `COMPANY_EMAIL`, `COMPANY_WEBSITE`** | `MODELEC CI`, `Système de Gestion UV`, `…@uvsystem.pro`, `uvsystem.pro` | `UVMASTER`, `La gestion des UV simplifiée`, `contact@uvmaster.ci`, `uvmaster.ci` (**ces variables écrasent les valeurs par défaut du code**) |
-| `SANCTUM_STATEFUL_DOMAINS` | `uvsystem.pro,api.uvsystem.pro,app.uvsystem.pro` | `uvmaster.ci` |
+| **`COMPANY_NAME`, `COMPANY_TAGLINE`, `COMPANY_EMAIL`, `COMPANY_WEBSITE`** | l'ancien nom de l'application, `Système de Gestion UV`, adresse et site de l'ancien domaine | `UVMASTER`, `La gestion des UV simplifiée`, `contact@uvmaster.ci`, `uvmaster.ci` (**ces variables écrasent les valeurs par défaut du code**) |
+| `SANCTUM_STATEFUL_DOMAINS` | l'ancien domaine et ses sous-domaines `api` et `app` | `uvmaster.ci` |
 | `CORS_ALLOWED_ORIGINS` | (valeur héritée) | `https://uvmaster.ci` |
-| `MAIL_FROM_ADDRESS` | `contact@uvsystem.pro` | `contact@uvmaster.ci` (**boîte et domaine à créer/vérifier chez Resend : SPF + DKIM**) |
-| `MAIL_FROM_NAME` | `${APP_NAME}` | `UVMASTER` |
-| `BACKUP_NOTIFICATION_EMAIL`, `SECURITY_NOTIFICATION_EMAILS` | `…@uvsystem.pro` | `…@uvmaster.ci` |
-| `APP_NAME` | `MODELEC CI` | **ne pas changer** |
+| `MAIL_FROM_ADDRESS` | `contact@` sur l'ancien domaine | `contact@uvmaster.ci` (**boîte et domaine à créer/vérifier chez Resend : SPF + DKIM**) |
+| `MAIL_FROM_NAME` | `${APP_NAME}` | `UVMASTER CI` |
+| `BACKUP_NOTIFICATION_EMAIL`, `SECURITY_NOTIFICATION_EMAILS` | adresses de l'ancien domaine | `…@uvmaster.ci` |
+| `APP_NAME` | l'ancien nom de l'application | `UVMASTER CI` (valeur technique : voir §1 pour les conséquences) |
 | `APP_KEY` | clé de production | **reprendre la même** (elle chiffre des données, dont les sessions chiffrées) |
 
 ## 4. Prérequis externes (BLOQUÉS tant qu'ils ne sont pas levés)
@@ -87,14 +87,14 @@ Source : MySQL de l'hébergement mutualisé (base de production) + fichiers tél
 
 ```bash
 # 1. Sur l'hébergement actuel (lecture seule sur la base) : dump cohérent + fichiers
-mysqldump --single-transaction --routines --triggers --no-tablespaces -u <user> -p <base> | gzip > uvsystem-$(date +%F).sql.gz
-tar -czf uvsystem-files-$(date +%F).tar.gz storage/app/public storage/app/private
-sha256sum uvsystem-*.gz > SHA256SUMS
+mysqldump --single-transaction --routines --triggers --no-tablespaces -u <user> -p <base> | gzip > export-$(date +%F).sql.gz
+tar -czf export-files-$(date +%F).tar.gz storage/app/public storage/app/private
+sha256sum export-*.gz > SHA256SUMS
 
 # 2. Copier vers le VPS, vérifier : sha256sum -c SHA256SUMS
 
 # 3. Sur le VPS : importer dans la base du conteneur (base vide ou temporaire de répétition)
-gunzip -c uvsystem-DATE.sql.gz | docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db mysql -uroot -p"$DB_ROOT_PASSWORD" uvmaster
+gunzip -c export-DATE.sql.gz | docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db mysql -uroot -p"$DB_ROOT_PASSWORD" uvmaster
 
 # 4. Contrôle préalable + sauvegarde reconnue + migration
 docker compose … exec -u www-data app php artisan backup:run --only-db
@@ -138,7 +138,7 @@ Rien de ce qui suit n'a été exécuté sur la production ni sur un serveur rée
 | # | Contrôle | Statut | Preuve / reste à faire |
 |---|---|---|---|
 | 1 | Marque UVMASTER + slogan dans les écrans, e-mails, PDF, exports, 2FA, SMS, notifications | VALIDÉ | `BrandIdentityTest` ; balayage des références restantes (identifiants techniques conservés volontairement : paquet Android, nom du son d'alerte, `APP_NAME`) |
-| 2 | Logos web, icônes Android, écran de démarrage, favicons | VALIDÉ (aucun visuel Modelec restant) / À VALIDER visuellement | générés depuis le logo fourni (basse résolution, §4.4) ; rendu sur appareil réel NON TESTÉ |
+| 2 | Logos web, icônes Android, écran de démarrage, favicons | VALIDÉ (aucun visuel de l'ancienne marque restant) / À VALIDER visuellement | générés depuis le logo fourni (basse résolution, §4.4) ; rendu sur appareil réel NON TESTÉ |
 | 3 | Suite de tests SQLite | VALIDÉ | 1248 réussis, 1 ignoré, 0 échec |
 | 4 | Suite de tests MySQL 8.0.46 | VALIDÉ | 1233 réussis, 16 ignorés (tests de DDL propres à SQLite, déjà exercés par la vraie migration sur MySQL), 0 échec |
 | 5 | Dépendances (`composer audit`) | VALIDÉ | 0 avis après mise à jour (Laravel 12.69, Filament 3.3.56, Livewire 3.8) ; `npm audit --omit=dev` : 0 vulnérabilité |
@@ -152,4 +152,4 @@ Rien de ce qui suit n'a été exécuté sur la production ni sur un serveur rée
 | 13 | VPS, DNS, certificat Let's Encrypt réel | BLOQUÉ | aucun hôte ni enregistrement DNS (§4.1–4.2) |
 | 14 | APK/AAB 4.1 signés, certificat identique à l'ancienne version | VALIDÉ (apksigner + empreinte) | installation sur appareil réel : NON TESTÉ |
 | 15 | Resend (domaine, webhook, boîte), identifiant SMS, Firebase | BLOQUÉ / NON TESTÉ | actions chez les fournisseurs (§4.3, 4.5, 4.7) |
-| 16 | Domaine de production d'origine | ⚪ NON DÉTERMINÉ | le dépôt ne connaît que `uvsystem.pro` ; la consigne mentionnait aussi `uvsystem.org` (à ne pas toucher) |
+| 16 | Domaine de production d'origine | ⚪ NON DÉTERMINÉ | le dépôt ne connaît que l'ancien domaine d'origine ; la consigne en mentionnait aussi un second (à ne pas toucher) |

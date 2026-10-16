@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - UV Distribution System
+| API Routes - UVMASTER
 |--------------------------------------------------------------------------
 |
 | Routes for mobile application and external integrations.
