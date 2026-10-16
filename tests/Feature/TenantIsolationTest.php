@@ -10,6 +10,7 @@ use App\Models\Agent;
 use App\Models\CaisseCategorie;
 use App\Models\Fournisseur;
 use App\Models\PaymentMethod;
+use App\Models\PushToken;
 use App\Models\Remboursement;
 use App\Models\Tenant;
 use App\Models\User;
@@ -430,5 +431,23 @@ class TenantIsolationTest extends TestCase
         // Un master de tenant ne peut pas utiliser cette page.
         $this->actingAs($this->userA);
         Livewire::test(ListTenants::class)->assertForbidden();
+    }
+
+    public function test_a_phone_used_by_two_companies_keeps_its_push_token_only_for_the_last_account(): void
+    {
+        $this->actingAs($this->userA)
+            ->postJson('/m/push-token', ['token' => 'phone-partage', 'platform' => 'android'])
+            ->assertNoContent();
+
+        // Même téléphone, compte d'une autre entreprise : pas d'erreur 500 (jeton unique) et plus d'alertes pour A.
+        $this->actingAs($this->userB)
+            ->postJson('/m/push-token', ['token' => 'phone-partage', 'platform' => 'android'])
+            ->assertNoContent();
+
+        $rows = PushToken::withoutGlobalScopes()->where('token', 'phone-partage')->get();
+
+        $this->assertCount(1, $rows);
+        $this->assertSame($this->userB->id, $rows->first()->user_id);
+        $this->assertSame($this->b->id, $rows->first()->tenant_id);
     }
 }

@@ -20,6 +20,14 @@ class PushTokenController extends Controller
             'platform' => ['required', 'in:android'],
         ]);
 
+        // Un jeton FCM identifie un téléphone, pas un compte. Si un autre compte (même d'une autre entreprise) s'y
+        // est connecté avant, il cède sa place : sinon l'enregistrement échouait (jeton unique) et ses alertes
+        // continuaient d'arriver sur ce téléphone.
+        PushToken::withoutGlobalScopes()
+            ->where('token', $validated['token'])
+            ->where('user_id', '!=', $request->user()->id)
+            ->delete();
+
         PushToken::query()->updateOrCreate(
             ['token' => $validated['token']],
             ['user_id' => $request->user()->id, 'platform' => $validated['platform']]

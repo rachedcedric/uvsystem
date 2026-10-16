@@ -63,6 +63,33 @@ class PushNotificationsTest extends TestCase
         $this->assertDatabaseHas('push_tokens', ['token' => 'other-device']);
     }
 
+    public function test_a_phone_handed_to_another_account_moves_its_push_token_to_the_new_owner(): void
+    {
+        $first = $this->userWithRole('admin');
+        $second = $this->userWithRole('admin');
+        PushToken::create(['user_id' => $first->id, 'token' => 'shared-phone', 'platform' => 'android']);
+
+        $this->actingAs($second)
+            ->postJson('/m/push-token', ['token' => 'shared-phone', 'platform' => 'android'])
+            ->assertNoContent();
+
+        $this->assertDatabaseCount('push_tokens', 1);
+        $this->assertDatabaseHas('push_tokens', ['user_id' => $second->id, 'token' => 'shared-phone']);
+    }
+
+    public function test_signing_out_from_a_filament_page_also_forgets_the_phone(): void
+    {
+        $admin = $this->userWithRole('admin');
+        PushToken::create(['user_id' => $admin->id, 'token' => 'current-device', 'platform' => 'android']);
+
+        $this->actingAs($admin)
+            ->withSession(['push_token' => 'current-device'])
+            ->post(route('filament.admin.auth.logout'))
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('push_tokens', ['token' => 'current-device']);
+    }
+
     public function test_only_admins_can_register_push_tokens(): void
     {
         $commercial = $this->userWithRole('commercial');

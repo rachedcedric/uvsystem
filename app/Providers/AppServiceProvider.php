@@ -6,6 +6,7 @@ use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\MobileAccess;
 use App\Http\Responses\AppAwareLogoutResponse;
 use App\Models\Approvisionnement;
+use App\Models\PushToken;
 use App\Models\Remboursement;
 use App\Models\RemboursementAgent;
 use App\Models\UvTransaction;
@@ -26,8 +27,10 @@ use App\Support\Subscriptions\GatedPdf;
 use Filament\Forms\Components\TextInput;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse;
 use Filament\Support\RawJs;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -72,6 +75,18 @@ class AppServiceProvider extends ServiceProvider
     {
         // DomPDF intégrait la police DejaVu entière (~870 Ko pour 13 lignes) : on n'embarque que les glyphes utilisés.
         config(['dompdf.options.enable_font_subsetting' => true]);
+
+        // Quel que soit l'écran de déconnexion (mobile, Filament, 2FA…), le téléphone cesse de recevoir les alertes du compte.
+        Event::listen(Logout::class, function (Logout $event): void {
+            $token = request()->hasSession() ? request()->session()->get('push_token') : null;
+
+            if (is_string($token) && $event->user !== null) {
+                PushToken::withoutGlobalScopes()
+                    ->where('user_id', $event->user->getAuthIdentifier())
+                    ->where('token', $token)
+                    ->delete();
+            }
+        });
 
         // Enregistrer les observers pour les transactions UV
         UvTransaction::observe(UvTransactionObserver::class);
