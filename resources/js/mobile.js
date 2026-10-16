@@ -589,6 +589,21 @@ import { PushNotifications } from '@capacitor/push-notifications';
         }
     });
 
+    // Session ou jeton expiré (419) : Livewire affichait une boîte native en anglais (« This page has expired »).
+    // Sur la connexion il n'y a rien à perdre : on recharge tout de suite ; ailleurs on demande, en français.
+    document.addEventListener('livewire:init', function () {
+        if (!window.Livewire || typeof window.Livewire.hook !== 'function') return;
+        window.Livewire.hook('request', function (request) {
+            request.fail(function (failure) {
+                if (failure.status !== 419) return;
+                failure.preventDefault();
+                if (/\/login\/?$/.test(location.pathname) || window.confirm('Votre session a expiré. Recharger la page ?')) {
+                    location.reload();
+                }
+            });
+        });
+    });
+
     function showFlash() {
         var flash = document.querySelector('[data-m-flash]');
         if (flash) {

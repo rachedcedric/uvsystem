@@ -282,4 +282,19 @@ class MobileDesignSystemTest extends TestCase
 
         $this->assertMatchesRegularExpression('/\.m-field > \.m-chips\s*\{[^}]*padding-inline:\s*0/s', $css);
     }
+
+    public function test_hero_amount_wraps_its_unit_instead_of_clipping_it(): void
+    {
+        $css = file_get_contents(resource_path('css/mobile.css'));
+
+        $this->assertMatchesRegularExpression('/\.m-hero__amount\s*\{[^}]*flex-wrap:\s*wrap/s', $css);
+    }
+
+    public function test_an_expired_livewire_session_is_handled_in_french_not_by_the_english_native_box(): void
+    {
+        $js = file_get_contents(resource_path('js/mobile.js'));
+
+        $this->assertStringContainsString('failure.status !== 419', $js);
+        $this->assertStringContainsString('Votre session a expiré', $js);
+    }
 }

@@ -280,7 +280,7 @@
         button.type = 'button';
         button.setAttribute('data-uvmaster-camera', '');
         button.textContent = '📷 Prendre une photo';
-        button.style.cssText = 'margin:0 0 8px;padding:10px 14px;font-size:14px;font-weight:600;border:1px solid rgba(128,128,128,.5);border-radius:10px;background:transparent;color:inherit;';
+        button.style.cssText = 'margin:8px 0;padding:10px 14px;font-size:14px;font-weight:600;border:1px solid rgba(128,128,128,.5);border-radius:10px;background:transparent;color:inherit;';
         button.addEventListener('click', function () { takePhotoInto(input); });
         return button;
     }

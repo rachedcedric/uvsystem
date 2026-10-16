@@ -297,8 +297,10 @@ html {
 
 .m-hero__amount {
     display: flex;
+    /* police système agrandie : l'unité passe à la ligne au lieu d'être rognée */
+    flex-wrap: wrap;
     align-items: baseline;
-    gap: 8px;
+    gap: 0 8px;
     margin-top: 4px;
     font-family: var(--font-display);
     font-weight: 800;

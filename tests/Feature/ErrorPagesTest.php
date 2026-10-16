@@ -46,4 +46,21 @@ class ErrorPagesTest extends TestCase
         $this->assertStringNotContainsString('super.onReceivedHttpError', $java);
         $this->assertStringNotContainsString('public void onReceivedError(', $java);
     }
+
+    public function test_the_android_shell_caps_the_system_font_scale_so_the_layout_never_breaks(): void
+    {
+        $java = (string) file_get_contents(base_path('android/app/src/main/java/ci/uvmaster/app/MainActivity.java'));
+
+        // Constaté à 200 % : solde rogné, libellés d'onglets coupés. On plafonne l'agrandissement à 150 %.
+        $this->assertStringContainsString('MAX_TEXT_ZOOM = 150', $java);
+        $this->assertStringContainsString('setTextZoom(', $java);
+    }
+
+    public function test_the_android_shell_refreshes_the_status_bar_contrast_when_the_theme_changes(): void
+    {
+        $java = (string) file_get_contents(base_path('android/app/src/main/java/ci/uvmaster/app/MainActivity.java'));
+
+        $this->assertStringContainsString('onConfigurationChanged', $java);
+        $this->assertStringContainsString('setAppearanceLightStatusBars', $java);
+    }
 }
