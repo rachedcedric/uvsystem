@@ -1,4 +1,6 @@
 @php($max = max(1, collect($agents)->max('total')))
+{{-- Racine <div> comme le squelette de chargement : Livewire échoue à remplacer un <div> par un <section>. --}}
+<div>
 <x-m.section title="Meilleurs agents du mois">
     <div class="m-group">
         @forelse ($agents as $i => $agent)
@@ -15,3 +17,4 @@
         @endforelse
     </div>
 </x-m.section>
+</div>

@@ -5,6 +5,8 @@
         'remboursement' => ['label' => 'Remboursement', 'icon' => 'arrow-uturn-left', 'tone' => 'ok', 'sign' => '+', 'class' => 'm-amount--in'],
     ];
 @endphp
+{{-- Racine <div> comme le squelette de chargement : Livewire échoue à remplacer un <div> par un <section>. --}}
+<div>
 <x-m.section title="Activité récente">
     <div class="m-group">
         @forelse ($items as $item)
@@ -23,3 +25,4 @@
         @endforelse
     </div>
 </x-m.section>
+</div>
