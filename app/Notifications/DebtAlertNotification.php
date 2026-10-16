@@ -59,7 +59,7 @@ class DebtAlertNotification extends Notification implements PushNotificationCont
             ->line("**Téléphone:** {$this->agent->phone}")
             ->line('**Dette actuelle:** '.number_format($this->agent->current_debt, 0, ',', ' ').' FCFA')
             ->line('**Plafond autorisé:** '.number_format($this->agent->debt_limit, 0, ',', ' ').' FCFA')
-            ->line("**Ratio d'utilisation:** ".number_format($this->debtRatio, 1).'%')
+            ->line("**Ratio d'utilisation:** ".$this->ratioLabel().'%')
             ->action('Voir la fiche agent', url("/master/agents/{$this->agent->id}"))
             ->line("Merci d'utiliser ".config('branding.name').'.');
     }
@@ -87,18 +87,24 @@ class DebtAlertNotification extends Notification implements PushNotificationCont
 
         return [
             'title' => "{$severity} — {$this->agent->name}",
-            'body' => 'Dette : '.number_format((float) $this->agent->current_debt, 0, ',', ' ')." FCFA ({$this->debtRatio}% du plafond)",
+            'body' => 'Dette : '.number_format((float) $this->agent->current_debt, 0, ',', ' ')." FCFA ({$this->ratioLabel()}% du plafond)",
             'url' => "/m/dettes/agent/{$this->agent->id}",
             'type' => 'agent_debt_alert',
         ];
     }
 
+    /** Ratio lisible (« 77,4 ») : jamais la valeur flottante brute dans un message affiché à l'utilisateur. */
+    protected function ratioLabel(): string
+    {
+        return number_format((float) $this->debtRatio, 1, ',', ' ');
+    }
+
     protected function getAlertMessage(): string
     {
         return match ($this->alertType) {
-            'critical' => "L'agent {$this->agent->name} a atteint un niveau de dette CRITIQUE ({$this->debtRatio}% du plafond). Action immédiate requise.",
+            'critical' => "L'agent {$this->agent->name} a atteint un niveau de dette CRITIQUE ({$this->ratioLabel()}% du plafond). Action immédiate requise.",
             'reminder' => "Rappel de paiement envoyé à l'agent {$this->agent->name}. Dette en cours: ".number_format($this->agent->current_debt, 0, ',', ' ').' FCFA',
-            default => "L'agent {$this->agent->name} a atteint {$this->debtRatio}% de son plafond de dette. Surveillance recommandée.",
+            default => "L'agent {$this->agent->name} a atteint {$this->ratioLabel()}% de son plafond de dette. Surveillance recommandée.",
         };
     }
 }

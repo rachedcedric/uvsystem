@@ -88,6 +88,21 @@ class PushNotificationsTest extends TestCase
         $this->assertStringContainsString('700 000 FCFA', $reminder->pushPayload()['body']);
     }
 
+    public function test_debt_alert_messages_show_a_readable_percentage(): void
+    {
+        $admin = $this->userWithRole('admin');
+        $agent = Agent::factory()->create(['current_debt' => 370000, 'debt_limit' => 478027]);
+
+        // 370000 / 478027 * 100 = 77,401485690139… : jamais la valeur flottante brute dans le texte affiché.
+        $warning = new DebtAlertNotification($agent, 'warning');
+        $critical = new DebtAlertNotification($agent, 'critical', 136.01941033748);
+
+        $this->assertStringContainsString('77,4%', $warning->toArray($admin)['message']);
+        $this->assertStringNotContainsString('77.401', $warning->toArray($admin)['message']);
+        $this->assertStringContainsString('136,0%', $critical->toArray($admin)['message']);
+        $this->assertStringContainsString('136,0% du plafond', $critical->pushPayload()['body']);
+    }
+
     public function test_debt_alerts_are_sent_to_admins_and_not_commercial_users(): void
     {
         Notification::fake();
