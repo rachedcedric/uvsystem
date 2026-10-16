@@ -27,6 +27,11 @@ class CategoriesCaisse extends MobileResource
         return 'Catégorie de caisse';
     }
 
+    public static function feminine(): bool
+    {
+        return true;
+    }
+
     public static function plural(): string
     {
         return 'Catégories de caisse';

@@ -16,7 +16,7 @@
                     <span class="m-row__lead m-row__lead--ok"><x-m.icon name="photo" class="m-ico-sm" /></span>
                     <span class="m-row__body">
                         <span class="m-row__title" style="display:block">{{ $logo->getClientOriginalName() }}</span>
-                        <span class="m-row__sub" style="display:block">{{ number_format($logo->getSize() / 1024, 0, ',', ' ') }} Ko · sera réduit automatiquement</span>
+                        <span class="m-row__sub" style="display:block">{{ \App\Support\Mobile\FileSize::human($logo->getSize()) }} · sera réduit automatiquement</span>
                     </span>
                     <button type="button" class="m-iconbtn" wire:click="$set('logo', null)" aria-label="Retirer ce fichier"><x-m.icon name="x-mark" /></button>
                 </div>

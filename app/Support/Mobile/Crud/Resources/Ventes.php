@@ -30,6 +30,11 @@ class Ventes extends MobileResource
         return 'Vente';
     }
 
+    public static function feminine(): bool
+    {
+        return true;
+    }
+
     public static function plural(): string
     {
         return 'Ventes UV';

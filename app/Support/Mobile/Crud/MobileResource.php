@@ -23,6 +23,23 @@ abstract class MobileResource
 
     abstract public static function plural(): string;
 
+    /** Genre grammatical du libellé (« Nouvelle vente » / « Nouvel agent » / « Nouveau fournisseur »). */
+    public static function feminine(): bool
+    {
+        return false;
+    }
+
+    /** Titre de l'écran de création, accordé en genre : « Nouvelle charge », « Nouvel agent »… */
+    public static function newTitle(): string
+    {
+        $label = mb_strtolower(static::label());
+        $article = static::feminine()
+            ? 'Nouvelle'
+            : (preg_match('/^[aeiouyàâéèêëîïôùûh]/u', $label) ? 'Nouvel' : 'Nouveau');
+
+        return $article.' '.$label;
+    }
+
     /** @return list<Field> */
     abstract public static function fields(): array;
 

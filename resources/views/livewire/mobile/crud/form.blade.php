@@ -1,5 +1,5 @@
 <div>
-    <x-m.appbar :title="($isEdit ? 'Modifier ' : 'Nouveau ').mb_strtolower($r::label())"
+    <x-m.appbar :title="$isEdit ? 'Modifier '.mb_strtolower($r::label()) : $r::newTitle()"
                 :back="$backUrl" />
 
     <form wire:submit="save" class="m-form" novalidate>

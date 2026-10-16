@@ -1304,6 +1304,11 @@ body:has(.m-offline[data-show]) .m-appbar {
     display: none;
 }
 
+/* Dans un champ de formulaire, la gouttière est déjà donnée par le formulaire. */
+.m-field > .m-chips {
+    padding-inline: 0;
+}
+
 .m-chip {
     flex: none;
     height: 44px; /* zone tactile minimale du design system */
@@ -1362,6 +1367,9 @@ body:has(.m-offline[data-show]) .m-appbar {
 
 .m-more {
     display: block;
+    /* un <a> en block prend toute la largeur ; un <button> se contente de son contenu */
+    width: fit-content;
+    max-width: calc(100% - 32px);
     margin: 14px auto 0;
     padding: 10px 22px;
     border-radius: 999px;
@@ -1442,6 +1450,11 @@ body:has(.m-offline[data-show]) .m-appbar {
     background: var(--surface);
     font-size: 14px;
     color: var(--fg-2);
+}
+
+.m-callout:has(> dl) {
+    /* l'avertissement passe sous le total au lieu de l'écraser sur trois lignes */
+    flex-direction: column;
 }
 
 .m-callout dl {
@@ -1721,6 +1734,11 @@ body:has(.m-offline[data-show]) .m-appbar {
     border-radius: 18px;
     padding: 14px 14px 4px;
     margin-bottom: 12px;
+}
+
+/* Les pastilles sont blanches : dans la carte blanche d'une ligne elles disparaissaient. */
+.m-line .m-chip:not(.is-on) {
+    background: var(--surface-2);
 }
 
 .m-line__head {

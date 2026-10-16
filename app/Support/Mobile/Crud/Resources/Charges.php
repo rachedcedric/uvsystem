@@ -27,6 +27,11 @@ class Charges extends MobileResource
         return 'Charge';
     }
 
+    public static function feminine(): bool
+    {
+        return true;
+    }
+
     public static function plural(): string
     {
         return 'Charges';

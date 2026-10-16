@@ -27,6 +27,11 @@ class CategoriesCharges extends MobileResource
         return 'Catégorie de charge';
     }
 
+    public static function feminine(): bool
+    {
+        return true;
+    }
+
     public static function plural(): string
     {
         return 'Catégories de charges';

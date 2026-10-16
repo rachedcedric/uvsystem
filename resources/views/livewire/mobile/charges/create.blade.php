@@ -27,7 +27,7 @@
                     <span class="m-row__lead m-row__lead--ok"><x-m.icon name="paper-clip" class="m-ico-sm" /></span>
                     <span class="m-row__body">
                         <span class="m-row__title" style="display:block">{{ $justificatif->getClientOriginalName() }}</span>
-                        <span class="m-row__sub" style="display:block">{{ number_format($justificatif->getSize() / 1024, 0, ',', ' ') }} Ko</span>
+                        <span class="m-row__sub" style="display:block">{{ \App\Support\Mobile\FileSize::human($justificatif->getSize()) }}</span>
                     </span>
                     <button type="button" class="m-iconbtn" wire:click="removeJustificatif" aria-label="Retirer le justificatif"><x-m.icon name="x-mark" /></button>
                 </div>

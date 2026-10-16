@@ -11,7 +11,7 @@
                 <div class="m-select" style="cursor:default">
                     <span class="m-row__lead m-row__lead--ok"><x-m.icon name="document-text" class="m-ico-sm" /></span>
                     <span class="m-row__body"><span class="m-row__title" style="display:block">{{ $file->getClientOriginalName() }}</span>
-                        <span class="m-row__sub" style="display:block">{{ number_format($file->getSize() / 1024, 0, ',', ' ') }} Ko</span></span>
+                        <span class="m-row__sub" style="display:block">{{ \App\Support\Mobile\FileSize::human($file->getSize()) }}</span></span>
                     <button type="button" class="m-iconbtn" wire:click="removeFile" aria-label="Retirer"><x-m.icon name="x-mark" /></button>
                 </div>
             @else

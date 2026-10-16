@@ -253,4 +253,33 @@ class MobileDesignSystemTest extends TestCase
         $this->assertStringContainsString('width:100%;aspect-ratio:1;object-fit:contain', $view);
         $this->assertStringNotContainsString('max-height:100%;object-fit', $view);
     }
+
+    public function test_chips_stay_visible_inside_a_line_card(): void
+    {
+        $css = file_get_contents(resource_path('css/mobile.css'));
+
+        // Pastille (blanche) sur carte blanche = invisible : la ligne de caisse la teinte.
+        $this->assertMatchesRegularExpression('/\.m-line \.m-chip:not\(\.is-on\)\s*\{[^}]*background:\s*var\(--surface-2\)/s', $css);
+    }
+
+    public function test_callout_with_total_stacks_its_warning_below(): void
+    {
+        $css = file_get_contents(resource_path('css/mobile.css'));
+
+        $this->assertMatchesRegularExpression('/\.m-callout:has\(> dl\)\s*\{[^}]*flex-direction:\s*column/s', $css);
+    }
+
+    public function test_more_link_hugs_its_content_like_the_button(): void
+    {
+        $css = file_get_contents(resource_path('css/mobile.css'));
+
+        $this->assertMatchesRegularExpression('/\.m-more\s*\{[^}]*width:\s*fit-content/s', $css);
+    }
+
+    public function test_chips_inside_a_field_do_not_double_the_gutter(): void
+    {
+        $css = file_get_contents(resource_path('css/mobile.css'));
+
+        $this->assertMatchesRegularExpression('/\.m-field > \.m-chips\s*\{[^}]*padding-inline:\s*0/s', $css);
+    }
 }

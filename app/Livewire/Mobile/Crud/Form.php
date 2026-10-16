@@ -148,6 +148,6 @@ class Form extends Component
             'backUrl' => $record ? $r::showUrl($record) : $r::indexUrl(),
             'fields' => $this->fields(),
             'isEdit' => $this->recordId !== null,
-        ])->title(($this->recordId ? 'Modifier — ' : 'Nouveau — ').$r::label());
+        ])->title($this->recordId ? 'Modifier — '.$r::label() : $r::newTitle());
     }
 }
