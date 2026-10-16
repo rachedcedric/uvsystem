@@ -65,6 +65,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // DomPDF intégrait la police DejaVu entière (~870 Ko pour 13 lignes) : on n'embarque que les glyphes utilisés.
+        config(['dompdf.options.enable_font_subsetting' => true]);
+
         // Enregistrer les observers pour les transactions UV
         UvTransaction::observe(UvTransactionObserver::class);
         UvTransaction::observe(UvTransactionSecurityObserver::class);
