@@ -109,7 +109,8 @@ class AccountSecurityTest extends TestCase
         $this->fakeSession($other, 'theirs');
 
         $this->actingAs($me)->get('/security/sessions')
-            ->assertOk()->assertSee('Application '.config('branding.name').' · Android')->assertSee('10.0.0.9');
+            ->assertOk()->assertSee('Application '.config('branding.name').' · Android')->assertSee('10.0.0.9')
+            ->assertSee('Retour à l\'application', false);
 
         // IDOR : l'identifiant d'une session d'un autre compte ne permet rien
         $this->post('/security/sessions/revoke', ['session_id' => 'theirs'])->assertRedirect();
@@ -154,6 +155,19 @@ class AccountSecurityTest extends TestCase
 
         $this->withHeader('User-Agent', 'Mozilla/5.0 (Macintosh) Chrome/130')
             ->get('/security/sessions')
+            ->assertRedirect(route('filament.admin.auth.login'));
+    }
+
+    public function test_logging_out_from_a_filament_page_in_the_android_app_lands_on_the_mobile_login(): void
+    {
+        $this->actingAs($this->userWith())
+            ->withHeader('User-Agent', 'Mozilla/5.0 (Linux; Android 16) UvmasterApp')
+            ->post(route('filament.admin.auth.logout'))
+            ->assertRedirect(route('m.login'));
+
+        $this->actingAs($this->userWith())
+            ->withHeader('User-Agent', 'Mozilla/5.0 (Macintosh) Chrome/130')
+            ->post(route('filament.admin.auth.logout'))
             ->assertRedirect(route('filament.admin.auth.login'));
     }
 

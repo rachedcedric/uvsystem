@@ -179,7 +179,11 @@ class TwoFactorChallenge extends SimplePage
         session()->invalidate();
         session()->regenerateToken();
 
-        redirect()->route('filament.admin.auth.login');
+        $this->redirect(
+            str_contains((string) request()->userAgent(), 'UvmasterApp')
+                ? route('m.login')
+                : route('filament.admin.auth.login'),
+        );
     }
 
     public function hasLogo(): bool

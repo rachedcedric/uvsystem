@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\MobileAccess;
+use App\Http\Responses\AppAwareLogoutResponse;
 use App\Models\Approvisionnement;
 use App\Models\Remboursement;
 use App\Models\RemboursementAgent;
@@ -23,6 +24,7 @@ use App\Support\Money;
 use App\Support\Subscriptions\GatedExcel;
 use App\Support\Subscriptions\GatedPdf;
 use Filament\Forms\Components\TextInput;
+use Filament\Http\Responses\Auth\Contracts\LogoutResponse;
 use Filament\Support\RawJs;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -47,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Un seul notifieur par processus : il cumule les échecs d'envoi rapportés par subscriptions:process.
         $this->app->singleton(SubscriptionNotifier::class);
+
+        // Déconnexion depuis une page Filament : l'app Android retourne sur /m/login (pas sur la connexion bureau).
+        $this->app->bind(LogoutResponse::class, AppAwareLogoutResponse::class);
 
         // Toute génération de PDF / Excel passe par les fonctionnalités d'export de l'offre (voir ExportGate).
         $this->app->extend('dompdf.wrapper', fn ($pdf, $app) => new GatedPdf($app['dompdf'], $app['config'], $app['files'], $app['view']));

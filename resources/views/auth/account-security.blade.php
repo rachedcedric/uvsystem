@@ -1,6 +1,7 @@
 @extends('layouts.auth')
 @section('title', 'Sécurité du compte')
 @section('content')
+    <p><a href="{{ auth()->user()->isSuperAdmin() ? '/platform' : '/m' }}">← Retour à l'application</a></p>
     <h1>Sécurité du compte</h1>
     <p>Double authentification : <strong>{{ $twoFactor ? 'activée' : 'non activée' }}</strong> — <a href="{{ route('security.2fa') }}">{{ $twoFactor ? 'gérer' : 'activer' }}</a></p>
 
