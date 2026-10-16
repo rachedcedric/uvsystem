@@ -24,7 +24,7 @@ Indépendamment du multi-tenant, l'audit révèle **des failles exploitables dè
 | Auth | Sessions (web/Filament/mobile, `remember` forcé) + tokens Sanctum (API). 2FA TOTP (pragmarx/google2fa) : middleware `Require2FA` **commenté** dans le panel, non appliqué |
 | Sessions/tokens | Session DB 120 min (`config/security.php` annonce 30 min : **non appliqué**). Tokens Sanctum **sans expiration** (`expiration => null`), "refresh" = simple recréation |
 | Rôles | Spatie permission : `master`, `admin`, `comptable`, `commercial` ; permissions plates (`view_agents`, `create_agents`, …) via `RolesAndPermissionsSeeder` |
-| Autres | spatie/activitylog, spatie/laravel-backup, DomPDF, Maatwebsite Excel, Firebase push (FCM), Twilio SMS, Resend/Mailtrap |
+| Autres | spatie/activitylog, spatie/laravel-backup, DomPDF, Maatwebsite Excel, Firebase push (FCM), Twilio SMS, Resend |
 
 ## 2. Modèles / tables et appartenance des données (points 11-12)
 
@@ -75,7 +75,7 @@ Déjà en place : Capacitor + WebView, splash, bridge natif (téléchargements, 
 | V6 | 🟠 Élevé | Filament `AdminPanelProvider` | 2FA non appliquée (middleware commenté) alors que `config/security.php` la déclare requise pour master/admin | Réactiver pour les rôles concernés |
 | V7 | 🟠 Élevé | Mobile `Crud\*`, routes `{agent}`, `{charge}`, `{transaction}`… | Route-model-binding / `findOrFail($id)` sans scope : l'isolation entre tenants serait **inexistante** dès qu'une 2ᵉ organisation existe | Scope global tenant (voir §7) |
 | V8 | 🟡 Moyen | `FournisseurController::index` `orderBy($sortBy…)` | Tri sur colonne arbitraire fournie par le client (pas d'injection grâce au grammar, mais énumération de colonnes/erreurs SQL) | Liste blanche de colonnes |
-| V9 | 🟡 Moyen | `WebhookController` | Logge `headers->all()` et le payload complet (données sensibles/secrets potentiels) ; vérification de signature à confirmer côté Mailtrap | Redaction + signature obligatoire |
+| V9 | 🟡 Moyen | `WebhookController` | Logge `headers->all()` et le payload complet (données sensibles/secrets potentiels) ; vérification de signature à confirmer | Redaction + signature obligatoire |
 | V10 | 🟡 Moyen | `config/cors.php` | `supports_credentials` avec origines figées + motif `192.168.*` conservé en prod ; chemin `admin/*` exposé | Origines par environnement |
 | V11 | 🟡 Moyen | `config/security.php` | Valeurs de sécurité (session 30 min, idle 15 min, rotation) **déclarées mais non branchées** : fausse assurance | Soit les appliquer, soit les supprimer |
 | V12 | 🟡 Moyen | `AuthController::user` / `login` | Retourne l'objet `User` complet (+ relation agent) ; `register`/`login` sans verrouillage de compte distinct du throttle IP | `UserResource` filtré, throttle par e-mail |
@@ -158,6 +158,6 @@ Migration des données existantes : créer le tenant n°1 "UVMASTER CI", y ratta
 | GET | /api/activities, /stats, /log-names, /events, /{id} | Oui | requis | **aucune** | **non** — V2 |
 | GET/POST/DELETE | /api/notifications/* | Oui | via user | — | **oui** (par utilisateur) |
 | * | /api/2fa/* | Oui | via user | — | oui |
-| POST | /api/webhooks/resend, /mailtrap | Signature | — | — | — |
+| POST | /api/webhooks/resend | Signature | — | — | — |
 
 Routes web : `exports/download/{filename}` (auth seule — V4), `backup/download/{path}` (master/admin, .zip), `charges/justificatif/{charge}/download` (permission `view_charges`, sans scope), `remboursement/{id}/receipt[/download]` (auth seule — **V3**).

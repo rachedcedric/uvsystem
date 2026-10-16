@@ -12,7 +12,7 @@ class TestResend extends Command
      *
      * @var string
      */
-    protected $signature = 'resend:test 
+    protected $signature = 'resend:test
                             {email : Email destinataire}
                             {--type=simple : Type de test (simple, notification)}';
 
@@ -47,7 +47,7 @@ class TestResend extends Command
             $this->info('💡 Consultez le fichier .env.example pour les variables requises.');
             $this->newLine();
             $this->comment('Configuration requise :');
-            $this->comment('   RESEND_API_KEY=re_your_api_key');
+            $this->comment('   RESEND_KEY=re_your_api_key');
             $this->comment('   MAIL_MAILER=resend');
             $this->comment('   MAIL_FROM_ADDRESS=onboarding@resend.dev');
             $this->comment('   MAIL_FROM_NAME="Your Name"');
@@ -120,14 +120,14 @@ class TestResend extends Command
                 <div class="content">
                     <h2>Félicitations !</h2>
                     <p>Si vous lisez cet email, c'est que <strong>l'intégration Resend fonctionne parfaitement</strong> ! 🚀</p>
-                    
+
                     <div class="info-box">
                         <strong>📊 Informations de test</strong><br>
                         <strong>Date:</strong> {date}<br>
                         <strong>Environnement:</strong> <span class="badge">{env}</span><br>
                         <strong>Service:</strong> Resend API
                     </div>
-                    
+
                     <h3>✅ Fonctionnalités validées</h3>
                     <ul class="checklist">
                         <li>Connexion API Resend établie</li>
@@ -135,7 +135,7 @@ class TestResend extends Command
                         <li>Configuration Laravel correcte</li>
                         <li>Service ResendService fonctionnel</li>
                     </ul>
-                    
+
                     <p>Vous pouvez maintenant utiliser Resend pour envoyer vos emails transactionnels en production.</p>
                 </div>
                 <div class="footer">

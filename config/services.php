@@ -29,11 +29,6 @@ return [
         'webhook_lease' => (int) env('RESEND_WEBHOOK_LEASE', 120),
     ],
 
-    'mailtrap' => [
-        'api_token' => env('MAILTRAP_API_TOKEN'),
-        'webhook_secret' => env('MAILTRAP_WEBHOOK_SECRET'),
-    ],
-
     'firebase' => [
         'project_id' => env('FIREBASE_PROJECT_ID'),
         'credentials' => env('FIREBASE_CREDENTIALS'),

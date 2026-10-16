@@ -225,7 +225,7 @@ class ResendService
         $errors = [];
 
         if (empty(config('services.resend.key'))) {
-            $errors[] = 'RESEND_API_KEY is not configured';
+            $errors[] = 'RESEND_KEY is not configured';
         }
 
         if (empty(config('mail.from.address'))) {

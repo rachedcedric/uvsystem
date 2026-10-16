@@ -99,7 +99,7 @@ class CheckResendConfig extends Command
             $this->line('3. Générez une API Key : https://resend.com/api-keys');
             $this->line('4. Configurez les variables dans .env :');
             $this->newLine();
-            $this->comment('   RESEND_API_KEY=re_your_api_key');
+            $this->comment('   RESEND_KEY=re_your_api_key');
             $this->comment('   MAIL_MAILER=resend');
             $this->comment('   MAIL_FROM_ADDRESS=onboarding@resend.dev');
             $this->comment('   MAIL_FROM_NAME="Your Name"');
@@ -125,22 +125,6 @@ class CheckResendConfig extends Command
         }
 
         $this->newLine();
-
-        // Comparaison avec Mailtrap
-        $this->info('📊 Comparaison Resend vs Mailtrap :');
-        $this->table(
-            ['Feature', 'Resend', 'Mailtrap'],
-            [
-                ['Plan Gratuit', '3 000 emails/mois', '500 emails/mois (Sandbox)'],
-                ['Prix départ', '$20/mois (50K)', '$15/mois (10K)'],
-                ['Délivrabilité', '99.9%', 'Standard'],
-                ['Analytics', 'Temps réel', 'Temps réel'],
-                ['Webhooks', 'Inclus', 'Inclus'],
-                ['Interface', 'Moderne, simple', 'Complète, sandbox'],
-                ['Support', 'Email + Discord', 'Email'],
-                ['Use case', 'Production', 'Dev + Production'],
-            ]
-        );
 
         return $check['configured'] ? Command::SUCCESS : Command::FAILURE;
     }

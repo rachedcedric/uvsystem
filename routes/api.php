@@ -157,7 +157,7 @@ Route::middleware(['auth:sanctum', 'staff', 'can:access_api', 'throttle:api'])->
 | Webhook Routes (No Authentication Required)
 |--------------------------------------------------------------------------
 |
-| These routes are used by external services (Resend, Mailtrap, etc.)
+| These routes are used by external services (Resend)
 | to send event notifications. They are excluded from CSRF protection
 | and use signature verification for security.
 |
@@ -165,6 +165,3 @@ Route::middleware(['auth:sanctum', 'staff', 'can:access_api', 'throttle:api'])->
 
 Route::post('/webhooks/resend', [WebhookController::class, 'resend'])
     ->name('webhooks.resend');
-
-Route::post('/webhooks/mailtrap', [WebhookController::class, 'mailtrap'])
-    ->name('webhooks.mailtrap');

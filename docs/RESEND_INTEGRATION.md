@@ -12,7 +12,6 @@ Documentation complète de l'intégration Resend dans le système UV.
 -   [API Reference](#api-reference)
 -   [Webhooks](#webhooks)
 -   [Bonnes Pratiques](#bonnes-pratiques)
--   [Comparaison avec Mailtrap](#comparaison-avec-mailtrap)
 -   [Troubleshooting](#troubleshooting)
 
 ---
@@ -35,7 +34,7 @@ Documentation complète de l'intégration Resend dans le système UV.
 
 -   Interface moderne et épurée
 -   Intégration Laravel native
--   Excellent pour production (contrairement à Mailtrap qui est orienté testing)
+-   Excellent pour la production
 -   Tarifs très compétitifs
 -   Support communautaire actif (Discord)
 
@@ -282,7 +281,6 @@ php artisan resend:check
 -   ✅ Statut de chaque paramètre de configuration
 -   📊 Informations sur les plans Resend
 -   💡 Recommandations si configuration incomplète
--   📈 Comparaison avec Mailtrap
 
 ### resend:test
 
@@ -733,28 +731,6 @@ Consultez régulièrement le dashboard Resend :
 
 ---
 
-## 📊 Comparaison avec Mailtrap
-
-| Feature             | Resend                 | Mailtrap                  |
-| ------------------- | ---------------------- | ------------------------- |
-| **Plan Gratuit**    | 3 000 emails/mois      | 500 emails/mois (Sandbox) |
-| **Prix départ**     | $20/mois (50K)         | $15/mois (10K)            |
-| **Délivrabilité**   | 99.9%                  | Standard                  |
-| **Analytics**       | Temps réel             | Temps réel                |
-| **Webhooks**        | Inclus (gratuit)       | Inclus                    |
-| **Interface**       | Moderne, simple        | Complète, orientée dev    |
-| **Support**         | Email + Discord        | Email                     |
-| **Domaine vérifié** | Requis pour production | Optionnel                 |
-| **Testing Sandbox** | Non (production only)  | Oui (principal atout)     |
-| **Use case**        | **Production**         | Dev + Production          |
-
-**Recommandation :**
-
--   **Développement** : Utilisez Mailtrap (mode Sandbox)
--   **Production** : Utilisez Resend (meilleure délivrabilité, interface plus simple)
-
----
-
 ## 🐛 Troubleshooting
 
 ### Erreur : "API key not configured"
@@ -814,31 +790,6 @@ php artisan resend:check
 -   **GitHub :** https://github.com/resendlabs/resend-laravel
 -   **Discord Community :** https://resend.com/discord
 -   **Status Page :** https://resend.statuspage.io/
-
----
-
-## 🆚 Quand utiliser Resend vs Mailtrap ?
-
-### Utilisez Resend si :
-
--   ✅ Vous avez besoin d'une solution de production
--   ✅ Vous voulez une interface simple et moderne
--   ✅ Vous avez besoin de 99.9% de délivrabilité
--   ✅ Vous voulez des analytics en temps réel
--   ✅ Vous envoyez > 500 emails/mois
-
-### Utilisez Mailtrap si :
-
--   ✅ Vous êtes en développement/testing
--   ✅ Vous voulez un mode Sandbox (emails ne sortent pas)
--   ✅ Vous avez besoin de templates Mailtrap
--   ✅ Vous voulez tester sans risque
-
-### Solution Recommandée : Utilisez les deux !
-
--   **Développement** : `MAIL_MAILER=log` ou Mailtrap Sandbox
--   **Staging** : Mailtrap avec inbox dédié
--   **Production** : Resend
 
 ---
 

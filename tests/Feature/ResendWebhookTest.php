@@ -258,6 +258,15 @@ class ResendWebhookTest extends TestCase
         $this->send('msg_min', $this->delivered())->assertOk()->assertJsonMissing(['duplicate' => true]);
     }
 
+    // ------------------------------------------------------------------ surface exposée
+
+    public function test_the_unused_mailtrap_webhook_route_no_longer_exists(): void
+    {
+        $this->postJson('/api/webhooks/mailtrap', ['event' => 'delivery'])->assertNotFound();
+        $this->assertFalse(\Route::has('webhooks.mailtrap'));
+        $this->assertTrue(\Route::has('webhooks.resend'));
+    }
+
     // ------------------------------------------------------------------ données signées uniquement
 
     public function test_the_event_comes_from_the_signed_body_never_from_the_query_string(): void
@@ -304,6 +313,10 @@ class ResendWebhookTest extends TestCase
         $this->assertStringContainsString('recipient_count', $properties);
         $this->assertStringNotContainsString(self::ADDRESS, $properties);
         $this->assertStringNotContainsString('Sujet confidentiel', $properties);
+
+        $invalidEmailProperties = DB::table('activity_log')->where('description', 'email_marked_invalid')->pluck('properties')->implode("\n");
+        $this->assertNotSame('', $invalidEmailProperties);
+        $this->assertStringNotContainsString(self::ADDRESS, $invalidEmailProperties);
     }
 
     public function test_an_exception_message_is_logged_without_the_email_addresses_it_contains(): void

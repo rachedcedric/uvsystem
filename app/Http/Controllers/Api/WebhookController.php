@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * WebhookController
  *
- * Gère les webhooks entrants des services externes (Resend, Mailtrap, etc.)
+ * Gère les webhooks entrants des services externes (Resend)
  * pour tracker les événements d'envoi d'emails et mettre à jour le système.
  */
 class WebhookController extends Controller
@@ -147,91 +147,6 @@ class WebhookController extends Controller
             }
 
             Log::error('Error processing Resend webhook', $this->safeErrorContext($e));
-
-            return response()->json([
-                'error' => 'Internal server error',
-            ], 500);
-        }
-    }
-
-    /**
-     * Traite les webhooks Mailtrap
-     *
-     * @return JsonResponse
-     */
-    public function mailtrap(Request $request)
-    {
-        try {
-            // Vérifier la signature du webhook (Mailtrap)
-            if (! $this->verifyMailtrapSignature($request)) {
-                Log::warning('Mailtrap webhook signature verification failed', [
-                    'ip' => $request->ip(),
-                    'headers' => array_intersect_key($request->headers->all(), array_flip(['user-agent', 'content-type', 'svix-id', 'svix-timestamp'])),
-                ]);
-
-                return response()->json([
-                    'error' => 'Invalid signature',
-                ], 401);
-            }
-
-            // Récupérer les données du webhook
-            $payload = $request->all();
-            $eventType = $payload['type'] ?? 'unknown';
-
-            // Logger l'événement
-            Log::info('Mailtrap webhook received', [
-                'type' => $eventType,
-                'payload' => $payload,
-            ]);
-
-            // Traiter selon le type d'événement
-            switch ($eventType) {
-                case 'delivery':
-                    $this->handleMailtrapDelivery($payload);
-                    break;
-
-                case 'open':
-                    $this->handleMailtrapOpen($payload);
-                    break;
-
-                case 'click':
-                    $this->handleMailtrapClick($payload);
-                    break;
-
-                case 'bounce':
-                    $this->handleMailtrapBounce($payload);
-                    break;
-
-                case 'spam':
-                    $this->handleMailtrapSpam($payload);
-                    break;
-
-                default:
-                    Log::info('Mailtrap webhook: Unknown event type', [
-                        'type' => $eventType,
-                    ]);
-            }
-
-            // Enregistrer dans ActivityLog
-            activity()
-                ->withProperties([
-                    'service' => 'mailtrap',
-                    'event_type' => $eventType,
-                    'message_id' => $payload['message_id'] ?? null,
-                    'to_email' => $payload['to_email'] ?? null,
-                ])
-                ->log("Webhook Mailtrap: {$eventType}");
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Webhook processed successfully',
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Error processing Mailtrap webhook', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
 
             return response()->json([
                 'error' => 'Internal server error',
@@ -371,35 +286,6 @@ class WebhookController extends Controller
             'at' => basename($e->getFile()).':'.$e->getLine(),
             'error' => $this->redactEmails($e->getMessage()),
         ];
-    }
-
-    /**
-     * Vérifie la signature du webhook Mailtrap
-     */
-    private function verifyMailtrapSignature(Request $request): bool
-    {
-        $secret = config('services.mailtrap.webhook_secret');
-
-        // Si pas de secret configuré, on accepte en dev
-        if (empty($secret) && app()->environment('local')) {
-            return true;
-        }
-
-        if (empty($secret)) {
-            return false;
-        }
-
-        // Mailtrap utilise un header X-Mailtrap-Signature
-        $signature = $request->header('X-Mailtrap-Signature');
-
-        if (! $signature) {
-            return false;
-        }
-
-        // Calculer la signature attendue
-        $expectedSignature = hash_hmac('sha256', $request->getContent(), $secret);
-
-        return hash_equals($expectedSignature, $signature);
     }
 
     // ==========================================
@@ -543,84 +429,6 @@ class WebhookController extends Controller
     }
 
     // ==========================================
-    // HANDLERS ÉVÉNEMENTS MAILTRAP
-    // ==========================================
-
-    /**
-     * Email délivré (Mailtrap)
-     */
-    private function handleMailtrapDelivery(array $payload): void
-    {
-        $messageId = $payload['message_id'] ?? null;
-
-        Log::info('Mailtrap: Email delivered', [
-            'message_id' => $messageId,
-        ]);
-
-        $this->incrementEmailStat('mailtrap_delivered');
-    }
-
-    /**
-     * Email ouvert (Mailtrap)
-     */
-    private function handleMailtrapOpen(array $payload): void
-    {
-        $messageId = $payload['message_id'] ?? null;
-
-        Log::info('Mailtrap: Email opened', [
-            'message_id' => $messageId,
-        ]);
-
-        $this->incrementEmailStat('mailtrap_opened');
-    }
-
-    /**
-     * Lien cliqué (Mailtrap)
-     */
-    private function handleMailtrapClick(array $payload): void
-    {
-        $messageId = $payload['message_id'] ?? null;
-        $url = $payload['url'] ?? null;
-
-        Log::info('Mailtrap: Link clicked', [
-            'message_id' => $messageId,
-            'url' => $url,
-        ]);
-
-        $this->incrementEmailStat('mailtrap_clicked');
-    }
-
-    /**
-     * Email rebondi (Mailtrap)
-     */
-    private function handleMailtrapBounce(array $payload): void
-    {
-        $messageId = $payload['message_id'] ?? null;
-        $reason = $payload['reason'] ?? 'Unknown';
-
-        Log::error('Mailtrap: Email bounced', [
-            'message_id' => $messageId,
-            'reason' => $reason,
-        ]);
-
-        $this->incrementEmailStat('mailtrap_bounced');
-    }
-
-    /**
-     * Marqué comme spam (Mailtrap)
-     */
-    private function handleMailtrapSpam(array $payload): void
-    {
-        $messageId = $payload['message_id'] ?? null;
-
-        Log::error('Mailtrap: Marked as spam', [
-            'message_id' => $messageId,
-        ]);
-
-        $this->incrementEmailStat('mailtrap_spam');
-    }
-
-    // ==========================================
     // HELPERS
     // ==========================================
 
@@ -682,9 +490,7 @@ class WebhookController extends Controller
             // Logger l'action
             activity()
                 ->withProperties([
-                    'email' => $email,
                     'type' => $type,
-                    'reason' => $reason,
                 ])
                 ->log('email_marked_invalid');
 

@@ -61,3 +61,6 @@ keystore.properties
 /storage/framework/cache/laravel-excel/
 /storage/framework/cache/facade-*.php
 /storage/framework/cache/laravel-excel/
+
+# Quota FTP de l'ancien hébergement cPanel
+/.ftpquota
