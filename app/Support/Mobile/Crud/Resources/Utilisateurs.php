@@ -54,7 +54,7 @@ class Utilisateurs extends MobileResource
 
     public static function filters(): array
     {
-        return ['all' => 'Tous'] + Role::whereIn('name', User::assignableRoleNames())->orderBy('name')->pluck('name', 'name')->map(fn ($n) => ucfirst($n))->all();
+        return ['all' => 'Tous'] + Role::whereIn('name', User::assignableRoleNames())->orderBy('name')->pluck('name', 'name')->map(fn ($n) => ucfirst(str_replace('_', ' ', $n)))->all();
     }
 
     public static function applyFilter(Builder $query, string $filter): Builder
@@ -72,11 +72,11 @@ class Utilisateurs extends MobileResource
         return [
             Field::text('name', 'Nom')->required()->maxLength(255),
             Field::email('email', 'E-mail')->required()->maxLength(255)->unique('users'),
-            Field::password('password', 'Mot de passe')->required()->hint('8 caractères minimum'),
+            Field::password('password', 'Mot de passe')->required()->hint('12 caractères minimum'),
             Field::password('password_confirmation', 'Confirmer le mot de passe')->virtual()->rules('same:data.password', 'required_with:data.password'),
             // Champ présent seulement pour qui peut attribuer des rôles ; un admin ne se voit pas proposer « master ».
             ...(RoleAssignmentGuard::canAssignRoles(auth()->user()) ? [
-                Field::multi('roles', 'Rôles', fn () => Role::whereIn('name', RoleAssignmentGuard::assignableFor(auth()->user()))->orderBy('name')->pluck('name', 'name')->map(fn ($n) => ucfirst($n))->all())
+                Field::multi('roles', 'Rôles', fn () => Role::whereIn('name', RoleAssignmentGuard::assignableFor(auth()->user()))->orderBy('name')->pluck('name', 'name')->map(fn ($n) => ucfirst(str_replace('_', ' ', $n)))->all())
                     ->hint('Master et admin : administration complète de l\'entreprise (seul un master nomme un master) · Comptable : finances · Commercial : agents et transactions'),
             ] : []),
         ];

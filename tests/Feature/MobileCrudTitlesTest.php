@@ -17,3 +17,14 @@ it('accorde le titre de création en genre et en élision', function () {
         ->and($titles['fournisseurs'])->toBe('Nouveau fournisseur')
         ->and($titles['remboursements'])->toBe('Nouveau remboursement');
 });
+
+it('annonce la vraie longueur minimale du mot de passe et écrit les rôles lisiblement', function () {
+    $source = (string) file_get_contents(base_path('app/Support/Mobile/Crud/Resources/Utilisateurs.php'));
+    $rule = (string) file_get_contents(base_path('app/Support/Mobile/Crud/Field.php'));
+
+    // L'indication affichée doit correspondre à la règle réellement appliquée (min:12).
+    expect($rule)->toContain("'password' => ['string', 'min:12']")
+        ->and($source)->toContain("hint('12 caractères minimum')")
+        ->and($source)->not->toContain('8 caractères')
+        ->and($source)->toContain("str_replace('_', ' ', \$n)");
+});
