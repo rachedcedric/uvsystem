@@ -35,26 +35,36 @@ Le serveur de démonstration doit tourner sur ce poste (voir [DEMO.md](DEMO.md))
 
 Légende résultat : ☐ à faire · ✅ OK · ❌ échec (décrire) · ➖ sans objet.
 
+### Campagne du 2026-10-17 (émulateur, pas un téléphone réel)
+
+Exécutée sur l'émulateur Android 16 `Beni_Test` (Gboard, français côté site, anglais côté système), contre une démo
+locale (`adb reverse`). **Ne remplace pas un essai sur téléphone physique** : les lignes restées ☐ en ont besoin.
+Défauts trouvés et corrigés pendant la campagne : titres « Nouveau agent / catégorie / vente / charge », pastilles de
+caisse invisibles, total de caisse écrasé, lien d'historique pleine largeur, `0 Ko`, messages de validation en
+anglais, déconnexion depuis une page de sécurité renvoyant vers la connexion bureau, 200 % de police, barre d'état en
+thème sombre, boîte « This page has expired » en anglais, erreur JavaScript sur le tableau de bord (blocs différés en
+`<section>`), jeton push d'un téléphone partagé entre deux entreprises (erreur 500).
+
 ## 1. Installation et lancement
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| A1 | Installer, ouvrir | Splash puis écran de connexion, pas d'écran blanc | ☐ |
-| A2 | Couper le réseau, relancer l'app | Page hors-ligne de repli ; au retour du réseau, rechargement possible | ☐ |
-| A3 | Rotation (si autorisée) | Mise en page correcte, rien de coupé | ☐ |
-| A4 | Police système à 200 % | Textes lisibles, boutons non écrasés | ☐ |
+| A1 | Installer, ouvrir | Splash puis écran de connexion, pas d'écran blanc | ✅ |
+| A2 | Couper le réseau, relancer l'app | Page hors-ligne de repli ; au retour du réseau, rechargement possible | ✅ |
+| A3 | Rotation (si autorisée) | Mise en page correcte, rien de coupé | ✅ paysage OK |
+| A4 | Police système à 200 % | Textes lisibles, boutons non écrasés | ✅ 200 % rognait le solde et les onglets : plafonné à 150 % (APK) |
 
 ## 2. Connexion et rôles
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| B1 | Connexion master | Accueil, onglets Agents / Ventes / Accueil / Caisse / Plus | ☐ |
-| B2 | Connexion `lecture@demo.test` | Accueil **sans** bouton « Nouveau » ; Plus sans Import, Abonnement, Profil, Utilisateurs, Sauvegardes ; badge « Lecture seule » | ☐ |
-| B3 | Lecture seule : taper à la main `/m/ventes/nouvelle`, `/m/import`, `/m/exports/commissions/pdf` | Refus (403), aucune donnée ni formulaire affiché ; l'app reste utilisable (retour possible) | ☐ |
-| B4 | Connexion `superadmin@demo.test` sur l'app mobile | Refusée (le super admin n'a pas d'accès aux écrans entreprise) | ☐ |
-| B5 | Mauvais mot de passe 5 fois | Message d'erreur puis limitation, jamais de crash | ☐ |
-| B6 | Fermer/relancer l'app après connexion | Session conservée (« rester connecté ») | ☐ |
-| B7 | Déconnexion depuis Plus | Retour à la connexion ; bouton retour ne ramène pas à une page protégée | ☐ |
+| B1 | Connexion master | Accueil, onglets Agents / Ventes / Accueil / Caisse / Plus | ✅ |
+| B2 | Connexion `lecture@demo.test` | Accueil **sans** bouton « Nouveau » ; Plus sans Import, Abonnement, Profil, Utilisateurs, Sauvegardes ; badge « Lecture seule » | ✅ |
+| B3 | Lecture seule : taper à la main `/m/ventes/nouvelle`, `/m/import`, `/m/exports/commissions/pdf` | Refus (403), aucune donnée ni formulaire affiché ; l'app reste utilisable (retour possible) | ✅ page 403 française |
+| B4 | Connexion `superadmin@demo.test` sur l'app mobile | Refusée (le super admin n'a pas d'accès aux écrans entreprise) | ✅ |
+| B5 | Mauvais mot de passe 5 fois | Message d'erreur puis limitation, jamais de crash | ✅ limitation après 5 essais |
+| B6 | Fermer/relancer l'app après connexion | Session conservée (« rester connecté ») | ✅ |
+| B7 | Déconnexion depuis Plus | Retour à la connexion ; bouton retour ne ramène pas à une page protégée | ✅ |
 
 ## 3. Clavier (nouveau code : `enterkeyhint`, Entrée = suivant, champ visible)
 
@@ -64,23 +74,23 @@ Formulaires à parcourir : **Profil de l'entreprise** (11 champs), **Nouvelle ve
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| C1 | Toucher un champ texte non final | La touche d'action du clavier affiche « Suivant » (flèche) | ☐ |
-| C2 | Appuyer sur cette touche | Le focus passe au champ suivant, **le formulaire n'est pas envoyé** | ☐ |
-| C3 | Dernier champ : touche d'action | Libellé « OK/Terminé » ; le clavier se ferme ; pas de double envoi | ☐ |
-| C4 | Champ de recherche | Touche « Rechercher » ; appui = clavier fermé, liste filtrée | ☐ |
-| C5 | Zone multiligne (adresse, pied de page) | La touche fait un retour à la ligne (pas « Suivant ») | ☐ |
-| C6 | Champ du bas de page, clavier ouvert | Le champ **n'est pas masqué** par le clavier ni par la barre « Enregistrer » ; il remonte tout seul | ☐ |
-| C7 | Idem avec la barre « Enregistrer » collée en bas | Elle reste visible au-dessus du clavier (pas recouverte, pas flottante au milieu) | ☐ |
-| C8 | Montant (vente, remboursement) | Clavier **numérique**, affichage « 1 250 000 », seuls les chiffres sont gardés, bouton rapide OK | ☐ |
-| C9 | E-mail | Clavier avec `@` ; pas de majuscule automatique gênante | ☐ |
-| C10 | Téléphone | Clavier de numérotation | ☐ |
-| C11 | Mot de passe | Masqué, bouton œil, proposition d'enregistrement par le gestionnaire de mots de passe | ☐ |
-| C12 | Code 2FA reçu par e-mail/SMS | Clavier numérique ; suggestion « code reçu » au-dessus du clavier si disponible | ☐ |
-| C13 | Fermer le clavier avec la touche retour système | Le clavier se ferme **sans quitter la page** ; un 2ᵉ appui revient en arrière normalement | ☐ |
-| C14 | Clavier flottant / divisé (Samsung) ou mode une main | Le champ actif reste visible | ☐ |
-| C15 | Changer de clavier (Gboard ↔ Samsung ↔ SwiftKey) | Mêmes résultats C1 à C6 ; noter tout écart par clavier | ☐ |
-| C16 | Saisir, mettre l'app en arrière-plan, revenir | Les valeurs saisies sont conservées, clavier fermé | ☐ |
-| C17 | Appui long / copier-coller dans un champ | Fonctionne ; le montant se reformate | ☐ |
+| C1 | Toucher un champ texte non final | La touche d'action du clavier affiche « Suivant » (flèche) | ✅ |
+| C2 | Appuyer sur cette touche | Le focus passe au champ suivant, **le formulaire n'est pas envoyé** | ✅ |
+| C3 | Dernier champ : touche d'action | Libellé « OK/Terminé » ; le clavier se ferme ; pas de double envoi | ✅ |
+| C4 | Champ de recherche | Touche « Rechercher » ; appui = clavier fermé, liste filtrée | ✅ |
+| C5 | Zone multiligne (adresse, pied de page) | La touche fait un retour à la ligne (pas « Suivant ») | ✅ |
+| C6 | Champ du bas de page, clavier ouvert | Le champ **n'est pas masqué** par le clavier ni par la barre « Enregistrer » ; il remonte tout seul | ✅ |
+| C7 | Idem avec la barre « Enregistrer » collée en bas | Elle reste visible au-dessus du clavier (pas recouverte, pas flottante au milieu) | ✅ |
+| C8 | Montant (vente, remboursement) | Clavier **numérique**, affichage « 1 250 000 », seuls les chiffres sont gardés, bouton rapide OK | ✅ |
+| C9 | E-mail | Clavier avec `@` ; pas de majuscule automatique gênante | ✅ |
+| C10 | Téléphone | Clavier de numérotation | ✅ |
+| C11 | Mot de passe | Masqué, bouton œil, proposition d'enregistrement par le gestionnaire de mots de passe | ✅ |
+| C12 | Code 2FA reçu par e-mail/SMS | Clavier numérique ; suggestion « code reçu » au-dessus du clavier si disponible | ✅ code 2FA : clavier numérique, envoi auto à 6 chiffres |
+| C13 | Fermer le clavier avec la touche retour système | Le clavier se ferme **sans quitter la page** ; un 2ᵉ appui revient en arrière normalement | ✅ |
+| C14 | Clavier flottant / divisé (Samsung) ou mode une main | Le champ actif reste visible | ☐ clavier flottant : téléphone réel |
+| C15 | Changer de clavier (Gboard ↔ Samsung ↔ SwiftKey) | Mêmes résultats C1 à C6 ; noter tout écart par clavier | ☐ autre clavier : téléphone réel (émulateur : Gboard seul) |
+| C16 | Saisir, mettre l'app en arrière-plan, revenir | Les valeurs saisies sont conservées, clavier fermé | ✅ |
+| C17 | Appui long / copier-coller dans un champ | Fonctionne ; le montant se reformate | ✅ |
 
 > Rappel : `windowSoftInputMode=adjustResize` (manifeste) ne prend effet qu'avec un **APK reconstruit** ; le reste (touches
 > d'action, défilement) vient du site. Si C6/C7 échouent seulement sur l'APK ancien, c'est attendu.
@@ -89,50 +99,50 @@ Formulaires à parcourir : **Profil de l'entreprise** (11 champs), **Nouvelle ve
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| D1 | Démo (échéance à J-3) : ouvrir n'importe quel écran | Bandeau jaune « Échéance proche », cliquable (zone ≥ 44 px) vers « Mon abonnement » | ☐ |
-| D2 | Mettre l'abonnement en expiré (voir DEMO.md) | Bandeau rouge « consultation seule » ; lecture et exports possibles ; tenter d'enregistrer une vente : message clair, aucune donnée créée | ☐ |
-| D3 | Profil de l'entreprise : changer ville + pied de page, enregistrer | Message de succès ; valeurs conservées à la réouverture | ☐ |
-| D4 | Logo : « Choisir une image » → **appareil photo** puis **galerie** | Permission caméra demandée ; photo prise, « sera réduit automatiquement » ; après enregistrement le logo apparaît dans Plus | ☐ |
-| D5 | Logo : image > 2 Mo ou SVG | Message d'erreur lisible, rien d'enregistré | ☐ |
+| D1 | Démo (échéance à J-3) : ouvrir n'importe quel écran | Bandeau jaune « Échéance proche », cliquable (zone ≥ 44 px) vers « Mon abonnement » | ✅ |
+| D2 | Mettre l'abonnement en expiré (voir DEMO.md) | Bandeau rouge « consultation seule » ; lecture et exports possibles ; tenter d'enregistrer une vente : message clair, aucune donnée créée | ✅ message clair, rien créé |
+| D3 | Profil de l'entreprise : changer ville + pied de page, enregistrer | Message de succès ; valeurs conservées à la réouverture | ✅ |
+| D4 | Logo : « Choisir une image » → **appareil photo** puis **galerie** | Permission caméra demandée ; photo prise, « sera réduit automatiquement » ; après enregistrement le logo apparaît dans Plus | ✅ |
+| D5 | Logo : image > 2 Mo ou SVG | Message d'erreur lisible, rien d'enregistré | ✅ image de 3 Mo refusée (« téléversement échoué ») ; SVG refusé côté serveur (Pest) |
 
 ## 5. Sessions et appareils
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| E1 | Plus → Sécurité → « Appareils connectés » | La session de ce téléphone est marquée « actuelle » ; la page est lisible sur mobile | ☐ |
-| E2 | Se connecter avec le même compte sur un navigateur de bureau ; fermer cette session depuis le téléphone | Le navigateur est déconnecté au prochain clic ; le téléphone reste connecté | ☐ |
-| E3 | Changer le mot de passe depuis le navigateur | Le téléphone est déconnecté (nouvelle connexion exigée) | ☐ |
-| E4 | « Déconnecter tous les autres appareils » | Mot de passe redemandé ; seul ce téléphone reste | ☐ |
-| E5 | Se connecter sur 2 téléphones avec 2 comptes de **deux entreprises** | Chacun ne voit que ses propres sessions | ☐ |
+| E1 | Plus → Sécurité → « Appareils connectés » | La session de ce téléphone est marquée « actuelle » ; la page est lisible sur mobile | ✅ |
+| E2 | Se connecter avec le même compte sur un navigateur de bureau ; fermer cette session depuis le téléphone | Le navigateur est déconnecté au prochain clic ; le téléphone reste connecté | ✅ |
+| E3 | Changer le mot de passe depuis le navigateur | Le téléphone est déconnecté (nouvelle connexion exigée) | ✅ |
+| E4 | « Déconnecter tous les autres appareils » | Mot de passe redemandé ; seul ce téléphone reste | ✅ |
+| E5 | Se connecter sur 2 téléphones avec 2 comptes de **deux entreprises** | Chacun ne voit que ses propres sessions | ➖ couvert par Pest (TenantIsolationTest) ; G1-G3 vérifiés sur appareil |
 
 ## 6. Navigation, fichiers, notifications
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| F1 | Bouton retour matériel : feuille ouverte → modale → racine d'onglet → accueil → quitter | Chaque appui ferme/recule d'un niveau ; confirmation avant de quitter l'accueil | ☐ |
-| F2 | Master lié à une fiche agent : Plus → « Mon espace agent » | S'ouvre ; lien « ← Application » visible ; le retour matériel fonctionne | ☐ |
-| F3 | Master : exporter un PDF (ventes du mois) et un Excel | Téléchargement + feuille de partage ; fichier ouvrable ; pied de page de l'entreprise présent sur le PDF | ☐ |
-| F4 | Lecture seule : chercher un bouton d'export | Aucun ; l'URL directe est refusée (B3) | ☐ |
-| F5 | Notifications push (master/admin) : app ouverte / en arrière-plan / fermée | Réception, son, toucher ouvre l'écran Notifications ; les autres rôles ne reçoivent rien | ☐ |
-| F6 | Liens externes (site, e-mail, téléphone) | S'ouvrent dans le navigateur/appli système, pas dans la WebView | ☐ |
-| F7 | Tirer pour rafraîchir ; bandeau « Hors connexion » en coupant le Wi-Fi | Conforme, sans fausse alerte avec réseau faible | ☐ |
+| F1 | Bouton retour matériel : feuille ouverte → modale → racine d'onglet → accueil → quitter | Chaque appui ferme/recule d'un niveau ; confirmation avant de quitter l'accueil | ✅ |
+| F2 | Master lié à une fiche agent : Plus → « Mon espace agent » | S'ouvre ; lien « ← Application » visible ; le retour matériel fonctionne | ☐ compte lié à une fiche agent non testé |
+| F3 | Master : exporter un PDF (ventes du mois) et un Excel | Téléchargement + feuille de partage ; fichier ouvrable ; pied de page de l'entreprise présent sur le PDF | ✅ |
+| F4 | Lecture seule : chercher un bouton d'export | Aucun ; l'URL directe est refusée (B3) | ✅ |
+| F5 | Notifications push (master/admin) : app ouverte / en arrière-plan / fermée | Réception, son, toucher ouvre l'écran Notifications ; les autres rôles ne reçoivent rien | ☐ push : vérifié lors d'une campagne précédente, non rejoué ; jeton de téléphone partagé corrigé |
+| F6 | Liens externes (site, e-mail, téléphone) | S'ouvrent dans le navigateur/appli système, pas dans la WebView | ✅ tel: ouvre le composeur ; « version complète » s'ouvre dans la WebView avec « ← Application » |
+| F7 | Tirer pour rafraîchir ; bandeau « Hors connexion » en coupant le Wi-Fi | Conforme, sans fausse alerte avec réseau faible | ✅ |
 
 ## 7. Isolation entre entreprises (sur appareil)
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| G1 | Connecté dans l'entreprise A, saisir à la main l'adresse d'une fiche d'agent de B (`/m/agents/<id de B>`) | Page « introuvable » (404), aucune donnée de B | ☐ |
-| G2 | Rechercher dans les agents le nom d'un agent de B | Aucun résultat | ☐ |
-| G3 | Changer de compte (A puis B) sur le même téléphone | Aucune donnée de A visible dans B (pas de cache) | ☐ |
+| G1 | Connecté dans l'entreprise A, saisir à la main l'adresse d'une fiche d'agent de B (`/m/agents/<id de B>`) | Page « introuvable » (404), aucune donnée de B | ✅ 404 |
+| G2 | Rechercher dans les agents le nom d'un agent de B | Aucun résultat | ✅ |
+| G3 | Changer de compte (A puis B) sur le même téléphone | Aucune donnée de A visible dans B (pas de cache) | ✅ jeton push repris par le nouveau compte (corrigé) |
 
 ## 8. Confort et accessibilité
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| H1 | Thème sombre du système | Lisible, bandeaux visibles | ☐ |
-| H2 | Petit écran (≈ 320 px) et grand écran | Aucun défilement horizontal | ☐ |
+| H1 | Thème sombre du système | Lisible, bandeaux visibles | ✅ (barre d'état corrigée au changement de thème) |
+| H2 | Petit écran (≈ 320 px) et grand écran | Aucun défilement horizontal | ✅ 320 dp : aucun défilement horizontal |
 | H3 | Zones tactiles | Boutons/lignes faciles à toucher, pas d'appui accidentel | ☐ |
-| H4 | Lecteur d'écran (TalkBack) sur la connexion | Libellés des champs annoncés | ☐ |
+| H4 | Lecteur d'écran (TalkBack) sur la connexion | Libellés des champs annoncés | ☐ TalkBack : téléphone réel |
 
 ## 9. Conditions réelles et affichage 320 / 390 px (exigences du cadrage)
 
