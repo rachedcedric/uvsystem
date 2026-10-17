@@ -11,6 +11,8 @@ use App\Models\Tenant;
 use App\Services\Subscriptions\SubscriptionManager;
 use App\Support\PasswordPolicy;
 use App\Tenancy\TenantContext;
+use App\Tenancy\TenantDestroyer;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -39,12 +41,14 @@ class TenantResource extends Resource
 
     public static function canDelete($record): bool
     {
-        // Jamais de suppression : elle cascaderait sur toutes les données financières. On suspend.
-        return false;
+        // Suppression DÉFINITIVE : réservée au super admin et protégée (voir l'action « destroy » ci-dessous : confirmation par
+        // saisie du nom, une seule transaction). Pour couper l'accès sans rien effacer, on suspend.
+        return auth()->user()?->isSuperAdmin() ?? false;
     }
 
     public static function canDeleteAny(): bool
     {
+        // Pas de suppression groupée : une entreprise à la fois, avec confirmation nominative.
         return false;
     }
 
@@ -126,6 +130,41 @@ class TenantResource extends Resource
                     ->action(function (Tenant $record) {
                         $record->activate();
                         Notification::make()->title('Tenant réactivé')->success()->send();
+                    }),
+                // Suppression DÉFINITIVE : l'entreprise et toutes ses données (utilisateurs, agents, ventes, caisse, abonnement,
+                // fichiers…). Irréversible : confirmation par saisie du nom exact de l'entreprise.
+                Tables\Actions\Action::make('destroy')->label('Supprimer')->icon('heroicon-o-trash')->color('danger')
+                    ->visible(fn (Tenant $record): bool => static::canDelete($record))
+                    ->modalIcon('heroicon-o-exclamation-triangle')
+                    ->modalHeading(fn (Tenant $record): string => 'Supprimer définitivement « '.$record->name.' » ?')
+                    ->modalDescription(function (Tenant $record): string {
+                        $destroyer = app(TenantDestroyer::class);
+
+                        return 'Cette action est IRRÉVERSIBLE : l\'entreprise et TOUTES ses données seront effacées ('
+                            .$destroyer->describe($record).'), ainsi que ses fichiers et ses accès. '
+                            .($destroyer->isLegacyOwner($record) ? 'ATTENTION : c\'est l\'entreprise d\'origine de la plateforme, qui porte l\'historique antérieur. ' : '')
+                            .'Pour couper l\'accès sans rien perdre, utilisez plutôt « Suspendre ».';
+                    })
+                    ->modalSubmitActionLabel('Supprimer définitivement')
+                    ->form(fn (Tenant $record): array => [
+                        Forms\Components\TextInput::make('confirmation')
+                            ->label('Pour confirmer, saisissez le nom exact de l\'entreprise')
+                            ->placeholder($record->name)
+                            ->required()
+                            ->autocomplete(false)
+                            ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                if (mb_strtolower(trim((string) $value)) !== mb_strtolower(trim((string) $record->name))) {
+                                    $fail('Le nom saisi ne correspond pas à celui de l\'entreprise.');
+                                }
+                            }),
+                    ])
+                    ->action(function (Tenant $record) {
+                        $name = $record->name;
+                        $rows = app(TenantDestroyer::class)->destroy($record, auth()->user());
+
+                        Notification::make()->title('Entreprise supprimée')
+                            ->body('« '.$name.' » et ses données ont été effacées ('.array_sum($rows).' enregistrements).')
+                            ->success()->send();
                     }),
             ])
             ->defaultSort('name');
