@@ -49,7 +49,7 @@ dc exec -u www-data app php artisan platform:super-admin votre@email.com --name=
 | État / santé | `scripts/healthcheck.sh` (code 0 = sain) ; `dc ps` |
 | Journaux | `dc logs -f --tail=200 app` · `queue` · `scheduler` · `caddy` |
 | Redémarrer un service | `dc restart app` (ou `queue`, `scheduler`) |
-| Déployer une version | `scripts/deploy.sh` (sauvegarde + vérification de restauration, build, démarrage, `optimize`, santé) ; `--migrate` pour exécuter les migrations après préflight |
+| Déployer une version | `scripts/deploy.sh` (sauvegarde restaurable, build, démarrage, synchronisation des rôles/permissions, contrôle de plateforme, `optimize`, santé) ; `--migrate` pour exécuter les migrations après préflight |
 | Mise en maintenance | `dc exec -u www-data app php artisan down --secret=<jeton>` / `up` |
 | Console applicative | `dc exec -u www-data app php artisan tinker` |
 | Mémoire / CPU / disque | `docker stats --no-stream` ; `df -h` ; `docker system df` (ne **pas** lancer `docker system prune` sur un serveur partagé avec d'autres projets) |

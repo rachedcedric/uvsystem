@@ -10,6 +10,10 @@ if [ "$MIGRATE" = 1 ]; then
   dc exec -T -u www-data app php artisan tenancy:preflight || { echo "Préflight bloquant : migration refusée." >&2; exit 1; }
   dc exec -T -u www-data app php artisan migrate --force
 fi
+log "Synchronisation des rôles et permissions…"
+dc exec -T -u www-data app php artisan db:seed --class=RolesAndPermissionsSeeder --force
+log "Contrôle de la plateforme…"
+dc exec -T -u www-data app php artisan tenancy:deploy-check
 dc exec -T -u www-data app php artisan optimize
 "$DEPLOY_DIR/scripts/healthcheck.sh"
 log "Déploiement terminé. Retour arrière : voir docs/MIGRATION-UVMASTER.md (section « Retour arrière »)."
