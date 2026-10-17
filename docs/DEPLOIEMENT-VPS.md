@@ -57,13 +57,32 @@ dc exec -u www-data app php artisan platform:super-admin votre@email.com --name=
 ## Sauvegardes et restauration
 
 Deux niveaux complémentaires :
+
 1. **Applicatives** (planifiées par Laravel, `backup:run` à heures fixes) : archives dans `storage/app/UVMASTER CI/` (dossier fixé par `APP_NAME` : ne plus modifier cette valeur une fois en production), consultables par le super admin.
 2. **Système** (`deploy/scripts/backup.sh`) : dump MySQL en transaction unique + archive des fichiers + empreintes `SHA256SUMS` + comptages de contrôle, rétention `BACKUP_KEEP_DAYS` (14 j).
 
+Le fichier `.env.production` et le dossier `deploy/backups/` sont accessibles uniquement à `root`. Installer ces tâches dans le crontab `root` ; le verrou empêche la sauvegarde planifiée et sa vérification de se chevaucher :
+
 ```bash
-crontab -e   # à installer pour l'utilisateur « uvmaster »
-15 2 * * *  /opt/uvmaster/deploy/scripts/backup.sh >> /var/log/uvmaster-backup.log 2>&1
-45 2 * * 0  /opt/uvmaster/deploy/scripts/verify-restore.sh "$(ls -1d /opt/uvmaster/deploy/backups/* | tail -1)" >> /var/log/uvmaster-backup.log 2>&1
+sudo crontab -e
+15 2 * * *  flock -n /run/lock/uvmaster-backup.lock /opt/uvmaster/deploy/scripts/backup.sh >> /var/log/uvmaster-backup.log 2>&1
+45 2 * * 0  latest="$(find /opt/uvmaster/deploy/backups -mindepth 1 -maxdepth 1 -type d | sort | tail -n 1)"; test -n "$latest" && flock -n /run/lock/uvmaster-backup.lock /opt/uvmaster/deploy/scripts/verify-restore.sh "$latest" >> /var/log/uvmaster-backup.log 2>&1
+```
+
+Limiter aussi la croissance du journal avec `/etc/logrotate.d/uvmaster-backup` :
+
+```text
+/var/log/uvmaster-backup.log {
+    su root adm
+    weekly
+    rotate 12
+    size 10M
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 root adm
+}
 ```
 
 - **Vérifier** une sauvegarde sans toucher à la production : `scripts/verify-restore.sh <dossier>` (restaure dans une base temporaire, compare les comptages, la supprime).
