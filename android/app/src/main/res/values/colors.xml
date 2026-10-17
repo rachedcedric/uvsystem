@@ -3,4 +3,8 @@
     <!-- Même fond que l'interface mobile (papier) : évite toute bande de couleur autour de la WebView. -->
     <color name="m_bg">#F5F7F2</color>
     <color name="m_brand">#0B6B3A</color>
+    <!-- Écran de chargement natif : mêmes couleurs que la page « Pas de connexion » et l'interface mobile. -->
+    <color name="m_fg">#0E2A1C</color>
+    <color name="m_muted">#46594D</color>
+    <color name="m_on_brand">#FFFFFF</color>
 </resources>

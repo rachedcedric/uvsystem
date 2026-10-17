@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Écran de chargement natif, posé au-dessus de la WebView jusqu'à ce que le web signale appReady().
+     Le glyphe est au centre exact de l'écran (deux zones de poids égal de part et d'autre) : même position que le splash
+     système. La zone de contenu d'Android exclut les barres système, donc LoadingOverlay recentre uvmaster_loading_content
+     sur la fenêtre entière (translationY) une fois la mise en page connue. Les couleurs viennent de values/ et
+     values-night/ (m_*), donc suivent le thème clair/sombre. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/uvmaster_loading"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/m_bg"
+    android:clickable="true"
+    android:focusable="true">
+
+    <LinearLayout
+        android:id="@+id/uvmaster_loading_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/uvmaster_loading_glyph"
+            android:layout_width="@dimen/loading_glyph_size"
+            android:layout_height="@dimen/loading_glyph_size"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@string/app_name"
+            android:scaleType="fitCenter"
+            android:src="@mipmap/ic_launcher_foreground" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/loading_below_glyph_offset"
+            android:layout_weight="1"
+            android:gravity="top|center_horizontal"
+            android:orientation="vertical"
+            android:paddingLeft="28dp"
+            android:paddingRight="28dp">
+
+            <ProgressBar
+                android:id="@+id/uvmaster_loading_bar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="@dimen/loading_bar_width"
+                android:layout_height="@dimen/loading_bar_height"
+                android:contentDescription="@string/loading_progress"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/m_brand" />
+
+            <TextView
+                android:id="@+id/uvmaster_loading_slow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:accessibilityLiveRegion="polite"
+                android:text="@string/loading_slow"
+                android:textColor="@color/m_muted"
+                android:textSize="15sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/uvmaster_loading_failed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:accessibilityLiveRegion="polite"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/loading_failed_title"
+                    android:textColor="@color/m_fg"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_horizontal"
+                    android:text="@string/loading_failed_text"
+                    android:textColor="@color/m_muted"
+                    android:textSize="15sp" />
+
+                <Button
+                    android:id="@+id/uvmaster_loading_retry"
+                    android:layout_width="@dimen/loading_button_width"
+                    android:layout_height="@dimen/loading_button_height"
+                    android:layout_marginTop="22dp"
+                    android:background="@drawable/loading_retry_background"
+                    android:text="@string/loading_retry"
+                    android:textAllCaps="false"
+                    android:textColor="@color/m_on_brand"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

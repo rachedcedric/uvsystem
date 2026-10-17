@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bouton « Réessayer » de l'écran de chargement : même forme et mêmes couleurs que le bouton de la page « Pas de connexion ». -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33FFFFFF">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/m_brand" />
+            <corners android:radius="12dp" />
+        </shape>
+    </item>
+</ripple>

@@ -4,4 +4,9 @@
     <string name="title_activity_main">UVMASTER</string>
     <string name="package_name">ci.uvmaster.app</string>
     <string name="custom_url_scheme">ci.uvmaster.app</string>
+    <string name="loading_progress">Chargement</string>
+    <string name="loading_slow">Connexion lente…</string>
+    <string name="loading_failed_title">Le serveur ne répond pas</string>
+    <string name="loading_failed_text">Vérifiez votre connexion Internet, puis réessayez.</string>
+    <string name="loading_retry">Réessayer</string>
 </resources>

@@ -39,8 +39,14 @@
 
     /* ---------- Splash screen ---------- */
 
+    // Les pages /m (classe m-app) signalent elles-mêmes qu'elles sont prêtes (mobile.js, une fois la police chargée et
+    // l'interface dessinée) : ici seules les pages SANS interface /m (panneaux /master et /agent) le signalent, dès
+    // que le DOM est prêt. L'écran de chargement natif reste jusque-là.
     function hideSplash() {
-        try { plugin('SplashScreen').hide(); } catch (e) { /* le masquage automatique prend le relais */ }
+        if (document.body && document.body.classList.contains('m-app')) return;
+        try {
+            if (window.UvmasterNative && typeof window.UvmasterNative.appReady === 'function') window.UvmasterNative.appReady();
+        } catch (e) { /* l'écran natif se libère de lui-même peu après la fin du chargement */ }
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', hideSplash);
