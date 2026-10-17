@@ -42,7 +42,7 @@
         </x-m.field>
 
         <x-m.field label="Description (facultatif)" :error="$errors->first('description')">
-            <textarea wire:model="description" rows="2" class="m-input" style="height:auto;padding:12px 14px"></textarea>
+            <textarea wire:model="description" rows="2" class="m-input" style="height:auto;padding:12px 14px" placeholder="Informations complémentaires"></textarea>
         </x-m.field>
 
         <div class="m-submit">

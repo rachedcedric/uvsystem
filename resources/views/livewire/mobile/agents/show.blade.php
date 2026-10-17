@@ -18,10 +18,10 @@
     <div class="m-profile">
         <div class="m-profile__avatar">{{ mb_strtoupper(mb_substr($a->name, 0, 2)) }}</div>
         <div>
-            <div class="m-profile__name">{{ $a->type === 'premium' ? 'Agent premium' : 'Agent' }}
+            <div class="m-profile__name">{{ $a->name }}
                 @if ($a->status !== 'active') <span class="m-badge">Inactif</span> @endif
             </div>
-            <div class="m-profile__sub">{{ collect([$a->zone, $a->phone])->filter()->implode(' · ') ?: '—' }}</div>
+            <div class="m-profile__sub">{{ collect([$a->type === 'premium' ? 'Premium' : ($a->type === 'vip' ? 'VIP' : null), $a->zone, $a->phone])->filter()->implode(' · ') ?: '—' }}</div>
         </div>
     </div>
 

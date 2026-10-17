@@ -297,4 +297,12 @@ class MobileDesignSystemTest extends TestCase
         $this->assertStringContainsString('failure.status !== 419', $js);
         $this->assertStringContainsString('Votre session a expiré', $js);
     }
+
+    public function test_search_clear_button_and_notification_dot_do_not_use_browser_defaults(): void
+    {
+        $css = file_get_contents(resource_path('css/mobile.css'));
+
+        $this->assertStringContainsString('.m-search input::-webkit-search-cancel-button', $css);
+        $this->assertMatchesRegularExpression('/\.m-iconbtn__dot\s*\{[^}]*top:\s*1px/s', $css);
+    }
 }

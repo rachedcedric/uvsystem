@@ -313,4 +313,15 @@
         if (!scheduled) { scheduled = true; window.requestAnimationFrame(scanFileInputs); }
     }).observe(document.documentElement, { childList: true, subtree: true });
     scanFileInputs();
+
+    // Filament ouvre son menu latéral au premier chargement, même sur téléphone : il recouvre la page (écrans
+    // « version complète »). On le referme sur petit écran, au démarrage et après chaque navigation.
+    function closeSidebarOnPhones() {
+        if (window.innerWidth >= 1024) return;
+        var store = window.Alpine && typeof window.Alpine.store === 'function' ? window.Alpine.store('sidebar') : null;
+        if (store && store.isOpen) store.close();
+    }
+    document.addEventListener('alpine:initialized', closeSidebarOnPhones);
+    document.addEventListener('livewire:navigated', closeSidebarOnPhones);
+    window.setTimeout(closeSidebarOnPhones, 400);
 })();

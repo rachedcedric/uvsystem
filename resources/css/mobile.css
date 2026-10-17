@@ -249,8 +249,9 @@ html {
 
 .m-iconbtn__dot {
     position: absolute;
-    top: 7px;
-    right: 6px;
+    /* au coin du bouton de 44 px, pour ne pas masquer l'icône (cloche) */
+    top: 1px;
+    right: 0;
     min-width: 17px;
     height: 17px;
     padding: 0 4px;
@@ -1288,6 +1289,16 @@ body:has(.m-offline[data-show]) .m-appbar {
     font-size: 15.5px;
     outline: none;
     box-sizing: border-box;
+}
+
+.m-search input::-webkit-search-cancel-button {
+    /* croix d'effacement aux couleurs de l'app (la native est bleue) */
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    background: no-repeat center / 14px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2366756b' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
 }
 
 .m-search input:focus {

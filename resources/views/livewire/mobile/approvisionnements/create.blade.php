@@ -26,7 +26,7 @@
         <x-m.operation-date-time />
 
         <x-m.field label="Notes (facultatif)" :error="$errors->first('notes')">
-            <textarea wire:model="notes" rows="2" class="m-input" style="height:auto;padding:12px 14px"></textarea>
+            <textarea wire:model="notes" rows="2" class="m-input" style="height:auto;padding:12px 14px" placeholder="Informations complémentaires"></textarea>
         </x-m.field>
 
         <div class="m-submit">

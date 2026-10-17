@@ -43,7 +43,7 @@ Défauts trouvés et corrigés pendant la campagne : titres « Nouveau agent / c
 caisse invisibles, total de caisse écrasé, lien d'historique pleine largeur, `0 Ko`, messages de validation en
 anglais, déconnexion depuis une page de sécurité renvoyant vers la connexion bureau, 200 % de police, barre d'état en
 thème sombre, boîte « This page has expired » en anglais, erreur JavaScript sur le tableau de bord (blocs différés en
-`<section>`), jeton push d'un téléphone partagé entre deux entreprises (erreur 500).
+`<section>`), jeton push d'un téléphone partagé entre deux entreprises (erreur 500), carte de bienvenue de l'espace agent blanche sur blanc, menu latéral Filament ouvert sur téléphone, pastille de la cloche sur l'icône, mot de passe : une seule règle (12 caractères, majuscule, minuscule, chiffre, symbole).
 
 ## 1. Installation et lancement
 
@@ -120,7 +120,7 @@ Formulaires à parcourir : **Profil de l'entreprise** (11 champs), **Nouvelle ve
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
 | F1 | Bouton retour matériel : feuille ouverte → modale → racine d'onglet → accueil → quitter | Chaque appui ferme/recule d'un niveau ; confirmation avant de quitter l'accueil | ✅ |
-| F2 | Master lié à une fiche agent : Plus → « Mon espace agent » | S'ouvre ; lien « ← Application » visible ; le retour matériel fonctionne | ☐ compte lié à une fiche agent non testé |
+| F2 | Master lié à une fiche agent : Plus → « Mon espace agent » | S'ouvre ; lien « ← Application » visible ; le retour matériel fonctionne | ✅ s'ouvre avec « ← Application » ; menu latéral refermé et carte de bienvenue rendue visible (corrigés) |
 | F3 | Master : exporter un PDF (ventes du mois) et un Excel | Téléchargement + feuille de partage ; fichier ouvrable ; pied de page de l'entreprise présent sur le PDF | ✅ |
 | F4 | Lecture seule : chercher un bouton d'export | Aucun ; l'URL directe est refusée (B3) | ✅ |
 | F5 | Notifications push (master/admin) : app ouverte / en arrière-plan / fermée | Réception, son, toucher ouvre l'écran Notifications ; les autres rôles ne reçoivent rien | ☐ push : vérifié lors d'une campagne précédente, non rejoué ; jeton de téléphone partagé corrigé |
@@ -141,7 +141,7 @@ Formulaires à parcourir : **Profil de l'entreprise** (11 champs), **Nouvelle ve
 |---|---|---|---|
 | H1 | Thème sombre du système | Lisible, bandeaux visibles | ✅ (barre d'état corrigée au changement de thème) |
 | H2 | Petit écran (≈ 320 px) et grand écran | Aucun défilement horizontal | ✅ 320 dp : aucun défilement horizontal |
-| H3 | Zones tactiles | Boutons/lignes faciles à toucher, pas d'appui accidentel | ☐ |
+| H3 | Zones tactiles | Boutons/lignes faciles à toucher, pas d'appui accidentel | ✅ aucune cible < 40 px, sauf les barres du graphique du mois (19 px de large, 31 jours) |
 | H4 | Lecteur d'écran (TalkBack) sur la connexion | Libellés des champs annoncés | ☐ TalkBack : téléphone réel |
 
 ## 9. Conditions réelles et affichage 320 / 390 px (exigences du cadrage)

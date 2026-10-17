@@ -63,4 +63,12 @@ class ErrorPagesTest extends TestCase
         $this->assertStringContainsString('onConfigurationChanged', $java);
         $this->assertStringContainsString('setAppearanceLightStatusBars', $java);
     }
+
+    public function test_the_bridge_closes_the_filament_sidebar_on_phones(): void
+    {
+        $js = (string) file_get_contents(public_path('js/capacitor-bridge.js'));
+
+        $this->assertStringContainsString('closeSidebarOnPhones', $js);
+        $this->assertStringContainsString("store('sidebar')", $js);
+    }
 }

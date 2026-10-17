@@ -2,15 +2,16 @@
     <div class="space-y-6">
         @if($agent)
             {{-- Welcome Card --}}
-            <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg p-6 text-white">
+            {{-- Styles en ligne : les classes Tailwind du dégradé ne sont pas dans le CSS compilé de Filament (carte blanche sur blanc). --}}
+            <div class="rounded-xl shadow-lg p-6" style="background:linear-gradient(90deg,#10b981,#0d9488);color:#fff">
                 <div class="flex items-center justify-between">
                     <div>
                         <h2 class="text-2xl font-bold">Bienvenue, {{ $agent->name }} !</h2>
-                        <p class="text-emerald-100 mt-1">{{ $agent->phone }}</p>
+                        <p class="mt-1" style="color:#d1fae5">{{ $agent->phone }}</p>
                     </div>
                     <div class="text-right">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-                            {{ $agent->status === 'active' ? 'bg-emerald-200 text-emerald-800' : 'bg-red-200 text-red-800' }}">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                              style="{{ $agent->status === 'active' ? 'background:#a7f3d0;color:#065f46' : 'background:#fecaca;color:#991b1b' }}">
                             {{ $agent->status === 'active' ? 'Actif' : 'Inactif' }}
                         </span>
                     </div>
