@@ -305,4 +305,11 @@ class MobileDesignSystemTest extends TestCase
         $this->assertStringContainsString('.m-search input::-webkit-search-cancel-button', $css);
         $this->assertMatchesRegularExpression('/\.m-iconbtn__dot\s*\{[^}]*top:\s*1px/s', $css);
     }
+
+    public function test_form_hints_wrap_instead_of_being_cut_with_an_ellipsis(): void
+    {
+        $view = file_get_contents(resource_path('views/livewire/mobile/crud/form.blade.php'));
+
+        $this->assertStringContainsString('white-space:normal', $view);
+    }
 }

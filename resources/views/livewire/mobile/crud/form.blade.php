@@ -78,7 +78,7 @@
                                placeholder="{{ $field->placeholder }}" @if ($field->maxLength) maxlength="{{ $field->maxLength }}" @endif
                                autocomplete="off">
                 @endswitch
-                @if ($field->hint) <div class="m-row__sub" style="margin:6px 4px 0">{{ $field->hint }}</div> @endif
+                @if ($field->hint) <div class="m-row__sub" style="margin:6px 4px 0;white-space:normal;overflow:visible;text-overflow:clip">{{ $field->hint }}</div> @endif
             </x-m.field>
         @endforeach
 

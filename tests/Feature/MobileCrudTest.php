@@ -137,7 +137,7 @@ class MobileCrudTest extends TestCase
             Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
                 ->set('data.name', 'Faible')->set('data.email', 'faible@example.com')
                 ->set('data.password', $weak)->set('data.password_confirmation', $weak)
-                ->call('save')->assertHasErrors(['data.password']);
+                ->call('save')->assertHasErrors(['data.password'])->assertHasNoErrors(['data.password_confirmation']);
         }
 
         $this->assertNull(User::where('email', 'faible@example.com')->first());

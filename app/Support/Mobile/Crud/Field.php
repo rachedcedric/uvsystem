@@ -250,7 +250,8 @@ final class Field
             'toggle' => ['boolean'],
             'multi' => ['array'],
             'color' => ['regex:/^#[0-9a-fA-F]{6}$/'],
-            'password' => ['string', PasswordPolicy::rule()],
+            // La confirmation (champ virtuel) est comparée au mot de passe : la règle de robustesse ne s'applique qu'à lui.
+            'password' => $this->virtual ? ['string'] : ['string', PasswordPolicy::rule()],
             'select' => [Rule::in(array_map('strval', array_keys($this->resolveOptions())))],
             default => ['string'],
         });
