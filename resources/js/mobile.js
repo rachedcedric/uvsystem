@@ -593,8 +593,32 @@ import { PushNotifications } from '@capacitor/push-notifications';
     // Sur la connexion il n'y a rien à perdre : on recharge tout de suite ; ailleurs on demande, en français.
     document.addEventListener('livewire:init', function () {
         if (!window.Livewire || typeof window.Livewire.hook !== 'function') return;
+        // Réseau coupé en plein envoi : Livewire restaure mal l'attribut « disabled » des boutons
+        // wire:loading (il le remet au lieu de le retirer) et le bouton restait grisé pour toujours.
+        // On note l'état au toucher (avant que Livewire n'y touche) et on le rétablit après l'échec.
+        var loadingButtons = new WeakMap();
+        function rememberLoadingButtons(event) {
+            var root = event.target && event.target.closest && event.target.closest('[wire\\:id]');
+            if (!root) return;
+            loadingButtons.set(root, Array.prototype.map.call(root.querySelectorAll('[wire\\:loading\\.attr="disabled"]'), function (button) {
+                return [button, button.disabled];
+            }));
+        }
+        document.addEventListener('click', rememberLoadingButtons, true);
+        document.addEventListener('submit', rememberLoadingButtons, true);
+        window.Livewire.hook('commit', function (commit) {
+            var root = commit.component && commit.component.el;
+            commit.fail(function () {
+                (loadingButtons.get(root) || []).forEach(function (state) { state[0].disabled = state[1]; });
+            });
+        });
         window.Livewire.hook('request', function (request) {
             request.fail(function (failure) {
+                // 503 sans contenu : la requête n'a pas pu partir ou aboutir (réseau coupé).
+                if (failure.status === 503 && failure.content === null) {
+                    toast("Connexion perdue : l'action n'a peut-être pas été enregistrée. Vérifiez le réseau puis réessayez.");
+                    return;
+                }
                 if (failure.status !== 419) return;
                 failure.preventDefault();
                 if (/\/login\/?$/.test(location.pathname) || window.confirm('Votre session a expiré. Recharger la page ?')) {

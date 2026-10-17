@@ -46,10 +46,9 @@
             <div class="m-group" style="margin-top:18px">
                 <x-m.empty icon="banknotes" :title="$filtersActive ? 'Aucune vente pour ces filtres' : 'Aucune vente'"
                            :text="$filtersActive ? 'Aucune vente ne correspond à ces filtres.' : 'Les ventes enregistrées apparaîtront ici.'">
-                    @if ($filtersActive || $canCreate)
+                    @if ($filtersActive)
                         <div class="m-empty__actions">
-                            @if ($filtersActive)<button type="button" class="m-btn m-btn--ghost" wire:click="resetFilters">Réinitialiser les filtres</button>@endif
-                            @if ($canCreate)<a href="{{ route('m.ventes.create') }}" wire:navigate class="m-btn">Nouvelle vente</a>@endif
+                            <button type="button" class="m-btn m-btn--ghost" wire:click="resetFilters">Réinitialiser les filtres</button>
                         </div>
                     @endif
                 </x-m.empty>

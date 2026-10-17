@@ -150,17 +150,17 @@ Un émulateur **ne remplace pas** ces essais : ils se font sur un téléphone ph
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| R1 | Largeur 390 px : Réglages → Affichage → Taille d'affichage (ou `adb shell wm size 780x1688` + `adb shell wm density 400`) ; remettre ensuite `adb shell wm size reset` et `adb shell wm density reset` | Ventes UV (liste, fiche, création) lisible, aucun défilement horizontal, cibles tactiles confortables | ☐ |
-| R2 | Largeur 320 px : `adb shell wm size 640x1280` + `adb shell wm density 320` (puis reset) | Idem ; puces de période, bandeau d'abonnement et feuilles de confirmation non coupés | ☐ |
-| R3 | Réseau faible (3G/Edge) pendant une recherche et un enregistrement | Liste estompée pendant le chargement, aucun double envoi, message clair en cas d'échec | ☐ |
-| R4 | Mode avion en plein formulaire, puis retour du réseau | Bandeau « Hors connexion » ; valeurs saisies conservées ; l'enregistrement aboutit une seule fois | ☐ |
-| R5 | Passage Wi-Fi → 4G pendant l'usage | Session conservée, aucune déconnexion | ☐ |
-| R6 | Écran verrouillé 2 min puis reprise ; app en arrière-plan 10 min | Reprise sur le même écran, pas d'écran blanc ; session conservée | ☐ |
-| R7 | Appel entrant ou notification pendant la saisie | Retour au formulaire intact | ☐ |
-| R8 | Économiseur de batterie activé | Navigation fluide, sons et vibrations conformes aux réglages | ☐ |
-| R9 | Autorisation caméra refusée puis accordée (logo, justificatif) | Message clair si refus ; fonctionne après autorisation | ☐ |
-| R10 | Heure du téléphone décalée de +2 jours | Aucune faille d'accès : l'abonnement est jugé côté serveur (bandeau inchangé) | ☐ |
-| R11 | Luminosité maximale en extérieur | Textes discrets et pastilles lisibles (contrastes AA calculés, à confirmer à l'œil) | ☐ |
+| R1 | Largeur 390 px : Réglages → Affichage → Taille d'affichage (ou `adb shell wm size 780x1688` + `adb shell wm density 320` (400 donnerait 312 px, pas 390)) ; remettre ensuite `adb shell wm size reset` et `adb shell wm density reset` | Ventes UV (liste, fiche, création) lisible, aucun défilement horizontal, cibles tactiles confortables | ✅ 390 px : aucun défilement horizontal, aucune cible < 40 px (liste, fiche, création) |
+| R2 | Largeur 320 px : `adb shell wm size 640x1280` + `adb shell wm density 320` (puis reset) | Idem ; puces de période, bandeau d'abonnement et feuilles de confirmation non coupés | ✅ 320 px : rien de coupé, feuille de confirmation entière |
+| R3 | Réseau faible (3G/Edge) pendant une recherche et un enregistrement | Liste estompée pendant le chargement, aucun double envoi, message clair en cas d'échec | ✅ serveur ralenti à 3,5 s : liste estompée, 3 appuis rapides = 1 seule vente ; échec réseau : bouton figé et sans message → corrigé (message « Connexion perdue… », bouton réactivé) |
+| R4 | Mode avion en plein formulaire, puis retour du réseau | Bandeau « Hors connexion » ; valeurs saisies conservées ; l'enregistrement aboutit une seule fois | ✅ valeurs conservées, bandeau « Hors connexion », une seule vente après le retour (émulateur : le mode avion ne coupe pas le tunnel `adb reverse`, essai refait en arrêtant le serveur) |
+| R5 | Passage Wi-Fi → 4G pendant l'usage | Session conservée, aucune déconnexion | ✅ session conservée (limite émulateur : le lien serveur passe par le tunnel) |
+| R6 | Écran verrouillé 2 min puis reprise ; app en arrière-plan 10 min | Reprise sur le même écran, pas d'écran blanc ; session conservée | ✅ verrouillé 2 min puis arrière-plan 10 min : même écran, valeur saisie conservée, session conservée |
+| R7 | Appel entrant ou notification pendant la saisie | Retour au formulaire intact | ✅ appel entrant simulé : saisie « 75 000 » et focus intacts |
+| R8 | Économiseur de batterie activé | Navigation fluide, sons et vibrations conformes aux réglages | ✅ navigation normale avec l'économiseur ; sons et vibrations non vérifiables sur émulateur |
+| R9 | Autorisation caméra refusée puis accordée (logo, justificatif) | Message clair si refus ; fonctionne après autorisation | ✅ caméra s'ouvre après autorisation ; refus : message mêlé d'anglais et sans consigne → corrigé (réglages > Applications > UVMASTER > Autorisations) |
+| R10 | Heure du téléphone décalée de +2 jours | Aucune faille d'accès : l'abonnement est jugé côté serveur (bandeau inchangé) | ✅ horloge +2 jours : affichage identique (date serveur), session intacte |
+| R11 | Luminosité maximale en extérieur | Textes discrets et pastilles lisibles (contrastes AA calculés, à confirmer à l'œil) | ☐ à confirmer à l'œil sur téléphone réel (contrastes AA verrouillés par test) |
 
 ## 10. Critères de passage (règle de décision)
 
@@ -179,14 +179,14 @@ conditions réelles = R3 à R11.
 
 | ID | Étapes | Attendu | Résultat |
 |---|---|---|---|
-| V1 | Master : Ventes → liste | Cartes de période, top 5, filtres ; chaque ligne ≥ 44 px ; bouton « Nouvelle vente » présent | ☐ |
-| V2 | Rechercher un nom inexistant | « Aucune vente pour ces filtres » + « Réinitialiser les filtres » ; le bouton remet « 7 jours » et vide la recherche | ☐ |
-| V3 | Ouvrir une vente → « Annuler cette vente » | Feuille de confirmation ; touche retour matériel **ferme la feuille** sans quitter la page ; « Non, garder » ne modifie rien | ☐ |
-| V4 | Confirmer l'annulation d'une vente de test | Message de succès ; montant barré + pastille « Annulée » ; plus d'action d'annulation | ☐ |
-| V5 | Nouvelle vente : choisir un agent, saisir un montant (touches « Suivant »), enregistrer | Clavier numérique pour le montant ; champ jamais masqué ; une seule vente créée | ☐ |
-| V6 | Lecture seule : liste puis fiche | Mention « Consultation seule », aucun bouton d'écriture ; `/m/ventes/nouvelle` à la main = refus | ☐ |
-| V7 | Commercial : fiche d'une vente | Peut annuler/modifier selon ses droits, ne peut pas supprimer | ☐ |
-| V8 | Compte d'une autre entreprise : saisir l'adresse d'une vente de la première | Page introuvable, aucune donnée | ☐ |
+| V1 | Master : Ventes → liste | Cartes de période, top 5, filtres ; chaque ligne ≥ 44 px ; bouton « Nouvelle vente » présent | ✅ |
+| V2 | Rechercher un nom inexistant | « Aucune vente pour ces filtres » + « Réinitialiser les filtres » ; le bouton remet « 7 jours » et vide la recherche | ✅ le bouton « Réinitialiser les filtres » vide la recherche ; le doublon avec le bouton flottant a été supprimé |
+| V3 | Ouvrir une vente → « Annuler cette vente » | Feuille de confirmation ; touche retour matériel **ferme la feuille** sans quitter la page ; « Non, garder » ne modifie rien | ✅ retour matériel ferme la feuille, « Non, garder » ne change rien |
+| V4 | Confirmer l'annulation d'une vente de test | Message de succès ; montant barré + pastille « Annulée » ; plus d'action d'annulation | ✅ montant barré + pastille « Annulée », plus d'action d'annulation |
+| V5 | Nouvelle vente : choisir un agent, saisir un montant (touches « Suivant »), enregistrer | Clavier numérique pour le montant ; champ jamais masqué ; une seule vente créée | ✅ clavier numérique « 25 000 », champ visible, une seule vente créée |
+| V6 | Lecture seule : liste puis fiche | Mention « Consultation seule », aucun bouton d'écriture ; `/m/ventes/nouvelle` à la main = refus | ✅ « Consultation seule », aucun bouton d'écriture, `/m/ventes/nouvelle` = 403 français |
+| V7 | Commercial : fiche d'une vente | Peut annuler/modifier selon ses droits, ne peut pas supprimer | ✅ dupliquer, annuler et modifier ; pas de suppression |
+| V8 | Compte d'une autre entreprise : saisir l'adresse d'une vente de la première | Page introuvable, aucune donnée | ✅ « Page introuvable », aucune donnée de l'autre entreprise |
 
 ## Fiche de synthèse (à remplir)
 

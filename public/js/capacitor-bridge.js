@@ -271,7 +271,13 @@
             })
             .catch(function (error) {
                 var message = (error && error.message) || '';
-                if (!/cancel/i.test(message)) window.alert('Photo impossible. ' + message);
+                if (/cancel/i.test(message)) return;
+                // Le plugin renvoie des messages en anglais : on les remplace par une consigne utile.
+                if (/denied|permission/i.test(message)) {
+                    window.alert("Photo impossible : l'accès à l'appareil photo est refusé. Autorisez-le dans les réglages du téléphone (Applications > UVMASTER > Autorisations > Appareil photo), puis réessayez.");
+                    return;
+                }
+                window.alert("Photo impossible. Réessayez, ou choisissez une image dans la galerie.");
             });
     }
 
