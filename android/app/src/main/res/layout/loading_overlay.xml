@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Écran de chargement natif, posé au-dessus de la WebView jusqu'à ce que le web signale appReady().
-     Le glyphe est au centre exact de l'écran (deux zones de poids égal de part et d'autre) : même position que le splash
-     système. La zone de contenu d'Android exclut les barres système, donc LoadingOverlay recentre uvmaster_loading_content
-     sur la fenêtre entière (translationY) une fois la mise en page connue. Les couleurs viennent de values/ et
-     values-night/ (m_*), donc suivent le thème clair/sombre. -->
+     Direction « Signature » : le glyphe UV, le nom de la marque en lettres espacées, la baseline, et trois points qui pulsent.
+     Le glyphe est au centre exact de l'écran (deux zones de poids égal de part et d'autre) : même position et même taille
+     que le splash système, il ne bouge jamais. Le reste apparaît en fondu juste dessous. La zone de contenu d'Android exclut
+     les barres système, donc LoadingOverlay recentre uvmaster_loading_content sur la fenêtre entière (translationY) une fois
+     la mise en page connue. Les couleurs viennent de values/ et values-night/ (m_*), donc suivent le thème clair/sombre. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/uvmaster_loading"
     android:layout_width="match_parent"
@@ -12,13 +13,24 @@
     android:clickable="true"
     android:focusable="true">
 
+    <!-- Léger dégradé, en fondu par-dessus le fond uni du splash système. -->
+    <View
+        android:id="@+id/uvmaster_loading_gradient"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@drawable/loading_gradient"
+        android:importantForAccessibility="no" />
+
     <LinearLayout
         android:id="@+id/uvmaster_loading_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center_vertical"
         android:orientation="vertical">
 
         <View
+            android:id="@+id/uvmaster_loading_top"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
@@ -33,6 +45,7 @@
             android:src="@mipmap/ic_launcher_foreground" />
 
         <LinearLayout
+            android:id="@+id/uvmaster_loading_lower"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="@dimen/loading_below_glyph_offset"
@@ -42,31 +55,71 @@
             android:paddingLeft="28dp"
             android:paddingRight="28dp">
 
-            <ProgressBar
-                android:id="@+id/uvmaster_loading_bar"
-                style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_width="@dimen/loading_bar_width"
-                android:layout_height="@dimen/loading_bar_height"
-                android:contentDescription="@string/loading_progress"
-                android:indeterminate="true"
-                android:indeterminateTint="@color/m_brand" />
-
-            <TextView
-                android:id="@+id/uvmaster_loading_slow"
+            <!-- État d'attente : nom, baseline (qui devient « Connexion lente… » après 4 s) et points. -->
+            <LinearLayout
+                android:id="@+id/uvmaster_loading_brand"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:accessibilityLiveRegion="polite"
-                android:text="@string/loading_slow"
-                android:textColor="@color/m_muted"
-                android:textSize="15sp"
-                android:visibility="gone" />
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
 
+                <!-- paddingLeft compense l'espace que letterSpacing ajoute après la dernière lettre : le nom reste centré. -->
+                <TextView
+                    android:id="@+id/uvmaster_loading_wordmark"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:importantForAccessibility="no"
+                    android:letterSpacing="0.42"
+                    android:paddingLeft="5dp"
+                    android:text="@string/app_name"
+                    android:textColor="@color/m_fg"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/uvmaster_loading_tagline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:accessibilityLiveRegion="polite"
+                    android:alpha="0.8"
+                    android:letterSpacing="0.04"
+                    android:text="@string/loading_tagline"
+                    android:textColor="@color/m_muted"
+                    android:textSize="11sp" />
+
+                <LinearLayout
+                    android:id="@+id/uvmaster_loading_dots"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:contentDescription="@string/loading_progress"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="@dimen/loading_dot_size"
+                        android:layout_height="@dimen/loading_dot_size"
+                        android:background="@drawable/loading_dot" />
+
+                    <View
+                        android:layout_width="@dimen/loading_dot_size"
+                        android:layout_height="@dimen/loading_dot_size"
+                        android:layout_marginStart="@dimen/loading_dot_gap"
+                        android:background="@drawable/loading_dot" />
+
+                    <View
+                        android:layout_width="@dimen/loading_dot_size"
+                        android:layout_height="@dimen/loading_dot_size"
+                        android:layout_marginStart="@dimen/loading_dot_gap"
+                        android:background="@drawable/loading_dot" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- État d'échec : remplace l'état d'attente, à la même place. -->
             <LinearLayout
                 android:id="@+id/uvmaster_loading_failed"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
                 android:accessibilityLiveRegion="polite"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
@@ -75,6 +128,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
                     android:text="@string/loading_failed_title"
                     android:textColor="@color/m_fg"
                     android:textSize="19sp"

@@ -19,6 +19,9 @@ interface SubscriptionPaymentGateway
     /** Identifiant stable stocké dans subscription_payments.gateway (ex. « manual »). */
     public function name(): string;
 
+    /** Montant réellement payable après application des contraintes monétaires de la passerelle. */
+    public function payableAmount(int $amount): int;
+
     /**
      * Crée un paiement EN ATTENTE (jamais confirmé).
      *
@@ -36,4 +39,7 @@ interface SubscriptionPaymentGateway
     public function confirm(SubscriptionPayment $payment, array $proof): SubscriptionPayment;
 
     public function fail(SubscriptionPayment $payment, string $reason): SubscriptionPayment;
+
+    /** URL de paiement externe validée par la passerelle, ou null pour un paiement hors ligne. */
+    public function checkoutUrl(SubscriptionPayment $payment): ?string;
 }

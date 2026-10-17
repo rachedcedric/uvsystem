@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountSecurityController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ChargeJustificatifController;
 use App\Http\Controllers\ExportDownloadController;
+use App\Http\Controllers\JekoPaymentReturnController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\SubscribeController;
@@ -35,6 +36,11 @@ Route::middleware('web')->group(function () {
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::middleware(['web', 'throttle:60,1'])->group(function () {
+    Route::get('/paiements/jeko/succes', [JekoPaymentReturnController::class, 'success'])->name('payments.jeko.success');
+    Route::get('/paiements/jeko/erreur', [JekoPaymentReturnController::class, 'error'])->name('payments.jeko.error');
 });
 
 Route::get('/admin/{path?}', function (Request $request, ?string $path = null) {

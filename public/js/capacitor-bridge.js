@@ -144,6 +144,21 @@
         try { plugin('Browser').open({ url: url.href }); } catch (e) { window.open(url.href, '_system'); }
     }
 
+    // Appelée par le serveur (Livewire) pour ouvrir une page de paiement SANS quitter l'application : une redirection
+    // serveur ferait sortir la WebView vers le navigateur système, alors que le plugin Browser ouvre un onglet intégré
+    // à l'appli (bouton de fermeture, retour direct à l'appli). Seules les pages https sont acceptées.
+    window.uvmasterOpenExternal = function (href) {
+        var url = toUrl(href);
+        if (url && url.protocol === 'https:') openExternal(url);
+    };
+
+    // L'utilisateur referme l'onglet de paiement : les écrans qui l'écoutent se rafraîchissent (état du paiement).
+    try {
+        plugin('Browser').addListener('browserFinished', function () {
+            window.dispatchEvent(new CustomEvent('uvmaster-browser-finished'));
+        });
+    } catch (e) { /* sans plugin Browser, le rafraîchissement automatique des écrans prend le relais */ }
+
     // Retourne true si le lien a été pris en charge ici.
     function handleAnchor(anchor) {
         var href = anchor.getAttribute('href');

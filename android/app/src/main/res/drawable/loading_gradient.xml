@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Léger dégradé vertical de l'écran de chargement. Il apparaît en fondu par-dessus le fond uni (m_bg), qui est celui du
+     splash système : le passage de l'un à l'autre reste sans à-coup. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:endColor="@color/m_splash_bottom"
+        android:startColor="@color/m_splash_top"
+        android:type="linear" />
+</shape>

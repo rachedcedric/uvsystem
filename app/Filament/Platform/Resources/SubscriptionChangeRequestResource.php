@@ -2,10 +2,12 @@
 
 namespace App\Filament\Platform\Resources;
 
+use App\Exceptions\InvalidSubscriptionTransition;
 use App\Filament\Platform\Resources\SubscriptionChangeRequestResource\Pages;
 use App\Models\SubscriptionChangeRequest;
 use App\Models\SubscriptionPayment;
 use App\Models\Tenant;
+use App\Services\Subscriptions\Payments\ManualSubscriptionPaymentGateway;
 use App\Services\Subscriptions\SubscriptionBilling;
 use App\Tenancy\TenantContext;
 use Filament\Forms;
@@ -81,6 +83,9 @@ class SubscriptionChangeRequestResource extends Resource
                             ->first(fn (SubscriptionPayment $p) => ($p->metadata['change_request_id'] ?? null) === $r->id));
 
                         abort_if($payment === null, 404, 'Aucun paiement en attente pour cette demande.');
+                        if ($payment->gateway !== ManualSubscriptionPaymentGateway::NAME) {
+                            throw new InvalidSubscriptionTransition('Ce paiement se règle via Jèko : il est confirmé automatiquement à réception du paiement.');
+                        }
 
                         app(SubscriptionBilling::class)->confirm($payment, ['reference' => $data['reference'], 'confirmed_by' => auth()->user()]);
                     }, 'Paiement confirmé, offre changée')),

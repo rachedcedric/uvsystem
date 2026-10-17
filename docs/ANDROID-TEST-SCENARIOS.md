@@ -45,6 +45,31 @@ anglais, déconnexion depuis une page de sécurité renvoyant vers la connexion 
 thème sombre, boîte « This page has expired » en anglais, erreur JavaScript sur le tableau de bord (blocs différés en
 `<section>`), jeton push d'un téléphone partagé entre deux entreprises (erreur 500), carte de bienvenue de l'espace agent blanche sur blanc, menu latéral Filament ouvert sur téléphone, pastille de la cloche sur l'icône, mot de passe : une seule règle (12 caractères, majuscule, minuscule, chiffre, symbole).
 
+### Campagne du 2026-10-17, soir (émulateur) : écran de chargement natif et paiements Jèko
+
+Émulateur `Beni_Test` contre une démo jetable (base SQLite, faux serveur Jèko local, aucun appel au vrai Jèko).
+Code testé : écran de chargement natif (jamais vu sur appareil avant), page « Mon abonnement » avec paiement Jèko.
+
+| Contrôle | Résultat |
+|---|---|
+| Écran de chargement : glyphe immobile du splash système à l'overlay, « Connexion lente… » à 4 s, erreur + « Réessayer » à 12 s, thème clair et sombre | ✅ |
+| Serveur éteint (connexion refusée) : page locale « Connexion impossible », « Réessayer » recharge l'app, session conservée | ✅ |
+| Retour matériel depuis l'accueil : confirmation avant de quitter | ✅ |
+| Renouvellement : « Payer » crée un paiement Jèko en attente et ouvre le navigateur système sur `pay.jeko.africa` | ✅ |
+| Webhook : signature absente, fausse, non hexadécimale, en majuscules, corps modifié → 401 ; montant ou magasin falsifié → 422, paiement reste en attente | ✅ |
+| Webhook valide : échéance + 1 mois (17/11 → 17/12), notification « Paiement confirmé » ; rejeu → pas de seconde prolongation | ✅ |
+| Jèko injoignable : message « Le service Jèko ne répond pas… », paiement marqué échoué, erreur journalisée | ✅ (après correction) |
+| Annuler une demande dont le paiement Jèko est en attente : refusée avec message | ✅ (après correction) |
+
+Défauts trouvés et corrigés pendant la campagne :
+- **« Réessayer » coupé ou invisible** (écran 360 × 640 dp : bas du bouton coupé ; 320 dp ou police ≥ 150 % : bouton absent, donc aucune action possible). En échec, le groupe glyphe + message est maintenant centré et la moitié basse prend la hauteur de son contenu ; titre centré ; bouton ramené à 240 dp (tient dans 320 dp). Vérifié en 360 × 640 / police 100 %, 320 × 640 / 150 %, 360 × 640 / 200 %, retour à l'attente sans décalage du glyphe.
+- Boutons « Payer », « Activer », « Choisir » sans marge intérieure (texte collé aux bords) : règle `.m-row__end .m-btn`.
+- Erreur de la page d'abonnement tronquée sur une ligne (« Réessayez d… ») : encadré qui revient à la ligne, plus un toast visible quel que soit le défilement (le bouton touché est en bas de page, l'encadré en haut).
+- Libellés tronqués (« Facture de renouvellement au… », « chez J… », « elle … ») raccourcis.
+- Erreurs Jèko avalées sans trace dans les écrans d'abonnement : maintenant journalisées ; paiement échoué détecté par la réconciliation : le master est prévenu ; `JEKO_BASE_URL` en HTTP refusé hors local et test.
+
+Reste à valider sur téléphone réel : le retour d'un vrai paiement Wave/Orange (l'app se rouvre-t-elle toute seule ? sinon l'utilisateur revient à la main) ; le cas d'une demande de changement d'offre dont le paiement Jèko a été abandonné : elle ne peut être ni annulée ni remplacée tant que Jèko ne répond pas « erreur » (décision produit en attente).
+
 ## 1. Installation et lancement
 
 | ID | Étapes | Attendu | Résultat |

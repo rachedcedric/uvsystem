@@ -5,6 +5,7 @@ namespace App\Livewire\Mobile\Subscription;
 use App\Enums\SubscriptionCycle;
 use App\Enums\SubscriptionStatus;
 use App\Exceptions\InvalidSubscriptionTransition;
+use App\Livewire\Concerns\OpensPaymentPage;
 use App\Models\SubscriptionChangeRequest;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Throwable;
 
 /**
  * Abonnement du tenant courant, en lecture seule, pour ses master et admin. Le tenant vient UNIQUEMENT de
@@ -31,12 +33,24 @@ use Livewire\Component;
 #[Title('Mon abonnement')]
 class Show extends Component
 {
+    use OpensPaymentPage;
+
     /** Cycle affiché pour la comparaison des offres (le serveur recalcule tout à la demande). */
     public string $cycle = 'monthly';
 
     public ?string $message = null;
 
     public ?string $error = null;
+
+    /**
+     * Messages ponctuels : ils vivent le temps d'une réponse. Sans cela, « Demande enregistrée, réglez le montant » resterait
+     * affiché après un rafraîchissement automatique alors que la demande a pu être annulée entre-temps (paiement expiré).
+     */
+    public function hydrate(): void
+    {
+        $this->message = null;
+        $this->error = null;
+    }
 
     public function mount(): void
     {
@@ -61,17 +75,62 @@ class Show extends Component
             $this->message = $request->status === SubscriptionChangeRequest::APPLIED
                 ? 'Votre offre a été changée.'
                 : 'Demande enregistrée. Réglez le montant indiqué : le changement s\'appliquera dès confirmation de votre paiement.';
+
+            if ($request->status === SubscriptionChangeRequest::PENDING) {
+                $payment = SubscriptionPayment::query()
+                    ->where('status', SubscriptionPayment::PENDING)
+                    ->latest('id')
+                    ->get()
+                    ->first(fn (SubscriptionPayment $item) => ($item->metadata['change_request_id'] ?? null) === $request->id);
+
+                if ($payment !== null) {
+                    $this->redirectToPayment($payment);
+                }
+            }
         } catch (InvalidSubscriptionTransition $e) {
-            $this->error = $e->getMessage();
+            $this->fail($e->getMessage());
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->fail('Le service Jèko ne répond pas. Réessayez dans quelques instants.');
         }
+    }
+
+    public function renew(): void
+    {
+        abort_unless(auth()->user()?->can('viewAny', TenantSubscription::class), 403);
+        $this->reset(['message', 'error']);
+
+        try {
+            $tenant = Tenant::query()->findOrFail(TenantContext::requireId());
+            $this->redirectToPayment(app(SubscriptionBilling::class)->request($tenant));
+        } catch (InvalidSubscriptionTransition $exception) {
+            $this->fail($exception->getMessage());
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->fail('Le service Jèko ne répond pas. Réessayez dans quelques instants.');
+        }
+    }
+
+    public function pay(int $paymentId): void
+    {
+        abort_unless(auth()->user()?->can('viewAny', TenantSubscription::class), 403);
+        $this->redirectToPayment(SubscriptionPayment::query()
+            ->where('status', SubscriptionPayment::PENDING)
+            ->findOrFail($paymentId));
     }
 
     public function cancelRequest(): void
     {
         abort_unless(auth()->user()?->can('viewAny', TenantSubscription::class), 403);
+        $this->reset(['message', 'error']);
 
-        app(SubscriptionBilling::class)->cancelPendingRequests(Tenant::query()->findOrFail(TenantContext::requireId()));
-        $this->message = 'Demande annulée.';
+        try {
+            app(SubscriptionBilling::class)->cancelPendingRequests(Tenant::query()->findOrFail(TenantContext::requireId()));
+            $this->message = 'Demande annulée.';
+            $this->dispatch('m-toast', message: 'Demande annulée.');
+        } catch (InvalidSubscriptionTransition $exception) {
+            $this->fail($exception->getMessage());
+        }
     }
 
     public function toggleAutoRenew(): void
@@ -117,5 +176,23 @@ class Show extends Component
             'pendingPayments' => SubscriptionPayment::query()->where('status', SubscriptionPayment::PENDING)->latest('id')->get(),
             'backups' => $canBackup ? collect(Storage::disk('local')->files(TenantContext::storagePath('backups')))->map(fn ($f) => basename($f))->sortDesc()->values()->all() : [],
         ]);
+    }
+
+    /** Erreur affichée dans l'encadré (persistant) ET en toast : le bouton touché peut être très loin de l'encadré. */
+    private function fail(string $message): void
+    {
+        $this->error = $message;
+        $this->dispatch('m-toast', message: $message, type: 'error');
+    }
+
+    private function redirectToPayment(SubscriptionPayment $payment): void
+    {
+        $url = app(SubscriptionBilling::class)->checkoutUrl($payment);
+
+        if ($url === null) {
+            return;
+        }
+
+        $this->openPaymentPage($url);
     }
 }

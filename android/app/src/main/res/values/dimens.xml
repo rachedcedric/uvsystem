@@ -3,10 +3,12 @@
     <!-- Glyphe « UV » de l'écran de chargement. 288 dp = zone d'icône du splash système d'Android 12+ : avec le même fichier
          ic_launcher_foreground (le « UV » occupe 54 % de sa largeur) il mesure 155 dp, comme sur le splash système. -->
     <dimen name="loading_glyph_size">288dp</dimen>
-    <!-- Remonte la progression sous le glyphe visible (l'image a 108 dp de marge transparente sous le « UV »). -->
-    <dimen name="loading_below_glyph_offset">-80dp</dimen>
-    <dimen name="loading_bar_width">84dp</dimen>
-    <dimen name="loading_bar_height">4dp</dimen>
-    <dimen name="loading_button_width">280dp</dimen>
+    <!-- Remonte le nom de la marque sous le glyphe visible (l'image a 108 dp de marge transparente sous le « UV ») : il se
+         place environ 32 dp sous le « UV ». -->
+    <dimen name="loading_below_glyph_offset">-76dp</dimen>
+    <dimen name="loading_dot_size">6dp</dimen>
+    <dimen name="loading_dot_gap">8dp</dimen>
+    <!-- 240 dp : tient dans la zone de texte (largeur d'écran − 2 × 28 dp) même sur un écran de 320 dp. -->
+    <dimen name="loading_button_width">240dp</dimen>
     <dimen name="loading_button_height">54dp</dimen>
 </resources>

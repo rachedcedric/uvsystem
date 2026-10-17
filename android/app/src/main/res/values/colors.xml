@@ -7,4 +7,9 @@
     <color name="m_fg">#0E2A1C</color>
     <color name="m_muted">#46594D</color>
     <color name="m_on_brand">#FFFFFF</color>
+    <!-- Écran de chargement : vert vif des points (même vert que le glyphe), et léger dégradé de fond qui apparaît en fondu
+         par-dessus le fond uni m_bg (le splash système, lui, est uni : aucun changement brutal au passage de l'un à l'autre). -->
+    <color name="m_accent">#1FA645</color>
+    <color name="m_splash_top">#F8FAF5</color>
+    <color name="m_splash_bottom">#EEF3EA</color>
 </resources>

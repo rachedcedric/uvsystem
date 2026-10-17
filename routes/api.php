@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\FournisseurController;
+use App\Http\Controllers\Api\JekoWebhookController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\RemboursementController;
 use App\Http\Controllers\Api\ReportController;
@@ -165,3 +166,7 @@ Route::middleware(['auth:sanctum', 'staff', 'can:access_api', 'throttle:api'])->
 
 Route::post('/webhooks/resend', [WebhookController::class, 'resend'])
     ->name('webhooks.resend');
+
+Route::post('/webhooks/jeko', JekoWebhookController::class)
+    ->middleware('throttle:120,1')
+    ->name('webhooks.jeko');

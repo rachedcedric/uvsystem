@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\Subscriptions\Payments\JekoSubscriptionPaymentGateway;
 use App\Services\Subscriptions\Payments\ManualSubscriptionPaymentGateway;
 
 return [
@@ -46,9 +47,16 @@ return [
     // Essai appliqué à la souscription publique si l'offre n'en définit pas (jamais utilisé en interne).
     'default_trial_days' => 14,
 
-    // Passerelles de paiement : nom => classe implémentant SubscriptionPaymentGateway. Seule « manual » est fournie ;
-    // ajouter CinetPay/PayDunya ici plus tard, après configuration explicite.
+    // Passerelles de paiement : nom => classe implémentant SubscriptionPaymentGateway.
+    // Les abonnements se paient uniquement via Jèko ; « manual » ne sert qu'au super admin pour dépanner (jamais par défaut).
+    'default_gateway' => env('SUBSCRIPTIONS_PAYMENT_GATEWAY', 'jeko'),
+
+    // Un paiement Jèko resté « en attente » au-delà de cette durée est annulé (rattrapage toutes les 5 min) : une demande
+    // abandonnée ne bloque plus le changement d'offre. Si Jèko répond « payé » entre-temps, le paiement est confirmé, jamais annulé.
+    'pending_payment_ttl_hours' => (int) env('SUBSCRIPTIONS_PENDING_PAYMENT_TTL_HOURS', 48),
+
     'gateways' => [
+        'jeko' => JekoSubscriptionPaymentGateway::class,
         'manual' => ManualSubscriptionPaymentGateway::class,
     ],
 

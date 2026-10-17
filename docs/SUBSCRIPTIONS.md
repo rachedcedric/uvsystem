@@ -64,13 +64,13 @@ Changement par rapport à avant : `Tenant::isActive()` ne dépend plus de `trial
 
 ## Paiements
 
-Aucun prestataire n'est installé. Un paiement n'est `confirmed` que sur une **confirmation réelle** : mode manuel = attestation d'un `isSuperAdmin()` avec **référence obligatoire**. `SubscriptionBilling::confirm` est idempotent (un paiement ne prolonge qu'une fois) ; un échec ne modifie pas l'abonnement. Ajouter CinetPay/PayDunya plus tard = une classe implémentant `SubscriptionPaymentGateway` déclarée dans `config/subscriptions.php` (`gateways`).
+Deux passerelles sont disponibles : `manual` et `jeko`. Les abonnements se paient uniquement via Jèko : la passerelle par défaut est `jeko` (`SUBSCRIPTIONS_PAYMENT_GATEWAY`), sans repli sur `manual`. `manual` n'est utilisée que par l'action « Enregistrer un paiement » du super admin, qui la demande explicitement. Un paiement n'est `confirmed` que sur une **confirmation réelle** : attestation d'un `isSuperAdmin()` avec référence obligatoire en mode manuel ; webhook HMAC ou vérification serveur de l'API en mode Jèko. `SubscriptionBilling::confirm` est idempotent : un paiement ne prolonge qu'une fois et un échec ne modifie pas l'abonnement. Voir [JEKO_PAYMENTS.md](JEKO_PAYMENTS.md).
 
 ## Changement d'offre à la demande du tenant, prorata, renouvellement automatique
 
 - **Demande** (`/m/abonnement`, master/admin) : `SubscriptionBilling::requestChange`. Le serveur calcule le **prorata** (`SubscriptionProration`) : crédit = prix payé × part non consommée ; même cycle : coût = nouveau prix × part restante, échéance conservée ; cycle changé : prix complet d'une nouvelle période ; à régler = max(0, coût − crédit). Rien à régler (rétrogradation, essai, abonnement hérité) : le changement est **appliqué tout de suite**. Sinon un paiement en attente du montant dû est créé et le changement s'applique à sa **confirmation réelle** (passerelle, ou super admin avec référence depuis « Demandes de changement »). Une seule demande en attente ; la précédente est annulée **avec son paiement**, et un paiement dont la demande n'est plus valable ne peut pas être confirmé.
 - Un abonnement échu ne change pas d'offre : on règle d'abord son renouvellement.
-- **`auto_renew`** : avec la passerelle manuelle aucun prélèvement n'est possible ; l'option fait **émettre une facture de renouvellement** (paiement en attente + notification `SubscriptionRenewalDue`) à l'échéance, une seule fois ; payer cette facture réactive l'abonnement. Activable par le master (`/m/abonnement`) ou la plateforme.
+- **`auto_renew`** : l'option fait **émettre une demande de renouvellement** (paiement en attente + notification `SubscriptionRenewalDue`) à l'échéance, une seule fois ; elle ne prélève pas le client sans interaction. En mode Jèko, le tenant ouvre le checkout depuis sa page d'abonnement. Payer cette demande réactive l'abonnement. Activable par le master (`/m/abonnement`) ou la plateforme.
 
 ## Expiration planifiée
 
@@ -99,7 +99,7 @@ Aucun prestataire n'est installé. Un paiement n'est `confirmed` que sur une **c
 3. Envoyer le code, `composer install --no-dev -o`, `npm run build` (ou envoyer `public/build`).
 4. `php artisan down` puis `php artisan migrate --force` puis `php artisan optimize:clear` puis `php artisan up`.
 5. Vérifier **avant d'ouvrir le service** que tout tenant a un abonnement : `select t.id from tenants t left join tenant_subscriptions s on s.tenant_id = t.id and s.current_marker is not null where s.id is null` → vide (la politique par défaut `SUBSCRIPTION_REQUIRED=true` met en accès restreint un tenant sans abonnement). Puis : un abonnement courant par tenant (`select tenant_id, count(*) from tenant_subscriptions where current_marker is not null group by tenant_id having count(*) > 1` → vide), `/offres`, `/platform/subscription-plans`, `/m/abonnement`.
-6. Le cron `schedule:run` existant exécute `subscriptions:process` (01h00) et `tenancy:backup-dedicated` (dimanche 03h30).
+6. Le cron `schedule:run` existant exécute `subscriptions:process` (01h00), `subscriptions:reconcile-jeko` (toutes les 5 minutes) et `tenancy:backup-dedicated` (dimanche 03h30).
 
 ## Preuves (commandes)
 
@@ -114,7 +114,7 @@ Aucun prestataire n'est installé. Un paiement n'est `confirmed` que sur une **c
 - **E-mails multiples** : l'anti-abus d'essais ne peut pas empêcher quelqu'un d'utiliser plusieurs vraies boîtes mail et téléphones distincts.
 - **Plafond de stockage** : calculé par parcours du dossier du tenant au moment d'enregistrer un fichier (coût proportionnel au nombre de fichiers) ; les exports ponctuels téléchargés directement ne sont pas comptés.
 - **Prorata** : calculé à la demande ; si la demande attend longtemps son paiement, le montant demandé reste celui du jour de la demande.
-- **Passerelle** : seule la passerelle manuelle existe ; aucun prélèvement automatique tant qu'un prestataire n'est pas branché.
+- **Paiement récurrent** : Jèko Checkout requiert une action du payeur ; `auto_renew` émet la demande mais ne réalise pas de prélèvement sans interaction.
 - **Sauvegardes dédiées** : zip des données du tenant (même format que l'export complet), conservé sur le même serveur : ce n'est pas une copie hors site.
 
 ## Montée en charge de l'inscription

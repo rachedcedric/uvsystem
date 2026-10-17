@@ -115,6 +115,14 @@ Schedule::command('subscriptions:process')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/subscriptions.log'));
 
+// Jèko n'émet pas de webhook pour les encaissements échoués. L'interrogation de statut sert aussi de
+// rattrapage si un webhook de succès n'a pas été livré.
+Schedule::command('subscriptions:reconcile-jeko')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/subscriptions-jeko.log'));
+
 // Sauvegarde dédiée des tenants dont l'offre l'inclut : chaque dimanche à 03h30 (rotation : 7 dernières).
 Schedule::command('tenancy:backup-dedicated')
     ->weeklyOn(0, '03:30')

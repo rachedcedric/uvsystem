@@ -1,4 +1,5 @@
-<div>
+<div x-data @uvmaster-browser-finished.window="$wire.$refresh()"
+     @if ($pendingPayments->contains('gateway', 'jeko')) wire:poll.10s @endif>
     <x-m.appbar title="Mon abonnement" :sub="$plan ? 'Offre '.$plan->name : null" :back="route('m.more')" />
 
     @if (! $subscription)
@@ -61,15 +62,18 @@
         </x-m.section>
     @endif
 
-    @if ($message)<div class="m-group" style="margin-top:6px"><x-m.row icon="check-circle" tone="ok" :chevron="false" :title="$message" /></div>@endif
-    @if ($error)<div class="m-group" style="margin-top:6px"><x-m.row icon="exclamation-triangle" tone="danger" :chevron="false" :title="$error" /></div>@endif
+    @if ($message)<x-m.callout icon="check-circle" style="margin:6px 12px 0" role="status">{{ $message }}</x-m.callout>@endif
+    @if ($error)<x-m.callout tone="danger" icon="exclamation-triangle" style="margin:6px 12px 0">{{ $error }}</x-m.callout>@endif
 
     @if ($subscription)
         <x-m.section title="Renouvellement">
             <div class="m-group">
-                <x-m.row icon="arrow-path" :chevron="false" title="Facture de renouvellement automatique"
+                <x-m.row icon="arrow-path" :chevron="false" title="Renouvellement automatique"
                          :sub="$subscription->auto_renew ? 'Activée : une facture est émise à l\'échéance.' : 'Désactivée.'">
                     <x-slot:end><button type="button" class="m-btn m-btn--ghost" style="min-height:44px;min-width:44px" wire:click="toggleAutoRenew">{{ $subscription->auto_renew ? 'Désactiver' : 'Activer' }}</button></x-slot:end>
+                </x-m.row>
+                <x-m.row icon="banknotes" :chevron="false" title="Renouveler maintenant" sub="Paiement sécurisé via Jèko.">
+                    <x-slot:end><button type="button" class="m-btn" style="min-height:44px" wire:click="renew">Payer</button></x-slot:end>
                 </x-m.row>
             </div>
         </x-m.section>
@@ -80,7 +84,11 @@
             <div class="m-group">
                 @foreach ($pendingPayments as $payment)
                     <x-m.row icon="banknotes" tone="warn" :chevron="false" :title="number_format($payment->amount, 0, ',', ' ').' FCFA'"
-                             :sub="($payment->metadata['purpose'] ?? 'renewal') === 'plan_change' ? 'Changement d\'offre — communiquez votre règlement à la plateforme.' : 'Renouvellement — communiquez votre règlement à la plateforme.'" />
+                             :sub="$payment->gateway === 'jeko' ? 'Jèko · valable jusqu\'au '.app(\App\Services\Subscriptions\SubscriptionBilling::class)->expiresAt($payment)->format('d/m à H:i') : (($payment->metadata['purpose'] ?? 'renewal') === 'plan_change' ? 'Changement d\'offre — communiquez votre règlement à la plateforme.' : 'Renouvellement — communiquez votre règlement à la plateforme.')">
+                        @if ($payment->gateway === 'jeko')
+                            <x-slot:end><button type="button" class="m-btn" style="min-height:44px" wire:click="pay({{ $payment->id }})">Payer</button></x-slot:end>
+                        @endif
+                    </x-m.row>
                 @endforeach
             </div>
         </x-m.section>
@@ -95,7 +103,7 @@
         @if ($pendingRequest)
             <div class="m-group" style="margin-bottom:8px">
                 <x-m.row icon="clock" tone="warn" :chevron="false" :title="'Demande en cours : '.$pendingRequest->plan->name"
-                         sub="En attente de votre paiement ; elle s'applique dès sa confirmation.">
+                         sub="En attente de votre paiement.">
                     <x-slot:end><button type="button" class="m-btn m-btn--ghost" style="min-height:44px" wire:click="cancelRequest">Annuler</button></x-slot:end>
                 </x-m.row>
             </div>

@@ -56,6 +56,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="mt-4">
+                    <x-filament::button
+                        icon="heroicon-o-banknotes"
+                        wire:click="renew"
+                        wire:loading.attr="disabled"
+                        wire:target="renew"
+                    >
+                        {{ config('subscriptions.default_gateway') === 'jeko' ? 'Renouveler avec Jèko' : 'Demander le renouvellement' }}
+                    </x-filament::button>
+                </div>
             </x-filament::section>
 
             <x-filament::section heading="Utilisation de l’offre">
@@ -105,9 +115,16 @@
                             </div>
                         @endif
                         @foreach ($pendingPayments as $payment)
-                            <p class="acct-body">
-                                Paiement en attente : <strong>{{ number_format($payment->amount, 0, ',', ' ') }} FCFA</strong>.
-                            </p>
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <p class="acct-body">
+                                    Paiement en attente : <strong>{{ number_format($payment->amount, 0, ',', ' ') }} FCFA</strong>.
+                                </p>
+                                @if ($payment->gateway === 'jeko')
+                                    <x-filament::button size="sm" icon="heroicon-o-arrow-top-right-on-square" wire:click="pay({{ $payment->id }})">
+                                        Payer avec Jèko
+                                    </x-filament::button>
+                                @endif
+                            </div>
                         @endforeach
                     </div>
                 </x-filament::section>

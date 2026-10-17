@@ -35,6 +35,8 @@
         <!-- Les tests historiques créent des tenants sans abonnement : ils gardent l'ancien mode « hérité ».
              La politique réelle (fail closed, défaut de config/subscriptions.php) est testée explicitement. -->
         <env name="SUBSCRIPTION_REQUIRED" value="false"/>
+        <!-- Le .env local peut activer Jèko : les tests ne doivent jamais en dépendre (ils fixent la passerelle eux-mêmes). -->
+        <env name="SUBSCRIPTIONS_PAYMENT_GATEWAY" value="manual"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

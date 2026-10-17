@@ -29,6 +29,16 @@ return [
         'webhook_lease' => (int) env('RESEND_WEBHOOK_LEASE', 120),
     ],
 
+    'jeko' => [
+        'base_url' => env('JEKO_BASE_URL', 'https://api.jeko.africa'),
+        'api_key' => env('JEKO_API_KEY'),
+        'api_key_id' => env('JEKO_API_KEY_ID'),
+        'store_id' => env('JEKO_STORE_ID'),
+        'webhook_secret' => env('JEKO_WEBHOOK_SECRET'),
+        'payment_method' => env('JEKO_PAYMENT_METHOD', 'wave'),
+        'redirect_hosts' => ['pay.jeko.africa', 'link.jeko.africa'],
+    ],
+
     'firebase' => [
         'project_id' => env('FIREBASE_PROJECT_ID'),
         'credentials' => env('FIREBASE_CREDENTIALS'),

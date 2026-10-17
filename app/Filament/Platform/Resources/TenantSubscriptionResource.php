@@ -10,6 +10,7 @@ use App\Filament\Platform\Resources\TenantSubscriptionResource\Pages;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Models\TenantSubscription;
+use App\Services\Subscriptions\Payments\ManualSubscriptionPaymentGateway;
 use App\Services\Subscriptions\SubscriptionBilling;
 use App\Services\Subscriptions\SubscriptionManager;
 use Closure;
@@ -228,7 +229,7 @@ class TenantSubscriptionResource extends Resource
                 ->form([Forms\Components\TextInput::make('reference')->label('Référence de l\'encaissement')->required()->maxLength(255)])
                 ->action(fn (TenantSubscription $r, array $data) => self::guarded(function () use ($r, $data, $tenant) {
                     $billing = app(SubscriptionBilling::class);
-                    $payment = $billing->request($tenant($r));
+                    $payment = $billing->request($tenant($r), ManualSubscriptionPaymentGateway::NAME);
                     $billing->confirm($payment, ['reference' => $data['reference'], 'confirmed_by' => auth()->user()]);
                 }, 'Paiement enregistré, abonnement prolongé')),
             Tables\Actions\Action::make('change_plan')->label('Changer d\'offre')->icon('heroicon-o-arrows-right-left')
@@ -248,7 +249,7 @@ class TenantSubscriptionResource extends Resource
             Tables\Actions\Action::make('auto_renew')
                 ->label(fn (TenantSubscription $r) => $r->auto_renew ? 'Désactiver la facture auto' : 'Activer la facture auto')->icon('heroicon-o-arrow-path')
                 ->visible($current)
-                ->modalDescription('À l\'échéance, une facture de renouvellement est émise (paiement en attente + notification). Aucun prélèvement : la passerelle manuelle n\'en effectue pas.')
+                ->modalDescription('À l\'échéance, une facture de renouvellement est émise (paiement en attente + notification). Le tenant règle cette facture via Jèko ; aucun prélèvement automatique n\'est effectué.')
                 ->requiresConfirmation()
                 ->action(fn (TenantSubscription $r) => self::guarded(fn () => $manager()->setAutoRenew($tenant($r), ! $r->auto_renew), 'Option mise à jour')),
             Tables\Actions\Action::make('suspend')->label('Suspendre')->icon('heroicon-o-pause-circle')->color('warning')

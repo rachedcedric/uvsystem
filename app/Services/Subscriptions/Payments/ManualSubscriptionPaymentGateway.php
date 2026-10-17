@@ -22,6 +22,11 @@ class ManualSubscriptionPaymentGateway implements SubscriptionPaymentGateway
         return self::NAME;
     }
 
+    public function payableAmount(int $amount): int
+    {
+        return $amount;
+    }
+
     public function initiate(TenantSubscription $subscription, int $amount, array $metadata = []): SubscriptionPayment
     {
         return TenantContext::runAs((int) $subscription->tenant_id, fn () => SubscriptionPayment::create([
@@ -68,5 +73,10 @@ class ManualSubscriptionPaymentGateway implements SubscriptionPaymentGateway
 
             return $payment;
         });
+    }
+
+    public function checkoutUrl(SubscriptionPayment $payment): ?string
+    {
+        return null;
     }
 }

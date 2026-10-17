@@ -5,4 +5,7 @@
     <color name="m_fg">#E6F0E8</color>
     <color name="m_muted">#A9BCAF</color>
     <color name="m_on_brand">#06150B</color>
+    <color name="m_accent">#4CC04B</color>
+    <color name="m_splash_top">#0A1A11</color>
+    <color name="m_splash_bottom">#06100A</color>
 </resources>

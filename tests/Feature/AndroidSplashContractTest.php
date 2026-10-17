@@ -187,6 +187,49 @@ class AndroidSplashContractTest extends TestCase
         $this->assertStringContainsString('Connexion lente…', $strings);
     }
 
+    public function test_the_loading_screen_uses_the_signature_design_and_never_moves_the_glyph(): void
+    {
+        $layout = $this->source('android/app/src/main/res/layout/loading_overlay.xml');
+        $overlay = $this->source(self::JAVA.'LoadingOverlay.java');
+        $strings = $this->source('android/app/src/main/res/values/strings.xml');
+
+        // Direction « Signature » : nom, baseline, trois points et léger dégradé ; plus de barre de progression.
+        $this->assertStringContainsString('android:id="@+id/uvmaster_loading_wordmark"', $layout);
+        $this->assertMatchesRegularExpression('/uvmaster_loading_wordmark".*?android:text="@string\/app_name"/s', $layout);
+        $this->assertMatchesRegularExpression('/uvmaster_loading_tagline".*?android:text="@string\/loading_tagline"/s', $layout);
+        $this->assertSame(3, substr_count($layout, '@drawable/loading_dot'), 'trois points exactement');
+        $this->assertStringContainsString('@drawable/loading_gradient', $layout);
+        $this->assertStringNotContainsString('ProgressBar', $layout);
+        $this->assertStringContainsString('La gestion des UV simplifiée', $strings);
+        $this->assertStringContainsString('name="loading_tagline"', $strings);
+
+        // Le glyphe est celui du splash système : même taille, centré, jamais décalé ni animé (sinon saut au passage).
+        $this->assertStringContainsString('<dimen name="loading_glyph_size">288dp</dimen>', $this->source('android/app/src/main/res/values/dimens.xml'));
+        $this->assertSame(1, preg_match('/<ImageView\s[^>]*uvmaster_loading_glyph[^>]*>/s', $layout, $glyph));
+        $this->assertStringNotContainsString('translation', $glyph[0]);
+        $this->assertStringNotContainsString('alpha', $glyph[0]);
+        $this->assertStringNotContainsString('uvmaster_loading_glyph', $overlay, 'le code ne touche jamais au glyphe');
+        $this->assertStringContainsString('centerOnWindow', $overlay);
+
+        // « Réduire les animations » d'Android : aucun mouvement quand l'échelle de durée vaut 0.
+        $this->assertStringContainsString('Settings.Global.ANIMATOR_DURATION_SCALE', $overlay);
+        $this->assertGreaterThanOrEqual(4, substr_count($overlay, 'animationsEnabled()'));
+
+        // Couleurs du dégradé et des points, en clair ET en sombre (deux valeurs distinctes).
+        $light = $this->source('android/app/src/main/res/values/colors.xml');
+        $dark = $this->source('android/app/src/main/res/values-night/colors.xml');
+
+        foreach (['m_accent', 'm_splash_top', 'm_splash_bottom'] as $name) {
+            $this->assertSame(1, preg_match('/name="'.$name.'">(#[0-9A-Fa-f]{6})</', $light, $l), "$name clair");
+            $this->assertSame(1, preg_match('/name="'.$name.'">(#[0-9A-Fa-f]{6})</', $dark, $d), "$name sombre");
+            $this->assertNotSame(strtoupper($l[1]), strtoupper($d[1]), "$name doit différer entre clair et sombre");
+        }
+
+        // Le dégradé se superpose au fond uni du splash système sans le remplacer.
+        $this->assertStringContainsString('android:background="@color/m_bg"', $layout);
+        $this->assertMatchesRegularExpression('/uvmaster_loading_gradient".*?android:alpha="0"/s', $layout);
+    }
+
     public function test_the_existing_error_page_contracts_of_the_activity_are_intact(): void
     {
         $main = $this->source(self::JAVA.'MainActivity.java');

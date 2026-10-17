@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Enums\SubscriptionCycle;
 use App\Enums\SubscriptionStatus;
 use App\Exceptions\InvalidSubscriptionTransition;
+use App\Livewire\Concerns\OpensPaymentPage;
 use App\Models\SubscriptionChangeRequest;
 use App\Models\SubscriptionPayment;
 use App\Models\SubscriptionPlan;
@@ -19,9 +20,12 @@ use App\Services\Subscriptions\SubscriptionProration;
 use App\Tenancy\TenantContext;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Throwable;
 
 class SubscriptionPage extends Page
 {
+    use OpensPaymentPage;
+
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 
     protected static ?string $navigationLabel = 'Mon abonnement';
@@ -77,17 +81,58 @@ class SubscriptionPage extends Page
                     : 'Le changement sera appliqué après confirmation du paiement.')
                 ->success()
                 ->send();
+
+            if ($request->status === SubscriptionChangeRequest::PENDING) {
+                $payment = SubscriptionPayment::query()
+                    ->where('status', SubscriptionPayment::PENDING)
+                    ->latest('id')
+                    ->get()
+                    ->first(fn (SubscriptionPayment $item) => ($item->metadata['change_request_id'] ?? null) === $request->id);
+
+                if ($payment !== null) {
+                    $this->redirectToPayment($payment);
+                }
+            }
         } catch (InvalidSubscriptionTransition $exception) {
             Notification::make()->title('Changement impossible')->body($exception->getMessage())->danger()->send();
+        } catch (Throwable $exception) {
+            report($exception);
+            Notification::make()->title('Paiement indisponible')->body('Le service Jèko ne répond pas. Réessayez dans quelques instants.')->danger()->send();
         }
+    }
+
+    public function renew(): void
+    {
+        $this->authorizeTenantManager();
+
+        try {
+            $this->redirectToPayment(app(SubscriptionBilling::class)->request($this->tenant()));
+        } catch (InvalidSubscriptionTransition $exception) {
+            Notification::make()->title('Renouvellement impossible')->body($exception->getMessage())->danger()->send();
+        } catch (Throwable $exception) {
+            report($exception);
+            Notification::make()->title('Paiement indisponible')->body('Le service Jèko ne répond pas. Réessayez dans quelques instants.')->danger()->send();
+        }
+    }
+
+    public function pay(int $paymentId): void
+    {
+        $this->authorizeTenantManager();
+        $this->redirectToPayment(SubscriptionPayment::query()
+            ->where('status', SubscriptionPayment::PENDING)
+            ->findOrFail($paymentId));
     }
 
     public function cancelRequest(): void
     {
         $this->authorizeTenantManager();
-        app(SubscriptionBilling::class)->cancelPendingRequests($this->tenant());
 
-        Notification::make()->title('Demande annulée')->success()->send();
+        try {
+            app(SubscriptionBilling::class)->cancelPendingRequests($this->tenant());
+            Notification::make()->title('Demande annulée')->success()->send();
+        } catch (InvalidSubscriptionTransition $exception) {
+            Notification::make()->title('Annulation impossible')->body($exception->getMessage())->danger()->send();
+        }
     }
 
     public function toggleAutoRenew(): void
@@ -161,5 +206,18 @@ class SubscriptionPage extends Page
         abort_unless($tenant !== null && (int) $tenant->getKey() === TenantContext::requireId(), 403);
 
         return $tenant;
+    }
+
+    private function redirectToPayment(SubscriptionPayment $payment): void
+    {
+        $url = app(SubscriptionBilling::class)->checkoutUrl($payment);
+
+        if ($url === null) {
+            Notification::make()->title('Paiement hors ligne')->body('Cette demande doit être confirmée par la plateforme.')->warning()->send();
+
+            return;
+        }
+
+        $this->openPaymentPage($url);
     }
 }

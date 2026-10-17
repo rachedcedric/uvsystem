@@ -1020,6 +1020,16 @@ button.m-row:active {
     color: var(--brand);
 }
 
+/* Bouton placé à droite d'une ligne de liste : taille de son contenu, avec une vraie marge intérieure
+   (le .m-btn de base est pleine largeur et sans marge horizontale). */
+.m-row__end .m-btn {
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 15px;
+}
+
 .m-spin {
     width: 20px;
     height: 20px;

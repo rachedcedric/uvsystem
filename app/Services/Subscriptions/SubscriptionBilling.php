@@ -13,11 +13,14 @@ use App\Models\User;
 use App\Notifications\Subscriptions\PaymentConfirmed;
 use App\Notifications\Subscriptions\PaymentFailed;
 use App\Notifications\Subscriptions\SubscriptionChangeRequested;
+use App\Services\Subscriptions\Payments\JekoSubscriptionPaymentGateway;
 use App\Services\Subscriptions\Payments\ManualSubscriptionPaymentGateway;
 use App\Services\Subscriptions\Payments\SubscriptionPaymentGateway;
 use App\Tenancy\TenantContext;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Throwable;
 
 /**
  * Relie un paiement à l'abonnement, sans connaître de prestataire : tout passe par SubscriptionPaymentGateway.
@@ -28,10 +31,10 @@ class SubscriptionBilling
 {
     public function __construct(private readonly SubscriptionManager $manager, private readonly SubscriptionNotifier $notifier) {}
 
-    /** Passerelles disponibles (config/subscriptions.php), « manual » par défaut. */
+    /** Passerelles disponibles (config/subscriptions.php), « jeko » par défaut ; « manual » doit être demandée explicitement. */
     public function gateway(?string $name = null): SubscriptionPaymentGateway
     {
-        $name ??= ManualSubscriptionPaymentGateway::NAME;
+        $name ??= (string) config('subscriptions.default_gateway', JekoSubscriptionPaymentGateway::NAME);
         $class = config("subscriptions.gateways.{$name}") ?? ($name === ManualSubscriptionPaymentGateway::NAME ? ManualSubscriptionPaymentGateway::class : null);
 
         return $class ? app($class) : throw new InvalidArgumentException("Passerelle de paiement inconnue : {$name}.");
@@ -48,8 +51,20 @@ class SubscriptionBilling
     public function request(Tenant $tenant, ?string $gateway = null): SubscriptionPayment
     {
         $subscription = $this->manager->current($tenant) ?? throw new InvalidSubscriptionTransition('Aucun abonnement à régler.');
+        $provider = $this->gateway($gateway);
+        $pending = TenantContext::runAs((int) $tenant->getKey(), fn () => SubscriptionPayment::query()
+            ->where('tenant_subscription_id', $subscription->getKey())
+            ->where('gateway', $provider->name())
+            ->where('status', SubscriptionPayment::PENDING)
+            ->latest('id')
+            ->get()
+            ->first(fn (SubscriptionPayment $payment) => ($payment->metadata['purpose'] ?? null) === 'renewal'));
 
-        return $this->gateway($gateway)->initiate($subscription, $this->amountDue($tenant), ['purpose' => 'renewal']);
+        if ($pending !== null) {
+            return $pending;
+        }
+
+        return $provider->initiate($subscription, $provider->payableAmount($this->amountDue($tenant)), ['purpose' => 'renewal']);
     }
 
     // ------------------------------------------------------------------ changement d'offre à la demande du tenant
@@ -60,7 +75,7 @@ class SubscriptionBilling
      * EN ATTENTE du montant dû est créé et le changement s'applique à sa confirmation réelle (passerelle ou super admin).
      * Une seule demande en attente par tenant : la précédente est annulée.
      */
-    public function requestChange(Tenant $tenant, SubscriptionPlan $plan, SubscriptionCycle $cycle, ?User $by = null): SubscriptionChangeRequest
+    public function requestChange(Tenant $tenant, SubscriptionPlan $plan, SubscriptionCycle $cycle, ?User $by = null, ?string $gateway = null): SubscriptionChangeRequest
     {
         if (! $plan->is_active) {
             throw new InvalidSubscriptionTransition("L'offre {$plan->name} n'est plus disponible.");
@@ -77,6 +92,12 @@ class SubscriptionBilling
         }
 
         $quote = app(SubscriptionProration::class)->quote($current, $plan, $cycle);
+        $provider = null;
+
+        if ($quote['amount_due'] > 0) {
+            $provider = $this->gateway($gateway);
+            $quote['amount_due'] = $provider->payableAmount($quote['amount_due']);
+        }
 
         $this->cancelPendingRequests($tenant);
 
@@ -95,11 +116,26 @@ class SubscriptionBilling
             return $this->applyChange($request);
         }
 
-        $this->gateway()->initiate($current, $quote['amount_due'], ['purpose' => 'plan_change', 'change_request_id' => $request->id]);
+        try {
+            $provider->initiate($current, $quote['amount_due'], ['purpose' => 'plan_change', 'change_request_id' => $request->id]);
+        } catch (Throwable $exception) {
+            TenantContext::runAs((int) $tenant->getKey(), fn () => $request->forceFill([
+                'status' => SubscriptionChangeRequest::CANCELLED,
+                'resolved_at' => now(),
+            ])->save());
+
+            throw $exception;
+        }
+
         $this->notifier->send($current, SubscriptionChangeRequested::class, "change_requested:{$request->id}",
             SubscriptionNotifier::contextFor($current, ['plan' => $plan->name, 'cycle' => $cycle->label(), 'amount' => $quote['amount_due']]));
 
         return $request;
+    }
+
+    public function checkoutUrl(SubscriptionPayment $payment): ?string
+    {
+        return $this->gateway($payment->gateway)->checkoutUrl($payment);
     }
 
     /**
@@ -109,7 +145,10 @@ class SubscriptionBilling
     public function cancelPendingRequests(Tenant $tenant): void
     {
         TenantContext::runAs((int) $tenant->getKey(), function () {
-            SubscriptionChangeRequest::query()->where('status', SubscriptionChangeRequest::PENDING)->get()->each(function (SubscriptionChangeRequest $old) {
+            $requests = SubscriptionChangeRequest::query()->where('status', SubscriptionChangeRequest::PENDING)->get();
+
+            $requests->each(fn (SubscriptionChangeRequest $request) => $this->assertRequestCanBeCancelled($request));
+            $requests->each(function (SubscriptionChangeRequest $old) {
                 $old->forceFill(['status' => SubscriptionChangeRequest::CANCELLED, 'resolved_at' => now()])->save();
                 $this->cancelPendingPaymentsOf($old);
             });
@@ -150,6 +189,7 @@ class SubscriptionBilling
         }
 
         TenantContext::runAs((int) $request->tenant_id, function () use ($request, $admin, $note) {
+            $this->assertRequestCanBeCancelled($request);
             $request->forceFill(['status' => SubscriptionChangeRequest::REJECTED, 'resolved_by' => $admin->getKey(), 'resolved_at' => now(), 'note' => $note])->save();
 
             // Le paiement en attente lié à la demande est annulé : plus rien à encaisser.
@@ -157,6 +197,19 @@ class SubscriptionBilling
         });
 
         return $request->refresh();
+    }
+
+    private function assertRequestCanBeCancelled(SubscriptionChangeRequest $request): void
+    {
+        $hasActiveJekoCheckout = SubscriptionPayment::query()
+            ->where('gateway', JekoSubscriptionPaymentGateway::NAME)
+            ->whereIn('status', [SubscriptionPayment::PENDING, SubscriptionPayment::CONFIRMED])
+            ->get()
+            ->contains(fn (SubscriptionPayment $payment) => ($payment->metadata['change_request_id'] ?? null) === $request->id);
+
+        if ($hasActiveJekoCheckout) {
+            throw new InvalidSubscriptionTransition('Cette demande ne peut plus être annulée : son paiement Jèko est en cours de traitement.');
+        }
     }
 
     /**
@@ -216,14 +269,62 @@ class SubscriptionBilling
         return $payment;
     }
 
+    /** Date limite d'un paiement en attente : au-delà, il est annulé (voir expire()). */
+    public function expiresAt(SubscriptionPayment $payment): Carbon
+    {
+        return $payment->created_at->copy()->addHours($this->pendingTtlHours());
+    }
+
+    public function isExpired(SubscriptionPayment $payment): bool
+    {
+        return $payment->status === SubscriptionPayment::PENDING && $this->expiresAt($payment)->isPast();
+    }
+
+    private function pendingTtlHours(): int
+    {
+        return max(1, (int) config('subscriptions.pending_payment_ttl_hours', 48));
+    }
+
+    /**
+     * Annule un paiement resté en attente au-delà du délai, et la demande de changement d'offre qui lui est liée : le
+     * tenant n'est plus bloqué. Le master est prévenu (« paiement non abouti »). Retourne false si le paiement a été
+     * résolu entre-temps (confirmé par webhook, par exemple) : il n'est alors jamais touché.
+     */
+    public function expire(SubscriptionPayment $payment): bool
+    {
+        try {
+            $this->fail($payment, "Expiré : aucun règlement reçu après {$this->pendingTtlHours()} h.");
+        } catch (InvalidSubscriptionTransition) {
+            return false;
+        }
+
+        $requestId = $payment->metadata['change_request_id'] ?? null;
+
+        if (($payment->metadata['purpose'] ?? 'renewal') === 'plan_change' && $requestId !== null) {
+            TenantContext::runAs((int) $payment->tenant_id, function () use ($requestId) {
+                $request = SubscriptionChangeRequest::query()->where('status', SubscriptionChangeRequest::PENDING)->find($requestId);
+                $request?->forceFill(['status' => SubscriptionChangeRequest::CANCELLED, 'resolved_at' => now()])->save();
+            });
+        }
+
+        return true;
+    }
+
     /** Marque un paiement en échec : l'abonnement n'est PAS modifié. */
     public function fail(SubscriptionPayment $payment, string $reason): SubscriptionPayment
     {
-        if ($payment->status !== SubscriptionPayment::PENDING) {
-            throw new InvalidSubscriptionTransition('Seul un paiement en attente peut échouer.');
-        }
+        // Relecture sous verrou : un webhook qui confirme au même instant ne doit jamais être écrasé par un échec.
+        DB::transaction(function () use ($payment, $reason) {
+            $fresh = TenantContext::withoutTenancy(fn () => SubscriptionPayment::query()->lockForUpdate()->find($payment->getKey()));
 
-        $this->gateway($payment->gateway)->fail($payment, $reason);
+            if ($fresh === null || $fresh->status !== SubscriptionPayment::PENDING) {
+                throw new InvalidSubscriptionTransition('Seul un paiement en attente peut échouer.');
+            }
+
+            $this->gateway($fresh->gateway)->fail($fresh, $reason);
+        });
+
+        $payment->refresh();
 
         $tenant = Tenant::query()->findOrFail($payment->tenant_id);
         if ($subscription = $this->manager->current($tenant)) {
