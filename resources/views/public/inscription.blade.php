@@ -30,7 +30,7 @@
             <label for="phone">Téléphone (facultatif)</label>
             <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" autocomplete="tel">
 
-            <label for="password">Mot de passe (12 caractères minimum, majuscules, minuscules et chiffres)</label>
+            <label for="password">Mot de passe ({{ \App\Support\PasswordPolicy::HINT }})</label>
             <input type="password" id="password" name="password" required autocomplete="new-password">
 
             <label for="password_confirmation">Confirmer le mot de passe</label>

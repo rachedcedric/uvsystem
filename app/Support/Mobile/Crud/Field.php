@@ -3,6 +3,7 @@
 namespace App\Support\Mobile\Crud;
 
 use App\Support\Money;
+use App\Support\PasswordPolicy;
 use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Closure;
@@ -249,7 +250,7 @@ final class Field
             'toggle' => ['boolean'],
             'multi' => ['array'],
             'color' => ['regex:/^#[0-9a-fA-F]{6}$/'],
-            'password' => ['string', 'min:12'],
+            'password' => ['string', PasswordPolicy::rule()],
             'select' => [Rule::in(array_map('strval', array_keys($this->resolveOptions())))],
             default => ['string'],
         });

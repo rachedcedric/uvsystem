@@ -46,7 +46,7 @@
         @csrf
         <label for="current_password">Mot de passe actuel</label>
         <input id="current_password" type="password" name="current_password" autocomplete="current-password" required>
-        <label for="password">Nouveau mot de passe (12 caractères min., majuscules, minuscules, chiffres)</label>
+        <label for="password">Nouveau mot de passe ({{ \App\Support\PasswordPolicy::HINT }})</label>
         <input id="password" type="password" name="password" autocomplete="new-password" required>
         <label for="password_confirmation">Confirmation</label>
         <input id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" required>

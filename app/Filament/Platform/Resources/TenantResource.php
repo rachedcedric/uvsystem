@@ -9,6 +9,7 @@ use App\Models\Agent;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Services\Subscriptions\SubscriptionManager;
+use App\Support\PasswordPolicy;
 use App\Tenancy\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -85,7 +86,7 @@ class TenantResource extends Resource
                     Forms\Components\TextInput::make('admin_email')->label('E-mail de connexion')->email()->required()
                         ->unique(table: 'users', column: 'email')->maxLength(255),
                     Forms\Components\TextInput::make('admin_password')->label('Mot de passe')->password()->revealable()
-                        ->required()->minLength(12)->maxLength(255),
+                        ->required()->rule(PasswordPolicy::rule())->helperText(PasswordPolicy::HINT)->maxLength(255),
                 ])->columns(3)
                 ->visible(fn (?Tenant $record) => $record === null),
         ]);

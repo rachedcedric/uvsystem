@@ -195,7 +195,7 @@ class SubscriptionPlatformTest extends SubscriptionTestCase
             ->fillForm([
                 'name' => 'Société Offre', 'status' => 'active', 'subscription_plan_id' => $this->plan('essentiel')->id,
                 'subscription_cycle' => 'yearly', 'subscription_mode' => 'trial',
-                'admin_name' => 'Admin', 'admin_email' => 'admin-offre@example.com', 'admin_password' => 'un-mot-de-passe-long',
+                'admin_name' => 'Admin', 'admin_email' => 'admin-offre@example.com', 'admin_password' => 'Un-Mot-De-Passe#Long1',
             ])->call('create')->assertHasNoFormErrors();
 
         $tenant = Tenant::where('name', 'Société Offre')->firstOrFail();

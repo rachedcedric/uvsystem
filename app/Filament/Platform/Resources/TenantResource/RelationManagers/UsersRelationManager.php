@@ -4,6 +4,7 @@ namespace App\Filament\Platform\Resources\TenantResource\RelationManagers;
 
 use App\Models\User;
 use App\Services\TwoFactorAuthService;
+use App\Support\PasswordPolicy;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -26,7 +27,7 @@ class UsersRelationManager extends RelationManager
             Forms\Components\TextInput::make('email')->label('E-mail')->email()->required()
                 ->unique(ignoreRecord: true)->maxLength(255),
             Forms\Components\TextInput::make('password')->label('Mot de passe')->password()->revealable()
-                ->minLength(12)->maxLength(255)
+                ->rule(PasswordPolicy::rule())->helperText(PasswordPolicy::HINT)->maxLength(255)
                 ->required(fn (string $operation) => $operation === 'create')
                 ->dehydrated(fn (?string $state) => filled($state))
                 ->dehydrateStateUsing(fn (string $state) => Hash::make($state)),

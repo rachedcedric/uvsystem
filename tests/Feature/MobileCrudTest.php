@@ -131,22 +131,34 @@ class MobileCrudTest extends TestCase
         Livewire::test(Crud\Index::class, ['resource' => 'modes-paiement'])->assertForbidden();
     }
 
+    public function test_user_password_must_follow_the_company_policy(): void
+    {
+        foreach (['motdepasse1234', 'Motdepasse12345', 'Court#1a'] as $weak) {
+            Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
+                ->set('data.name', 'Faible')->set('data.email', 'faible@example.com')
+                ->set('data.password', $weak)->set('data.password_confirmation', $weak)
+                ->call('save')->assertHasErrors(['data.password']);
+        }
+
+        $this->assertNull(User::where('email', 'faible@example.com')->first());
+    }
+
     public function test_user_is_created_with_roles_and_cannot_delete_self(): void
     {
         Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
             ->set('data.name', 'Awa Comptable')->set('data.email', 'awa@example.com')
-            ->set('data.password', 'motdepasse1234')->set('data.password_confirmation', 'autre')
+            ->set('data.password', 'Motdepasse#1234')->set('data.password_confirmation', 'autre')
             ->call('save')->assertHasErrors(['data.password_confirmation']);
 
         Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
             ->set('data.name', 'Awa Comptable')->set('data.email', 'awa@example.com')
-            ->set('data.password', 'motdepasse1234')->set('data.password_confirmation', 'motdepasse1234')
+            ->set('data.password', 'Motdepasse#1234')->set('data.password_confirmation', 'Motdepasse#1234')
             ->call('toggleChoice', 'roles', 'commercial')
             ->call('save')->assertHasNoErrors();
 
         $user = User::where('email', 'awa@example.com')->firstOrFail();
         $this->assertTrue($user->hasRole('commercial'));
-        $this->assertTrue(Hash::check('motdepasse1234', $user->password));
+        $this->assertTrue(Hash::check('Motdepasse#1234', $user->password));
 
         Livewire::test(Crud\Show::class, ['resource' => 'utilisateurs', 'id' => (string) $this->master->id])->call('delete')->assertForbidden();
     }
@@ -180,7 +192,7 @@ class MobileCrudTest extends TestCase
 
         Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
             ->set('data.name', 'Intrus')->set('data.email', 'intrus@example.com')
-            ->set('data.password', 'motdepasse1234')->set('data.password_confirmation', 'motdepasse1234')
+            ->set('data.password', 'Motdepasse#1234')->set('data.password_confirmation', 'Motdepasse#1234')
             ->call('toggleChoice', 'roles', 'master')
             ->call('save')->assertHasErrors(['data.roles']);
 

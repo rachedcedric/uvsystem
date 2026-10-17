@@ -334,7 +334,7 @@ class TenantIsolationTest extends TestCase
     {
         $tenant = app(TenantProvisioner::class)->provision(
             ['name' => 'Société C'],
-            ['name' => 'Admin C', 'email' => 'admin-c@example.com', 'password' => 'un-mot-de-passe-long'],
+            ['name' => 'Admin C', 'email' => 'admin-c@example.com', 'password' => 'Un-Mot-De-Passe#Long1'],
         );
 
         $admin = User::withoutGlobalScopes()->where('email', 'admin-c@example.com')->first();
@@ -395,7 +395,7 @@ class TenantIsolationTest extends TestCase
 
     public function test_platform_super_admin_command_creates_a_tenantless_account(): void
     {
-        $this->artisan('platform:super-admin', ['email' => 'root@plateforme.test', '--password' => 'mot-de-passe-solide-1'])
+        $this->artisan('platform:super-admin', ['email' => 'root@plateforme.test', '--password' => 'Mot-De-Passe#Solide1'])
             ->assertSuccessful();
 
         $user = User::withoutGlobalScopes()->where('email', 'root@plateforme.test')->first();
@@ -404,7 +404,7 @@ class TenantIsolationTest extends TestCase
 
         // Refus d'un mot de passe faible et d'un compte déjà rattaché à un tenant.
         $this->artisan('platform:super-admin', ['email' => 'faible@plateforme.test', '--password' => 'court'])->assertFailed();
-        $this->artisan('platform:super-admin', ['email' => $this->userA->email, '--password' => 'mot-de-passe-solide-1'])->assertFailed();
+        $this->artisan('platform:super-admin', ['email' => $this->userA->email, '--password' => 'Mot-De-Passe#Solide1'])->assertFailed();
     }
 
     public function test_super_admin_creates_and_suspends_a_tenant_from_the_platform_panel(): void
@@ -415,7 +415,7 @@ class TenantIsolationTest extends TestCase
         Livewire::test(CreateTenant::class)
             ->fillForm([
                 'name' => 'Société D', 'status' => 'active',
-                'admin_name' => 'Admin D', 'admin_email' => 'admin-d@example.com', 'admin_password' => 'un-mot-de-passe-long',
+                'admin_name' => 'Admin D', 'admin_email' => 'admin-d@example.com', 'admin_password' => 'Un-Mot-De-Passe#Long1',
             ])
             ->call('create')
             ->assertHasNoFormErrors();

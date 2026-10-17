@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PasswordPolicy;
 use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -91,7 +91,7 @@ class AccountSecurityController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols(), 'different:current_password'],
+            'password' => ['required', 'confirmed', PasswordPolicy::rule(), 'different:current_password'],
         ]);
 
         $this->confirmPassword($request, 'current_password');

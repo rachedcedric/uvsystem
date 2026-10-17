@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use App\Security\RoleAssignmentGuard;
+use App\Support\PasswordPolicy;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -57,7 +58,8 @@ class UserResource extends Resource
                             ->dehydrateStateUsing(fn ($state) => Hash::make($state))
                             ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create')
-                            ->minLength(8)
+                            ->rule(PasswordPolicy::rule())
+                            ->helperText(PasswordPolicy::HINT)
                             ->confirmed(),
 
                         Forms\Components\TextInput::make('password_confirmation')

@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\PasswordPolicy;
 use App\Tenancy\TenantContext;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Validation\Rules\Password as PasswordRule;
 
 /**
  * Mot de passe oublié. Réponse identique que le compte existe ou non (pas d'énumération de comptes) ;
@@ -40,7 +40,7 @@ class PasswordResetController extends Controller
         $request->validate([
             'token' => 'required|string',
             'email' => 'required|email',
-            'password' => ['required', 'confirmed', PasswordRule::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', PasswordPolicy::rule()],
         ]);
 
         $status = Password::reset(

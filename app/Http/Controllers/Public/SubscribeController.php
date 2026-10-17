@@ -6,10 +6,10 @@ use App\Enums\SubscriptionCycle;
 use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
 use App\Services\Subscriptions\TenantSignupService;
+use App\Support\PasswordPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -53,7 +53,7 @@ class SubscribeController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:150'],
             'email' => ['required', 'email:rfc', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()->symbols()],
+            'password' => ['required', 'confirmed', PasswordPolicy::rule()],
             'accept_terms' => ['accepted'],
             'token' => ['required', 'string'],
             'website' => ['nullable', 'max:0'], // leurre : un humain ne voit pas ce champ

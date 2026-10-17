@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Support\PasswordPolicy;
 use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -17,10 +18,10 @@ class PlatformSuperAdminCommand extends Command
     public function handle(): int
     {
         $email = strtolower(trim($this->argument('email')));
-        $password = $this->option('password') ?: $this->secret('Mot de passe (12 caractères minimum)');
+        $password = $this->option('password') ?: $this->secret('Mot de passe ('.PasswordPolicy::HINT.')');
 
-        if (! filter_var($email, FILTER_VALIDATE_EMAIL) || strlen((string) $password) < 12) {
-            $this->error('E-mail invalide ou mot de passe trop court (12 caractères minimum).');
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL) || ! $this->passwordIsValid((string) $password)) {
+            $this->error('E-mail invalide ou mot de passe trop faible ('.PasswordPolicy::HINT.').');
 
             return self::FAILURE;
         }
@@ -51,5 +52,10 @@ class PlatformSuperAdminCommand extends Command
         $this->info("Super admin prêt : {$email} → /platform");
 
         return self::SUCCESS;
+    }
+
+    private function passwordIsValid(string $password): bool
+    {
+        return validator(['password' => $password], ['password' => ['required', PasswordPolicy::rule()]])->passes();
     }
 }

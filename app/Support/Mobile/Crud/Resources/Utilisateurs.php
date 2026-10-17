@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Security\RoleAssignmentGuard;
 use App\Support\Mobile\Crud\Field;
 use App\Support\Mobile\Crud\MobileResource;
+use App\Support\PasswordPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
@@ -72,7 +73,7 @@ class Utilisateurs extends MobileResource
         return [
             Field::text('name', 'Nom')->required()->maxLength(255),
             Field::email('email', 'E-mail')->required()->maxLength(255)->unique('users'),
-            Field::password('password', 'Mot de passe')->required()->hint('12 caractères minimum'),
+            Field::password('password', 'Mot de passe')->required()->hint(PasswordPolicy::HINT),
             Field::password('password_confirmation', 'Confirmer le mot de passe')->virtual()->rules('same:data.password', 'required_with:data.password'),
             // Champ présent seulement pour qui peut attribuer des rôles ; un admin ne se voit pas proposer « master ».
             ...(RoleAssignmentGuard::canAssignRoles(auth()->user()) ? [

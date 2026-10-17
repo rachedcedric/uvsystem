@@ -83,7 +83,7 @@ class SubscriptionTenantAccessTest extends SubscriptionTestCase
 
         Livewire::test(Crud\Form::class, ['resource' => 'utilisateurs'])
             ->set('data.name', 'Nouveau')->set('data.email', 'nouveau@example.com')
-            ->set('data.password', 'un-mot-de-passe-long')->set('data.password_confirmation', 'un-mot-de-passe-long')
+            ->set('data.password', 'Un-Mot-De-Passe#Long1')->set('data.password_confirmation', 'Un-Mot-De-Passe#Long1')
             ->set('data.roles', ['comptable'])
             ->call('save')
             ->assertHasErrors('form');

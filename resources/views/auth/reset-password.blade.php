@@ -2,7 +2,7 @@
 @section('title', 'Nouveau mot de passe')
 @section('content')
     <h1>Nouveau mot de passe</h1>
-    <p>12 caractères minimum, avec majuscules, minuscules et chiffres.</p>
+    <p>{{ \App\Support\PasswordPolicy::HINT }}.</p>
     <form method="POST" action="{{ route('password.update') }}">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
