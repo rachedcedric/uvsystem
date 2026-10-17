@@ -41,6 +41,7 @@
             <div class="m-chips" style="padding:0;flex-wrap:wrap">
                 @foreach ($this->methods as $code => $label)
                     <button type="button" class="m-chip {{ $method === (string) $code ? 'is-on' : '' }}"
+                            aria-pressed="{{ $method === (string) $code ? 'true' : 'false' }}"
                             wire:click="$set('method', '{{ $code }}')" data-haptic>{{ $label }}</button>
                 @endforeach
             </div>
@@ -56,7 +57,7 @@
             <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="save"
                     @disabled($this->agent && $this->numericAmount > $this->debt)>
                 <span wire:loading.remove wire:target="save">Enregistrer le paiement</span>
-                <span wire:loading wire:target="save" class="m-spin"></span>
+                <span wire:loading wire:target="save" class="m-spin" role="status" aria-label="Chargement en cours"></span>
             </button>
         </div>
     </form>

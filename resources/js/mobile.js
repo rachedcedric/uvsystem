@@ -157,24 +157,91 @@ import { PushNotifications } from '@capacitor/push-notifications';
 
     /* -------------------------------------------------------------- sheets */
 
-    function openSheet(id) {
+    var activeSheetTrigger = null;
+    var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    function sheetOpeners(id) {
+        return Array.prototype.filter.call(document.querySelectorAll('[data-sheet-open]'), function (opener) {
+            return opener.getAttribute('data-sheet-open') === id;
+        });
+    }
+
+    function setSheetExpanded(id, expanded) {
+        sheetOpeners(id).forEach(function (opener) {
+            opener.setAttribute('aria-controls', id);
+            opener.setAttribute('aria-haspopup', 'dialog');
+            opener.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        });
+    }
+
+    function sheetFocusables(sheet) {
+        return Array.prototype.filter.call(sheet.querySelectorAll(FOCUSABLE), function (element) {
+            return !element.hidden && element.getAttribute('aria-hidden') !== 'true';
+        });
+    }
+
+    function focusSheet(sheet) {
+        var target = sheet.querySelector('[data-sheet-initial-focus]') || sheetFocusables(sheet)[0] || sheet;
+        requestAnimationFrame(function () { target.focus(); });
+    }
+
+    function openSheet(id, opener) {
         var sheet = document.getElementById(id);
         var backdrop = document.getElementById('m-backdrop');
         if (!sheet || !backdrop) return;
+        closeSheets(false);
+        activeSheetTrigger = opener || document.activeElement;
+        sheet.removeAttribute('aria-hidden');
         sheet.setAttribute('data-open', '');
         backdrop.setAttribute('data-open', '');
+        setSheetExpanded(id, true);
+        focusSheet(sheet);
         haptic('light');
     }
 
-    function closeSheets() {
+    function closeSheets(restoreFocus) {
         var closed = false;
         document.querySelectorAll('.m-sheet[data-open]').forEach(function (s) {
             s.removeAttribute('data-open');
+            s.setAttribute('aria-hidden', 'true');
+            setSheetExpanded(s.id, false);
             closed = true;
         });
         var backdrop = document.getElementById('m-backdrop');
         if (backdrop) backdrop.removeAttribute('data-open');
+        var sheetTrigger = activeSheetTrigger;
+        activeSheetTrigger = null;
+        if (closed && restoreFocus !== false && sheetTrigger && document.contains(sheetTrigger)) {
+            requestAnimationFrame(function () { sheetTrigger.focus(); });
+        }
         return closed;
+    }
+
+    function trapSheetFocus(e, sheet) {
+        if (e.key !== 'Tab') return;
+        var focusable = sheetFocusables(sheet);
+        if (!focusable.length) {
+            e.preventDefault();
+            sheet.focus();
+            return;
+        }
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (e.shiftKey && (document.activeElement === first || !sheet.contains(document.activeElement))) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && (document.activeElement === last || !sheet.contains(document.activeElement))) {
+            e.preventDefault();
+            first.focus();
+        }
+    }
+
+    function syncSheets() {
+        document.querySelectorAll('.m-sheet').forEach(function (sheet) {
+            var expanded = sheet.hasAttribute('data-open');
+            if (expanded) sheet.removeAttribute('aria-hidden'); else sheet.setAttribute('aria-hidden', 'true');
+            setSheetExpanded(sheet.id, expanded);
+        });
     }
 
     // Graphiques en barres : toucher une barre affiche son montant exact (jamais abrégé).
@@ -195,6 +262,13 @@ import { PushNotifications } from '@capacitor/push-notifications';
     }
 
     document.addEventListener('keydown', function (e) {
+        var sheet = document.querySelector('.m-sheet[data-open]');
+        if (sheet && e.key === 'Escape') {
+            e.preventDefault();
+            closeSheets();
+            return;
+        }
+        if (sheet) trapSheetFocus(e, sheet);
         var col = e.target.closest && e.target.closest('.m-bars__col[data-amount]');
         if (col && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); selectBar(col); }
     });
@@ -202,8 +276,10 @@ import { PushNotifications } from '@capacitor/push-notifications';
     document.addEventListener('click', function (e) {
         var bar = e.target.closest && e.target.closest('.m-bars__col[data-amount]');
         if (bar) { selectBar(bar); haptic('light'); return; }
+        var download = e.target.closest && e.target.closest('a[data-download]');
+        if (download) toast('Ouverture du téléchargement…');
         var opener = e.target.closest && e.target.closest('[data-sheet-open]');
-        if (opener) { e.preventDefault(); openSheet(opener.getAttribute('data-sheet-open')); return; }
+        if (opener) { e.preventDefault(); openSheet(opener.getAttribute('data-sheet-open'), opener); return; }
         if (e.target.closest && (e.target.closest('[data-sheet-close]') || e.target.id === 'm-backdrop')) { closeSheets(); return; }
         var prefToggle = e.target.closest && e.target.closest('[data-pref]');
         if (prefToggle) {
@@ -303,6 +379,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
     function setOffline(show) {
         var el = document.getElementById('m-offline');
         if (!el) return;
+        el.setAttribute('aria-hidden', show ? 'false' : 'true');
         if (show) el.setAttribute('data-show', ''); else el.removeAttribute('data-show');
     }
 
@@ -453,12 +530,31 @@ import { PushNotifications } from '@capacitor/push-notifications';
 
     var started = performance.now();
 
-    function hideNativeSplash() {
-        try { var s = plugin('SplashScreen'); if (s) s.hide(); } catch (e) { /* le masquage auto prend le relais */ }
+    // Splash web, utilisé dans un navigateur : durée minimale (évite un simple clignotement) et attente maximale de la
+    // police (évite un texte qui « saute » sans retarder l'affichage de plus d'une seconde).
+    var SPLASH_MIN_MS = 300;
+    var FONT_WAIT_MS = 1000;
+
+    // Dans l'application, l'écran de chargement natif reste jusqu'à ce signal : ce fichier en est l'UNIQUE émetteur
+    // pour les pages /m (capacitor-bridge.js le donne sur les pages sans interface /m). Une seule fois par page.
+    var nativeReadySent = false;
+
+    function signalNativeReady() {
+        if (nativeReadySent) return;
+        nativeReadySent = true;
+        try {
+            if (window.UvmasterNative && typeof window.UvmasterNative.appReady === 'function') window.UvmasterNative.appReady();
+        } catch (e) { /* l'écran natif se libère de lui-même peu après la fin du chargement */ }
+    }
+
+    // Police chargée (au plus FONT_WAIT_MS), puis deux images dessinées : le contenu est réellement affichable.
+    function whenFontsReady() {
+        var fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+        var capped = new Promise(function (resolve) { setTimeout(resolve, FONT_WAIT_MS); });
+        return Promise.race([fontsReady, capped]);
     }
 
     function hideSplash() {
-        hideNativeSplash();
         var el = document.getElementById('m-splash');
         try { sessionStorage.setItem('m-launched', '1'); } catch (e) { /* stockage indisponible */ }
         if (!el) return;
@@ -467,12 +563,20 @@ import { PushNotifications } from '@capacitor/push-notifications';
     }
 
     function bootSplash() {
+        if (native) {
+            // L'écran de chargement natif couvre déjà l'attente : pas de second écran de marque (jamais de double splash).
+            document.documentElement.classList.add('m-booted');
+            try { sessionStorage.setItem('m-launched', '1'); } catch (e) { /* stockage indisponible */ }
+            whenFontsReady().then(function () {
+                requestAnimationFrame(function () { requestAnimationFrame(signalNativeReady); });
+            });
+            return;
+        }
+
         var el = document.getElementById('m-splash');
-        if (!el || document.documentElement.classList.contains('m-booted')) { hideNativeSplash(); return; }
-        var fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-        var capped = new Promise(function (resolve) { setTimeout(resolve, 1800); });
-        Promise.race([fontsReady, capped]).then(function () {
-            var wait = Math.max(0, 1000 - (performance.now() - started));
+        if (!el || document.documentElement.classList.contains('m-booted')) return;
+        whenFontsReady().then(function () {
+            var wait = Math.max(0, SPLASH_MIN_MS - (performance.now() - started));
             setTimeout(hideSplash, wait);
         });
     }
@@ -580,6 +684,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
         syncDeviceStatus();
         syncPushNotifications();
         syncEnterKeyHints();
+        syncSheets();
         showFlash();
         var main = document.querySelector('.m-main');
         if (main) {
@@ -645,6 +750,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
         syncDeviceStatus();
         syncPushNotifications();
         syncEnterKeyHints();
+        syncSheets();
         bootSplash();
     }
 

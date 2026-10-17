@@ -21,14 +21,17 @@
 <body class="m-app">
     @persist('m-splash')
         <div id="m-splash" class="m-splash" aria-hidden="true">
-            <img class="m-logo m-splash__logo" src="{{ asset('images/logo-wide.png') }}" alt="">
+            <picture>
+                <source media="(prefers-color-scheme: dark)" srcset="{{ asset('images/logo-wide-dark.png') }}">
+                <img class="m-logo m-splash__logo" src="{{ asset('images/logo-wide.png') }}" alt="">
+            </picture>
             <div class="m-splash__bar"></div>
         </div>
     @endpersist
 
     @auth<x-two-factor-reminder />@endauth
     @auth<x-subscription-banner :mobile="true" />@endauth
-    <div id="m-offline" class="m-offline" role="status">Hors connexion — les données peuvent être périmées</div>
+    <div id="m-offline" class="m-offline" role="status" aria-hidden="true">Hors connexion — les données peuvent être périmées</div>
     <div id="m-ptr" class="m-ptr" aria-hidden="true"><x-m.icon name="arrow-path" class="m-ico-sm" /></div>
 
     <main class="m-main {{ $guest ? 'm-main--bare' : '' }}">

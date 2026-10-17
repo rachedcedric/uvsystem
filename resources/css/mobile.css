@@ -102,7 +102,12 @@ html {
 .m-app input,
 .m-app textarea,
 .m-app select,
-.m-app .m-selectable {
+.m-app .m-selectable,
+.m-app .m-num,
+.m-app .m-appbar__sub,
+.m-app .m-profile__sub,
+.m-app .m-hero__amount,
+.m-app [data-copyable] {
     -webkit-user-select: text;
     user-select: text;
 }
@@ -142,6 +147,13 @@ html {
         border-radius: 18px;
         background: #ffffff;
         box-sizing: border-box;
+    }
+
+    /* Splash : il sert le logo sombre (fond transparent, texte clair), donc ni pastille ni fond blanc. */
+    .m-logo.m-splash__logo {
+        padding: 0;
+        border-radius: 0;
+        background: none;
     }
 }
 
@@ -545,6 +557,7 @@ button.m-row:active {
 }
 
 .m-row__title {
+    display: block;
     font-weight: 600;
     font-size: 15px;
     white-space: nowrap;
@@ -553,6 +566,7 @@ button.m-row:active {
 }
 
 .m-row__sub {
+    display: block;
     margin-top: 1px;
     font-size: 13px;
     color: var(--fg-3);
@@ -894,11 +908,14 @@ button.m-row:active {
     border-radius: var(--r-xl) var(--r-xl) 0 0;
     background: var(--surface);
     transform: translateY(105%);
-    transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+    visibility: hidden;
+    transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.28s;
 }
 
 .m-sheet[data-open] {
     transform: none;
+    visibility: visible;
+    transition-delay: 0s;
 }
 
 .m-sheet__grip {
@@ -934,6 +951,13 @@ button.m-row:active {
     font-size: 13.5px;
     font-weight: 600;
     color: var(--fg-2);
+}
+
+.m-field__hint {
+    margin: 6px 4px 0;
+    overflow: visible;
+    white-space: normal;
+    text-overflow: clip;
 }
 
 .m-input {
@@ -1266,6 +1290,20 @@ body:has(.m-offline[data-show]) .m-appbar {
 .m-search {
     position: relative;
     margin: 4px 12px 0;
+}
+
+.m-more-search {
+    margin: 14px 12px 0;
+}
+
+.m-search-meta {
+    margin: 7px 8px 0;
+    color: var(--fg-3);
+    font-size: 13px;
+}
+
+.m-more-empty {
+    margin-top: 14px;
 }
 
 .m-search .m-ico-sm {
@@ -1902,6 +1940,171 @@ body:has(.m-offline[data-show]) .m-appbar {
 
 .m-pair > * {
     min-width: 0;
+}
+
+/* Modificateurs partagés pour les écrans secondaires et les formulaires d'administration. */
+.m-group--top-compact,
+.m-hero--compact {
+    margin-top: 6px;
+}
+
+.m-group--separated,
+.m-actions--separated {
+    margin-top: 12px;
+}
+
+.m-text-danger {
+    color: var(--danger);
+}
+
+.m-btn--danger {
+    background: var(--danger);
+}
+
+.m-btn--separated {
+    margin-top: 10px;
+}
+
+.m-callout--fill {
+    flex: 1;
+    margin: 0;
+}
+
+.m-button-stack {
+    display: grid;
+    gap: 10px;
+    padding: 0 12px;
+}
+
+.m-button-stack--separated {
+    padding-top: 12px;
+}
+
+.m-primary-action {
+    padding: 16px 12px 0;
+}
+
+.m-more-company,
+.m-more-user {
+    margin-top: 4px;
+}
+
+.m-more-company + .m-more-user {
+    margin-top: 10px;
+}
+
+.m-more-company__logo {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: contain;
+    border-radius: inherit;
+}
+
+.m-sound-tests {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.m-more-external__head,
+.m-more-logout {
+    margin-top: 22px;
+}
+
+.m-more-external__note {
+    margin: -2px 20px 6px;
+    color: var(--fg-3);
+    font-size: 13.5px;
+}
+
+.m-more-external__day {
+    margin-top: 14px;
+}
+
+.m-app-version {
+    margin: 18px 20px 0;
+    color: var(--fg-3);
+    font-size: 12.5px;
+    text-align: center;
+}
+
+.m-report-form {
+    padding-top: 14px;
+}
+
+.m-report-reset {
+    margin: 6px 4px 0;
+}
+
+.m-hero__amount--status {
+    font-size: 36px;
+}
+
+.m-row--top {
+    align-items: flex-start;
+}
+
+.m-row--top .m-row__title,
+.m-row--top .m-row__sub {
+    white-space: normal;
+}
+
+.m-row__sub--detail {
+    color: var(--fg-2);
+}
+
+.m-diagnostic__hint {
+    margin-top: 4px;
+}
+
+.m-diagnostic__hint.is-warning {
+    color: var(--warn);
+}
+
+.m-callout--device {
+    margin: 12px 12px 0;
+}
+
+.m-device-status {
+    font-size: 13.5px;
+}
+
+.m-two-factor-setup {
+    padding: 16px;
+    text-align: center;
+}
+
+.m-two-factor-qr {
+    display: inline-block;
+    padding: 10px;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.m-help-text {
+    margin: 10px 0 0;
+    white-space: normal;
+}
+
+.m-help-text--flush {
+    margin: 0 0 10px;
+}
+
+.m-two-factor-secret {
+    margin: 6px 0 0;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    word-break: break-all;
+}
+
+.m-two-factor-recovery {
+    padding: 14px 16px;
+}
+
+.m-recovery-codes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 12px;
+    font-weight: 600;
 }
 
 /* ------------------------------------------- tablette / ordinateur (≥ 600 px) */

@@ -56,8 +56,8 @@
 
     @if ($canExport)
         <div class="m-actions">
-            <a href="{{ route('m.exports.commissions', ['pdf', 'p' => $period]) }}" target="_blank" class="m-action" data-haptic><x-m.icon name="document-arrow-down" /> PDF</a>
-            <a href="{{ route('m.exports.commissions', ['xlsx', 'p' => $period]) }}" target="_blank" class="m-action" data-haptic><x-m.icon name="table-cells" /> Excel</a>
+            <a href="{{ route('m.exports.commissions', ['pdf', 'p' => $period]) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger les commissions au format PDF" data-download data-haptic><x-m.icon name="document-arrow-down" /> PDF</a>
+            <a href="{{ route('m.exports.commissions', ['xlsx', 'p' => $period]) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger les commissions au format Excel" data-download data-haptic><x-m.icon name="table-cells" /> Excel</a>
         </div>
     @endif
 
@@ -83,7 +83,7 @@
                 <div class="m-field" style="margin:6px 0 0"><label class="m-field__label">Recalculer</label>
                     <div class="m-chips" style="padding:0;flex-wrap:wrap">
                         @foreach (['date' => 'Une date', 'periode' => 'Une période', 'incomplete' => 'Journées incomplètes'] as $k => $l)
-                            <button type="button" class="m-chip {{ $recalcMode === $k ? 'is-on' : '' }}" wire:click="$set('recalcMode', '{{ $k }}')">{{ $l }}</button>
+                            <button type="button" class="m-chip {{ $recalcMode === $k ? 'is-on' : '' }}" aria-pressed="{{ $recalcMode === $k ? 'true' : 'false' }}" wire:click="$set('recalcMode', '{{ $k }}')">{{ $l }}</button>
                         @endforeach
                     </div>
                 </div>

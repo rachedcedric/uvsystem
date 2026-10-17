@@ -28,8 +28,8 @@
                 </header>
 
                 <div class="m-chips" style="padding:0 0 12px;gap:10px">
-                    <button type="button" class="m-chip {{ $line['type'] === 'entree' ? 'is-on' : '' }}" style="flex:1;height:44px" wire:click="$set('lines.{{ $i }}.type', 'entree')" data-haptic>Entrée</button>
-                    <button type="button" class="m-chip {{ $line['type'] === 'sortie' ? 'is-on' : '' }}" style="flex:1;height:44px" wire:click="$set('lines.{{ $i }}.type', 'sortie')" data-haptic>Sortie</button>
+                    <button type="button" class="m-chip {{ $line['type'] === 'entree' ? 'is-on' : '' }}" aria-pressed="{{ $line['type'] === 'entree' ? 'true' : 'false' }}" style="flex:1;height:44px" wire:click="$set('lines.{{ $i }}.type', 'entree')" data-haptic>Entrée</button>
+                    <button type="button" class="m-chip {{ $line['type'] === 'sortie' ? 'is-on' : '' }}" aria-pressed="{{ $line['type'] === 'sortie' ? 'true' : 'false' }}" style="flex:1;height:44px" wire:click="$set('lines.{{ $i }}.type', 'sortie')" data-haptic>Sortie</button>
                 </div>
 
                 <x-m.field label="Montant" :error="$errors->first('lines.'.$i.'.amount')">
@@ -44,6 +44,7 @@
                     <div class="m-chips" style="padding:0;flex-wrap:wrap">
                         @foreach ($this->categories as $categorie)
                             <button type="button" class="m-chip {{ $line['categorieId'] === $categorie->id ? 'is-on' : '' }}"
+                                    aria-pressed="{{ $line['categorieId'] === $categorie->id ? 'true' : 'false' }}"
                                     wire:click="$set('lines.{{ $i }}.categorieId', {{ $line['categorieId'] === $categorie->id ? 'null' : $categorie->id }})" data-haptic>{{ $categorie->name }}</button>
                         @endforeach
                     </div>
@@ -78,7 +79,7 @@
         <div class="m-submit">
             <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="save" @disabled($overdrawn)>
                 <span wire:loading.remove wire:target="save">Enregistrer {{ count($lines) > 1 ? count($lines).' mouvements' : '' }}</span>
-                <span wire:loading wire:target="save" class="m-spin"></span>
+                <span wire:loading wire:target="save" class="m-spin" role="status" aria-label="Chargement en cours"></span>
             </button>
         </div>
     </form>

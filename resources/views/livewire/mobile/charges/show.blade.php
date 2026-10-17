@@ -29,7 +29,7 @@
 
     @if ($c->justificatif_path && auth()->user()->can('view_charges'))
         <div class="m-actions">
-            <a href="{{ route('charges.justificatif.download', $c) }}" target="_blank" class="m-action" data-haptic>
+            <a href="{{ route('charges.justificatif.download', $c) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger le justificatif de la charge" data-download data-haptic>
                 <x-m.icon name="paper-clip" />
                 Voir le justificatif
             </a>

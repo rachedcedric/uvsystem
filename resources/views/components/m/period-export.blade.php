@@ -23,10 +23,10 @@
                 <strong>{{ $s['label'] }}</strong>
                 <span>{{ $s['count'] }} {{ $s['count'] > 1 ? $nouns : $noun }} · {{ $format($s['amount']) }} FCFA</span>
             </div>
-            <a href="{{ $link($period, 'pdf') }}" target="_blank" class="m-chip m-export__btn" data-haptic data-sheet-close><x-m.icon name="document-arrow-down" class="m-ico-sm" /> PDF</a>
-            <a href="{{ $link($period, 'xlsx') }}" target="_blank" class="m-chip m-export__btn" data-haptic data-sheet-close><x-m.icon name="table-cells" class="m-ico-sm" /> Excel</a>
+            <a href="{{ $link($period, 'pdf') }}" target="_blank" rel="noopener" class="m-chip m-export__btn" aria-label="Télécharger l'export au format PDF" data-download data-haptic data-sheet-close><x-m.icon name="document-arrow-down" class="m-ico-sm" /> PDF</a>
+            <a href="{{ $link($period, 'xlsx') }}" target="_blank" rel="noopener" class="m-chip m-export__btn" aria-label="Télécharger l'export au format Excel" data-download data-haptic data-sheet-close><x-m.icon name="table-cells" class="m-ico-sm" /> Excel</a>
             @if ($module === 'charges')
-                <a href="{{ $link($period, 'csv') }}" target="_blank" class="m-chip m-export__btn" data-haptic data-sheet-close><x-m.icon name="document-text" class="m-ico-sm" /> CSV</a>
+                <a href="{{ $link($period, 'csv') }}" target="_blank" rel="noopener" class="m-chip m-export__btn" aria-label="Télécharger l'export au format CSV" data-download data-haptic data-sheet-close><x-m.icon name="document-text" class="m-ico-sm" /> CSV</a>
             @endif
         </div>
     @endforeach

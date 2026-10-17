@@ -32,18 +32,25 @@ use App\Filament\Resources\RemboursementResource;
 use App\Filament\Resources\SousDistributeurResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Resources\UvTransactionResource;
+use App\Models\User;
 use App\Services\TenantDocumentBranding;
 use App\Support\Mobile\Crud\Registry;
 use App\Support\Mobile\Nav;
 use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 #[Layout('components.layouts.mobile')]
 #[Title('Plus')]
 class More extends Component
 {
+    #[Url(except: '')]
+    public string $search = '';
+
     /**
      * Rubriques du panneau complet (Filament) accessibles à l'utilisateur.
      * Sert de filet de sécurité : tout écran pas encore porté en mobile reste
@@ -110,21 +117,67 @@ class More extends Component
         }
     }
 
+    private function matchesSearch(string $value): bool
+    {
+        $needle = Str::lower(Str::ascii(trim($this->search)));
+
+        return $needle === '' || Str::contains(Str::lower(Str::ascii($value)), $needle);
+    }
+
     public function render()
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         $company = $user->tenant;
         $hasLogo = $company && app(TenantDocumentBranding::class)->storedLogoPath($company) !== null;
+
+        $native = Nav::moreItems($user);
+        $resourceGroups = Registry::menuFor($user);
+        $groups = $this->fullVersionGroups();
+        $searchActive = trim($this->search) !== '';
+
+        if ($searchActive) {
+            $native = array_values(array_filter($native, fn (array $item): bool => $this->matchesSearch($item['label'])));
+            $resourceGroups = collect($resourceGroups)
+                ->map(fn (array $resources): array => array_values(array_filter(
+                    $resources,
+                    fn (string $resource): bool => $this->matchesSearch($resource::plural()),
+                )))
+                ->filter()
+                ->all();
+            $groups = collect($groups)
+                ->map(function (array $group): array {
+                    if ($this->matchesSearch($group['label'])) {
+                        return $group;
+                    }
+
+                    $group['items'] = array_values(array_filter(
+                        $group['items'],
+                        fn (array $item): bool => $this->matchesSearch($item['label']),
+                    ));
+
+                    return $group;
+                })
+                ->filter(fn (array $group): bool => $group['items'] !== [])
+                ->values()
+                ->all();
+        }
+
+        $resultCount = count($native)
+            + collect($resourceGroups)->sum(fn (array $resources): int => count($resources))
+            + collect($groups)->sum(fn (array $group): int => count($group['items']));
 
         return view('livewire.mobile.more', [
             'user' => $user,
             'company' => $company,
             'companyLogo' => $hasLogo ? route('tenant.branding.logo', ['v' => $company->updated_at?->timestamp], false) : null,
             'role' => $user->getRoleNames()->first(),
-            'native' => Nav::moreItems($user),
-            'resourceGroups' => Registry::menuFor($user),
-            'groups' => $this->fullVersionGroups(),
+            'native' => $native,
+            'resourceGroups' => $resourceGroups,
+            'groups' => $groups,
+            'searchActive' => $searchActive,
+            'resultCount' => $resultCount,
         ]);
     }
 }

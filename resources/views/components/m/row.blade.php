@@ -14,9 +14,9 @@
         </span>
     @endif
     <span class="m-row__body">
-        <span class="m-row__title" style="display:block">{{ $title }}</span>
+        <span class="m-row__title">{{ $title }}</span>
         @if ($sub)
-            <span class="m-row__sub" style="display:block">{{ $sub }}</span>
+            <span class="m-row__sub">{{ $sub }}</span>
         @endif
         {{ $body ?? '' }}
     </span>

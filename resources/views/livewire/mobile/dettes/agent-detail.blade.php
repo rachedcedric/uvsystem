@@ -22,8 +22,8 @@
         @if ($canCollect)
             <a href="{{ route('m.remboursements.create', ['agent' => $a->id]) }}" wire:navigate class="m-action" data-haptic><x-m.icon name="banknotes" /> Encaisser</a>
         @endif
-        <a href="{{ route('m.exports.dette-agent', [$a, 'pdf']) }}" target="_blank" class="m-action" data-haptic><x-m.icon name="document-arrow-down" /> PDF</a>
-        <a href="{{ route('m.exports.dette-agent', [$a, 'xlsx']) }}" target="_blank" class="m-action" data-haptic><x-m.icon name="table-cells" /> Excel</a>
+        <a href="{{ route('m.exports.dette-agent', [$a, 'pdf']) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger la dette de {{ $a->name }} au format PDF" data-download data-haptic><x-m.icon name="document-arrow-down" /> PDF</a>
+        <a href="{{ route('m.exports.dette-agent', [$a, 'xlsx']) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger la dette de {{ $a->name }} au format Excel" data-download data-haptic><x-m.icon name="table-cells" /> Excel</a>
     </div>
 
     <x-m.section title="Historique">

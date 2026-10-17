@@ -151,6 +151,18 @@ class MobileFoundationTest extends TestCase
             ->assertDontSee('Ventes UV');
     }
 
+    public function test_more_page_filters_navigation_without_accents(): void
+    {
+        $user = $this->adminUser();
+
+        Livewire::actingAs($user)->test(More::class)
+            ->set('search', 'securite')
+            ->assertSee('Sécurité du compte')
+            ->assertSee('1 résultat')
+            ->assertDontSee('Mon abonnement')
+            ->assertDontSee('Préférences');
+    }
+
     public function test_logout_signs_the_user_out(): void
     {
         $user = $this->adminUser();

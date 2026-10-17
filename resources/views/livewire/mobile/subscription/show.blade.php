@@ -89,7 +89,7 @@
     <x-m.section title="Changer d'offre">
         <nav class="m-chips" aria-label="Cycle" style="padding:0 14px 8px">
             @foreach (\App\Enums\SubscriptionCycle::cases() as $option)
-                <button type="button" class="m-chip {{ $viewCycle === $option ? 'is-on' : '' }}" style="min-height:44px;min-width:44px" wire:click="$set('cycle', '{{ $option->value }}')">{{ $option->label() }}</button>
+                <button type="button" class="m-chip {{ $viewCycle === $option ? 'is-on' : '' }}" aria-pressed="{{ $viewCycle === $option ? 'true' : 'false' }}" style="min-height:44px;min-width:44px" wire:click="$set('cycle', '{{ $option->value }}')">{{ $option->label() }}</button>
             @endforeach
         </nav>
         @if ($pendingRequest)

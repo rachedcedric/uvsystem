@@ -35,7 +35,7 @@
     </div>
 
     <div class="m-actions">
-        <a href="{{ route('remboursement.receipt.download', $r) }}" target="_blank" class="m-action" data-haptic>
+        <a href="{{ route('remboursement.receipt.download', $r) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger le reçu au format PDF" data-download data-haptic>
             <x-m.icon name="document-arrow-down" />
             Reçu PDF
         </a>

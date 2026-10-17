@@ -71,7 +71,7 @@
 
     <div class="m-group" style="margin-top:12px">
         <x-m.row :href="route('m.dettes.agent', $a)" icon="exclamation-triangle" tone="warn" title="Détail de la dette" sub="Historique complet, PDF et Excel" />
-        <a href="{{ route('m.exports.fiche-agent', $a) }}" target="_blank" class="m-row" data-haptic>
+        <a href="{{ route('m.exports.fiche-agent', $a) }}" target="_blank" rel="noopener" class="m-row" aria-label="Télécharger la fiche PDF de {{ $a->name }}" data-download data-haptic>
             <span class="m-row__lead m-row__lead--muted"><x-m.icon name="document-text" class="m-ico-sm" /></span>
             <span class="m-row__body"><span class="m-row__title">Fiche agent (PDF)</span></span>
             <x-m.icon name="arrow-down-tray" class="m-row__chev" />
@@ -118,7 +118,7 @@
             <div style="padding:0 16px;display:grid;gap:12px">
                 <div class="m-chips" style="padding:0;flex-wrap:wrap">
                     @foreach (['sms' => 'SMS', 'email' => 'E-mail', 'both' => 'SMS + e-mail'] as $k => $l)
-                        <button type="button" class="m-chip {{ $channel === $k ? 'is-on' : '' }}" wire:click="$set('channel', '{{ $k }}')">{{ $l }}</button>
+                        <button type="button" class="m-chip {{ $channel === $k ? 'is-on' : '' }}" aria-pressed="{{ $channel === $k ? 'true' : 'false' }}" wire:click="$set('channel', '{{ $k }}')">{{ $l }}</button>
                     @endforeach
                 </div>
                 <textarea wire:model="customMessage" rows="3" class="m-input" style="height:auto;padding:12px 14px" placeholder="Message personnalisé (facultatif). Laissez vide pour le message par défaut."></textarea>

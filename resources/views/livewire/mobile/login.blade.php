@@ -38,7 +38,7 @@
 
         <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="login">
             <span wire:loading.remove wire:target="login">Se connecter</span>
-            <span wire:loading wire:target="login" class="m-spin" aria-label="Connexion en cours"></span>
+            <span wire:loading wire:target="login" class="m-spin" role="status" aria-label="Connexion en cours"></span>
         </button>
     </form>
 

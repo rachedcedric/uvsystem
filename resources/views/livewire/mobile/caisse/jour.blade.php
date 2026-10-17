@@ -33,7 +33,7 @@
         @if ($canCreate)
             <a href="{{ route('m.caisse.create', ['date' => $day->toDateString()]) }}" wire:navigate class="m-action" data-haptic><x-m.icon name="plus" /> Ajouter à cette journée</a>
         @endif
-        <a href="{{ route('m.exports.caisse-jour', $day->toDateString()) }}" target="_blank" class="m-action" data-haptic><x-m.icon name="document-arrow-down" /> Exporter en PDF</a>
+        <a href="{{ route('m.exports.caisse-jour', $day->toDateString()) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger la journée de caisse au format PDF" data-download data-haptic><x-m.icon name="document-arrow-down" /> Exporter en PDF</a>
     </div>
 
     <x-m.section title="Mouvements">

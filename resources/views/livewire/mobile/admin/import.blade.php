@@ -40,7 +40,7 @@
         <div class="m-submit">
             <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="import,file" @disabled(! $file)>
                 <span wire:loading.remove wire:target="import">Lancer l'import</span>
-                <span wire:loading wire:target="import" class="m-spin"></span>
+                <span wire:loading wire:target="import" class="m-spin" role="status" aria-label="Chargement en cours"></span>
             </button>
         </div>
     </form>

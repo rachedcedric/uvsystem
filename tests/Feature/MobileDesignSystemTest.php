@@ -91,8 +91,155 @@ class MobileDesignSystemTest extends TestCase
 
         $this->assertStringContainsString('data-sheet-open="cancel-sheet"', $html);
         $this->assertStringContainsString('aria-haspopup="dialog"', $html);
+        $this->assertStringContainsString('aria-expanded="false"', $html);
+        $this->assertStringContainsString('aria-controls="cancel-sheet"', $html);
         $this->assertStringContainsString('m-danger-link--outline', $html);
         $this->assertStringContainsString('Annuler', $html);
+    }
+
+    public function test_sheets_manage_the_complete_accessible_focus_cycle(): void
+    {
+        $html = $this->render('<x-m.confirm-sheet id="delete-sheet" title="Supprimer ?" />');
+        $js = (string) file_get_contents(resource_path('js/mobile.js'));
+
+        $this->assertStringContainsString('aria-hidden="true"', $html);
+        $this->assertStringContainsString("sheet.removeAttribute('aria-hidden')", $js);
+        $this->assertStringContainsString("sheet.setAttribute('aria-hidden', 'true')", $js);
+        $this->assertStringContainsString("opener.setAttribute('aria-expanded', expanded ? 'true' : 'false')", $js);
+        $this->assertStringContainsString('setSheetExpanded(id, true)', $js);
+        $this->assertStringContainsString('setSheetExpanded(s.id, false)', $js);
+        $this->assertStringContainsString("e.key === 'Escape'", $js);
+        $this->assertStringContainsString("e.key !== 'Tab'", $js);
+        $this->assertStringContainsString('sheetTrigger.focus()', $js);
+    }
+
+    public function test_field_links_its_label_hint_and_error_to_the_control(): void
+    {
+        $html = $this->render('<x-m.field label="Montant" for="amount" hint="En FCFA" error="Montant requis"><input id="amount" aria-describedby="amount-hint amount-error" aria-invalid="true"></x-m.field>');
+
+        $this->assertStringContainsString('for="amount"', $html);
+        $this->assertStringContainsString('id="amount-hint"', $html);
+        $this->assertStringContainsString('id="amount-error"', $html);
+        $this->assertStringContainsString('role="alert"', $html);
+        $this->assertStringContainsString('aria-describedby="amount-hint amount-error"', $html);
+        $this->assertStringContainsString('aria-invalid="true"', $html);
+    }
+
+    public function test_generic_crud_fields_expose_their_accessible_state(): void
+    {
+        $view = (string) file_get_contents(resource_path('views/livewire/mobile/crud/form.blade.php'));
+
+        $this->assertStringContainsString(':for="$fieldId"', $view);
+        $this->assertStringContainsString(':hint="$field->hint"', $view);
+        $this->assertStringContainsString('id="{{ $fieldId }}"', $view);
+        $this->assertStringContainsString('aria-describedby="{{ $describedBy }}"', $view);
+        $this->assertStringContainsString('aria-invalid="true"', $view);
+    }
+
+    public function test_selectable_chips_and_switches_expose_their_state(): void
+    {
+        $views = collect(glob(resource_path('views/**/*.blade.php')))
+            ->merge(glob(resource_path('views/**/**/*.blade.php')))
+            ->merge(glob(resource_path('views/**/**/**/*.blade.php')))
+            ->unique();
+        $missing = [];
+
+        foreach ($views as $view) {
+            $contents = (string) file_get_contents($view);
+            preg_match_all('/<button\b[^>]*\bclass="[^"]*\bm-chip\b[^"{]*\{\{[^}]*is-on[^>]*>/s', $contents, $chips);
+            preg_match_all('/<button\b[^>]*\brole="switch"[^>]*>/s', $contents, $switches);
+            foreach ($chips[0] as $chip) {
+                if (! str_contains($chip, 'aria-pressed=')) {
+                    $missing[] = str_replace(resource_path('views/').'/', '', $view).' chip';
+                }
+            }
+            foreach ($switches[0] as $switch) {
+                if (! str_contains($switch, 'aria-checked=')) {
+                    $missing[] = str_replace(resource_path('views/').'/', '', $view).' switch';
+                }
+            }
+        }
+
+        $this->assertSame([], array_values(array_unique($missing)));
+    }
+
+    public function test_livewire_loading_and_offline_states_are_announced(): void
+    {
+        $views = collect(glob(resource_path('views/livewire/mobile/**/*.blade.php')))
+            ->merge(glob(resource_path('views/livewire/mobile/**/**/*.blade.php')))
+            ->unique();
+        $missing = [];
+
+        foreach ($views as $view) {
+            preg_match_all('/<span\b[^>]*wire:loading[^>]*class="m-spin"[^>]*>/s', (string) file_get_contents($view), $spinners);
+            foreach ($spinners[0] as $spinner) {
+                if (! str_contains($spinner, 'role="status"') || ! str_contains($spinner, 'aria-label=')) {
+                    $missing[] = basename($view);
+                }
+            }
+        }
+
+        $layout = (string) file_get_contents(resource_path('views/components/layouts/mobile.blade.php'));
+        $js = (string) file_get_contents(resource_path('js/mobile.js'));
+        $this->assertSame([], array_values(array_unique($missing)));
+        $this->assertStringContainsString('id="m-offline" class="m-offline" role="status" aria-hidden="true"', $layout);
+        $this->assertStringContainsString("el.setAttribute('aria-hidden', show ? 'false' : 'true')", $js);
+    }
+
+    public function test_auth_layout_uses_the_mobile_brand_and_accessibility_tokens(): void
+    {
+        $layout = (string) file_get_contents(resource_path('views/layouts/auth.blade.php'));
+        $css = (string) file_get_contents(resource_path('css/auth.css'));
+
+        $this->assertStringContainsString("@vite('resources/css/auth.css')", $layout);
+        $this->assertStringContainsString('class="auth-brand__logo"', $layout);
+        $this->assertStringContainsString('role="status"', $layout);
+        $this->assertStringContainsString('role="alert"', $layout);
+        $this->assertStringContainsString('--brand: #0b6b3a', $css);
+        $this->assertStringContainsString('@media (prefers-color-scheme: dark)', $css);
+        $this->assertStringContainsString(':focus-visible', $css);
+    }
+
+    public function test_mobile_downloads_are_explicit_and_business_values_are_selectable(): void
+    {
+        $views = collect(glob(resource_path('views/livewire/mobile/**/*.blade.php')))
+            ->merge(glob(resource_path('views/livewire/mobile/**/**/*.blade.php')))
+            ->push(resource_path('views/components/m/period-export.blade.php'))
+            ->unique();
+        $missing = [];
+
+        foreach ($views as $view) {
+            $lines = preg_split('/\R/', (string) file_get_contents($view));
+            foreach (array_filter($lines, fn (string $line) => str_contains($line, 'target="_blank"')) as $link) {
+                if (! str_contains($link, 'data-download')
+                    || ! str_contains($link, 'rel="noopener"')
+                    || ! str_contains($link, 'aria-label=')) {
+                    $missing[] = basename($view);
+                }
+            }
+        }
+
+        $js = (string) file_get_contents(resource_path('js/mobile.js'));
+        $css = (string) file_get_contents(resource_path('css/mobile.css'));
+        $this->assertSame([], array_values(array_unique($missing)));
+        $this->assertStringContainsString('Ouverture du téléchargement', $js);
+        $this->assertStringContainsString('.m-appbar__sub', $css);
+        $this->assertStringContainsString('.m-hero__amount', $css);
+        $this->assertStringContainsString('user-select: text', $css);
+    }
+
+    public function test_priority_mobile_screens_use_shared_styles_instead_of_inline_css(): void
+    {
+        $views = [
+            resource_path('views/livewire/mobile/more.blade.php'),
+            resource_path('views/livewire/mobile/analytics/reports.blade.php'),
+            resource_path('views/livewire/mobile/admin/notifications-diagnostic.blade.php'),
+            resource_path('views/livewire/mobile/admin/two-factor.blade.php'),
+        ];
+
+        foreach ($views as $view) {
+            $this->assertStringNotContainsString('style=', (string) file_get_contents($view), basename($view));
+        }
     }
 
     public function test_callout_announces_only_real_alerts(): void
@@ -247,11 +394,12 @@ class MobileDesignSystemTest extends TestCase
     public function test_the_company_logo_in_the_more_screen_has_an_explicit_size(): void
     {
         $view = (string) file_get_contents(resource_path('views/livewire/mobile/more.blade.php'));
+        $css = (string) file_get_contents(resource_path('css/mobile.css'));
 
         // max-height:100% ou height:100% ne bornent rien dans une cellule de grille à hauteur automatique : le logo
         // gardait son ratio (40×53) et débordait de la carte. aspect-ratio:1 le force à rester dans la case carrée.
-        $this->assertStringContainsString('width:100%;aspect-ratio:1;object-fit:contain', $view);
-        $this->assertStringNotContainsString('max-height:100%;object-fit', $view);
+        $this->assertStringContainsString('class="m-more-company__logo"', $view);
+        $this->assertMatchesRegularExpression('/\.m-more-company__logo\s*\{[^}]*width:\s*100%;[^}]*aspect-ratio:\s*1;[^}]*object-fit:\s*contain/s', $css);
     }
 
     public function test_chips_stay_visible_inside_a_line_card(): void
@@ -308,8 +456,8 @@ class MobileDesignSystemTest extends TestCase
 
     public function test_form_hints_wrap_instead_of_being_cut_with_an_ellipsis(): void
     {
-        $view = file_get_contents(resource_path('views/livewire/mobile/crud/form.blade.php'));
+        $css = file_get_contents(resource_path('css/mobile.css'));
 
-        $this->assertStringContainsString('white-space:normal', $view);
+        $this->assertMatchesRegularExpression('/\.m-field__hint\s*\{[^}]*white-space:\s*normal/s', $css);
     }
 }

@@ -36,7 +36,7 @@
         <div class="m-submit">
             <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="save" @disabled($this->warning)>
                 <span wire:loading.remove wire:target="save">Enregistrer la vente</span>
-                <span wire:loading wire:target="save" class="m-spin"></span>
+                <span wire:loading wire:target="save" class="m-spin" role="status" aria-label="Chargement en cours"></span>
             </button>
         </div>
     </form>

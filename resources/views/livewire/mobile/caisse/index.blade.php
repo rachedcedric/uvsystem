@@ -37,8 +37,8 @@
     </x-m.section>
 
     <div class="m-actions">
-        <a href="{{ route('m.exports.caisse-historique') }}" target="_blank" class="m-action" data-haptic><x-m.icon name="document-arrow-down" /> PDF 14 jours</a>
-        <a href="{{ route('m.exports.caisse-historique', ['p' => 'all']) }}" target="_blank" class="m-action" data-haptic><x-m.icon name="document-arrow-down" /> PDF complet</a>
+        <a href="{{ route('m.exports.caisse-historique') }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger l'historique de caisse des 14 derniers jours au format PDF" data-download data-haptic><x-m.icon name="document-arrow-down" /> PDF 14 jours</a>
+        <a href="{{ route('m.exports.caisse-historique', ['p' => 'all']) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger l'historique complet de la caisse au format PDF" data-download data-haptic><x-m.icon name="document-arrow-down" /> PDF complet</a>
         <a href="{{ route('m.crud.index', 'categories-caisse') }}" wire:navigate class="m-action" data-haptic><x-m.icon name="tag" /> Catégories</a>
     </div>
 

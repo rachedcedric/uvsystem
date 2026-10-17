@@ -14,6 +14,7 @@
             <div class="m-chips" style="padding:0;flex-wrap:wrap">
                 @foreach ($this->fournisseurs as $f)
                     <button type="button" class="m-chip {{ $fournisseurId === $f->id ? 'is-on' : '' }}"
+                            aria-pressed="{{ $fournisseurId === $f->id ? 'true' : 'false' }}"
                             wire:click="$set('fournisseurId', {{ $f->id }})" data-haptic>{{ $f->name }}</button>
                 @endforeach
             </div>
@@ -32,7 +33,7 @@
         <div class="m-submit">
             <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="save">
                 <span wire:loading.remove wire:target="save">Enregistrer l'approvisionnement</span>
-                <span wire:loading wire:target="save" class="m-spin"></span>
+                <span wire:loading wire:target="save" class="m-spin" role="status" aria-label="Chargement en cours"></span>
             </button>
         </div>
     </form>

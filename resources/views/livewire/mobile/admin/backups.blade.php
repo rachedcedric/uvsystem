@@ -13,7 +13,7 @@
             @forelse ($backups as $b)
                 <x-m.row icon="archive-box" tone="muted" :title="$b['name']" :sub="$b['date']->translatedFormat('j M Y, H:i').' · '.$b['size']" :chevron="false" wire:key="b{{ $b['name'] }}">
                     <x-slot:end>
-                        <a href="{{ route('m.sauvegardes.telecharger', ['name' => $b['name']]) }}" target="_blank" class="m-iconbtn" aria-label="Télécharger" data-haptic><x-m.icon name="arrow-down-tray" /></a>
+                        <a href="{{ route('m.sauvegardes.telecharger', ['name' => $b['name']]) }}" target="_blank" rel="noopener" class="m-iconbtn" aria-label="Télécharger la sauvegarde {{ $b['name'] }}" data-download data-haptic><x-m.icon name="arrow-down-tray" /></a>
                         <button type="button" class="m-iconbtn" aria-label="Supprimer" style="color:var(--danger)"
                                 x-data @click="if (confirm('Supprimer cette sauvegarde ?')) $wire.delete('{{ $b['name'] }}')"><x-m.icon name="trash" /></button>
                     </x-slot:end>
