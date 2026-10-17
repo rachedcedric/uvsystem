@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Mobile;
 
+use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -25,7 +26,15 @@ class Login extends Component
     public function mount()
     {
         if (Auth::check()) {
-            return $this->redirectRoute('m.home', navigate: false);
+            $user = Auth::user();
+
+            if ($user instanceof User && $user->canAccessPanel(Filament::getPanel('admin'))) {
+                return $this->redirectRoute('m.home', navigate: false);
+            }
+
+            Auth::guard('web')->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
         }
     }
 
@@ -56,7 +65,9 @@ class Login extends Component
             ]);
         }
 
-        if (! Auth::user()->canAccessPanel(Filament::getPanel('admin'))) {
+        $user = Auth::user();
+
+        if (! ($user instanceof User) || ! $user->canAccessPanel(Filament::getPanel('admin'))) {
             Auth::logout();
             RateLimiter::hit($throttleKey, 60);
 

@@ -151,7 +151,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
     {
         $this->submit();
 
-        $this->confirm()->assertRedirect(route('m.login'));
+        $this->confirm()->assertRedirect(route('inscription.terminee'));
 
         $tenant = Tenant::where('contact_email', 'awa@example.com')->firstOrFail();
         $user = User::withoutGlobalScopes()->where('email', 'awa@example.com')->firstOrFail();
@@ -172,6 +172,18 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $this->assertNotNull($signup->verified_at);
         $this->assertSame($tenant->id, $signup->tenant_id);
         $this->assertSame([], $signup->payloadData(), 'charge utile vidée après usage');
+    }
+
+    public function test_confirmation_shows_success_even_when_another_account_is_authenticated(): void
+    {
+        $this->submit();
+        $this->actingAs(User::factory()->create());
+
+        $this->followingRedirects()
+            ->post($this->link())
+            ->assertOk()
+            ->assertSee('Félicitations')
+            ->assertSee('Se connecter');
     }
 
     public function test_values_forged_by_the_browser_are_ignored(): void
@@ -203,11 +215,11 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $this->submit();
         $link = $this->link();
 
-        $this->post($link)->assertRedirect(route('m.login'))->assertSessionHas('status', fn ($m) => str_contains($m, 'est confirmée'));
+        $this->post($link)->assertRedirect(route('inscription.terminee'))->assertSessionHas('signup_status', fn ($message) => str_contains($message, 'est validée'));
         $counts = [$this->tenantCount(), User::withoutGlobalScopes()->count(), TenantSubscription::withoutGlobalScopes()->count()];
 
-        $this->post($link)->assertRedirect(route('m.login'))->assertSessionHas('status', fn ($m) => str_contains($m, 'déjà créée'));
-        $this->post($link)->assertRedirect(route('m.login'));
+        $this->post($link)->assertRedirect(route('inscription.terminee'))->assertSessionHas('signup_status', fn ($message) => str_contains($message, 'déjà validée'));
+        $this->post($link)->assertRedirect(route('inscription.terminee'));
 
         $this->assertSame($counts, [$this->tenantCount(), User::withoutGlobalScopes()->count(), TenantSubscription::withoutGlobalScopes()->count()]);
     }
@@ -352,7 +364,7 @@ class SubscriptionPublicTest extends SubscriptionTestCase
         $this->submit();
 
         $this->post($first)->assertRedirect(route('offres')); // ancien lien invalidé
-        $this->confirm()->assertRedirect(route('m.login'));
+        $this->confirm()->assertRedirect(route('inscription.terminee'));
     }
 
     public function test_a_mail_failure_leaves_no_pending_request(): void

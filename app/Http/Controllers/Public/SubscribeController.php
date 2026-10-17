@@ -94,6 +94,16 @@ class SubscribeController extends Controller
         return view('public.verification-envoyee', ['email' => $request->session()->get('signup_email')]);
     }
 
+    public function completed(Request $request)
+    {
+        return view('public.inscription-terminee', [
+            'message' => $request->session()->get(
+                'signup_status',
+                'Votre inscription est validée. Votre entreprise est prête.',
+            ),
+        ]);
+    }
+
     /** Page de confirmation : un simple GET ne crée rien (les scanners de liens e-mail ne doivent pas consommer le jeton). */
     public function verify(string $token)
     {
@@ -113,9 +123,9 @@ class SubscribeController extends Controller
             return redirect()->back()->withErrors(['token' => 'La création de votre entreprise a échoué, rien n\'a été créé. Réessayez dans un instant en rouvrant le lien reçu par e-mail.']);
         }
 
-        return redirect()->route('m.login')->with('status', $created
-            ? 'Votre adresse est confirmée, votre entreprise est créée et votre essai gratuit démarre. Connectez-vous avec l\'adresse e-mail et le mot de passe choisis.'
-            : 'Votre entreprise est déjà créée : connectez-vous avec l\'adresse e-mail et le mot de passe choisis.');
+        return redirect()->route('inscription.terminee')->with('signup_status', $created
+            ? 'Votre inscription est validée. Votre entreprise est créée et votre essai gratuit démarre maintenant.'
+            : 'Votre inscription est déjà validée. Votre entreprise est prête.');
     }
 
     private function plan(string $slug): ?SubscriptionPlan

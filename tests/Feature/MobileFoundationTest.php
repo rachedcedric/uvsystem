@@ -54,6 +54,18 @@ class MobileFoundationTest extends TestCase
             ->assertDontSee('m-tabbar');
     }
 
+    public function test_login_page_logs_out_an_authenticated_account_without_mobile_access(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/m/login')
+            ->assertOk()
+            ->assertSee('Bon retour.');
+
+        $this->assertGuest();
+    }
+
     public function test_user_can_log_in_and_stays_remembered(): void
     {
         $user = $this->adminUser();

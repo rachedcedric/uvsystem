@@ -30,6 +30,7 @@ Route::middleware('web')->group(function () {
         ->middleware(['signed', 'throttle:20,60'])->name('inscription.verifier');
     Route::post('/inscription/verifier/{token}', [SubscribeController::class, 'confirm'])
         ->middleware(['signed', 'throttle:10,60'])->name('inscription.confirmer');
+    Route::get('/inscription/terminee', [SubscribeController::class, 'completed'])->name('inscription.terminee');
     // Ancienne adresse du parcours : on conserve plan et cycle.
     Route::get('/souscrire', fn (Request $request) => redirect()->route('inscription', $request->query(), 301));
 });

@@ -114,7 +114,7 @@ class SelfServiceSignupFlowTest extends TestCase
 
         // 5. L'e-mail : un GET affiche la confirmation, le POST crée tout.
         $confirmPage = $this->get($this->link())->assertOk()->assertSee('Confirmer');
-        $this->post($this->link())->assertRedirect(route('m.login'));
+        $this->post($this->link())->assertRedirect(route('inscription.terminee'));
 
         // 6. Ce qui a été créé.
         $tenant = Tenant::where('contact_email', 'gerant1@prospect.example')->firstOrFail();
@@ -171,7 +171,7 @@ class SelfServiceSignupFlowTest extends TestCase
             $cycle = $i % 2 ? 'monthly' : 'yearly';
             $page = $this->get("/inscription?plan={$plan}&cycle={$cycle}");
             $this->post('/inscription', $this->prospect(100 + $i, ['plan' => $plan, 'cycle' => $cycle, 'token' => $this->hiddenValue($page, 'token')]))->assertRedirect(route('inscription.envoye'));
-            $this->post($this->link())->assertRedirect(route('m.login'));
+            $this->post($this->link())->assertRedirect(route('inscription.terminee'));
         }
 
         $tenants = Tenant::whereIn('contact_email', collect(range(1, $count))->map(fn ($i) => 'gerant'.(100 + $i).'@prospect.example'))->get();
@@ -281,8 +281,8 @@ class SelfServiceSignupFlowTest extends TestCase
 
         // La panne disparaît : le MÊME lien aboutit, une seule fois.
         app('events')->forget('eloquent.created: '.User::class);
-        $this->post($link)->assertRedirect(route('m.login'));
-        $this->post($link)->assertRedirect(route('m.login'));
+        $this->post($link)->assertRedirect(route('inscription.terminee'));
+        $this->post($link)->assertRedirect(route('inscription.terminee'));
         $this->assertSame(1, Tenant::where('contact_email', 'gerant7@prospect.example')->count());
     }
 
@@ -299,7 +299,7 @@ class SelfServiceSignupFlowTest extends TestCase
         $this->assertNull(SubscriptionSignup::first()->verified_at);
 
         SubscriptionPlan::where('slug', 'pro')->update(['trial_days' => 14]);
-        $this->post($this->link())->assertRedirect(route('m.login'));
+        $this->post($this->link())->assertRedirect(route('inscription.terminee'));
         $this->assertSame(1, Tenant::where('contact_email', 'gerant8@prospect.example')->count());
     }
 
