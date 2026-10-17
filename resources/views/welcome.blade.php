@@ -11,7 +11,7 @@
         <meta property="og:site_name" content="{{ config('branding.name') }}">
         <meta property="og:title" content="{{ config('branding.name') }} — {{ config('branding.tagline') }}">
 
-        <link rel="icon" href="{{ asset('images/logo.png') }}">
+        @include('partials.favicons')
         @vite('resources/css/landing.css')
     </head>
     <body>

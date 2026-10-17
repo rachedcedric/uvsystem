@@ -6,7 +6,7 @@ use App\Filament\Pages\Auth\Login;
 use App\Http\Middleware\BlockReadOnlyFormPages;
 use App\Http\Middleware\EnforceTwoFactor;
 use App\Http\Middleware\TriggerDebtReminderCycle;
-use App\Services\TenantDocumentBranding;
+use App\Support\BrandAsset;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -24,7 +24,6 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -37,10 +36,12 @@ class AdminPanelProvider extends PanelProvider
             ->path('master')
             ->login(Login::class)
             ->brandName(fn (): string => auth()->user()?->tenant?->name ?: config('branding.name'))
-            ->brandLogo(fn (): string => $this->tenantLogoUrl(false))
-            ->darkModeBrandLogo(fn (): string => $this->tenantLogoUrl(true))
+            // Le panneau porte TOUJOURS le logo du produit. Le logo téléversé par une entreprise (profil de l'entreprise) sert à
+            // ses documents (PDF, exports) et à sa carte dans l'application mobile, jamais à l'interface d'administration.
+            ->brandLogo(asset('images/logo-wide.png'))
+            ->darkModeBrandLogo(asset('images/logo-wide-dark.png'))
             ->brandLogoHeight('2.5rem')
-            ->favicon(asset('favicon-32.png'))
+            ->favicon(BrandAsset::url('favicon-32.png'))
             ->colors([
                 'primary' => Color::Blue,
                 'danger' => Color::Rose,
@@ -168,21 +169,5 @@ class AdminPanelProvider extends PanelProvider
                 EnforceTwoFactor::class,
                 BlockReadOnlyFormPages::class,
             ]);
-    }
-
-    private function tenantLogoUrl(bool $dark): string
-    {
-        $tenant = auth()->user()?->tenant;
-        $path = $tenant ? app(TenantDocumentBranding::class)->storedLogoPath($tenant) : null;
-
-        if (
-            $tenant
-            && $path !== null
-            && Storage::disk('public')->exists($path)
-        ) {
-            return route('tenant.branding.logo', ['v' => $tenant->updated_at?->timestamp]);
-        }
-
-        return asset($dark ? 'images/logo-dark.png' : 'images/logo.png');
     }
 }

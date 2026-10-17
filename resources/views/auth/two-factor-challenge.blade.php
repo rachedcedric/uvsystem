@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vérification 2FA - {{ config('branding.name') }}</title>
     @vite('resources/css/app.css')
+    @include('partials.favicons')
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="max-w-md w-full mx-4">

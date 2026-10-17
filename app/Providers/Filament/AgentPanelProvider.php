@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Agent\Pages\AgentDashboard;
 use App\Filament\Agent\Widgets\AgentStatsOverview;
 use App\Http\Middleware\EnforceTwoFactor;
+use App\Support\BrandAsset;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -39,7 +40,7 @@ class AgentPanelProvider extends PanelProvider
             ->brandLogo(asset('images/logo.png'))
             ->darkModeBrandLogo(asset('images/logo-dark.png'))
             ->brandLogoHeight('2.5rem')
-            ->favicon(asset('favicon-32.png'))
+            ->favicon(BrandAsset::url('favicon-32.png'))
             // Pont Capacitor (APK Android) : bouton retour natif et lien « ← Application » ; inactif dans un navigateur classique.
             ->renderHook(
                 PanelsRenderHook::BODY_END,

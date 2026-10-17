@@ -1,6 +1,7 @@
 @extends('layouts.public')
 @section('title', 'Offres')
 @section('content')
+    <div class="offres">
     <h1>{{ cms('public.offres.title') }}</h1>
     <p>{{ cms('public.offres.subtitle') }}</p>
 
@@ -32,5 +33,6 @@
         @empty
             <p>Aucune offre n'est disponible pour le moment.</p>
         @endforelse
+    </div>
     </div>
 @endsection

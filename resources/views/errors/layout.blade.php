@@ -25,6 +25,7 @@
         @media (prefers-color-scheme: dark) { .primary { color: #06140c; } }
         .secondary { border: 1px solid var(--line); background: transparent; color: var(--fg); }
     </style>
+    @include('partials.favicons')
 </head>
 <body>
     <main role="main">

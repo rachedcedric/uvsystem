@@ -17,6 +17,7 @@
     <script>try{if(sessionStorage.getItem('m-launched'))document.documentElement.classList.add('m-booted')}catch(e){}</script>
     @vite(['resources/css/mobile.css', 'resources/js/mobile.js'])
     @livewireStyles
+    @include('partials.favicons')
 </head>
 <body class="m-app">
     @persist('m-splash')

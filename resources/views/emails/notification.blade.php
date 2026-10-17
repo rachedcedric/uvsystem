@@ -83,7 +83,7 @@
 
 <body>
     <div class="header">
-        <h1>{{ $company['name'] ?? config('app.name') }}</h1>
+        <h1>{{ $company['name'] ?? config('branding.name') }}</h1>
     </div>
 
     <div class="content">
@@ -104,7 +104,7 @@
 
     <div class="footer">
         <p>
-            {{ $company['name'] ?? config('app.name') }}<br>
+            {{ $company['name'] ?? config('branding.name') }}<br>
             Email: <a href="mailto:{{ $company['email'] ?? '' }}">{{ $company['email'] ?? '' }}</a><br>
             Téléphone: {{ $company['phone'] ?? '' }}
         </p>

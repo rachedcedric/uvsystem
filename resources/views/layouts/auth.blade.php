@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#0b6b3a">
     <title>@yield('title') — {{ config('branding.name') }}</title>
     @vite('resources/css/auth.css')
+    @include('partials.favicons')
 </head>
 <body class="auth-page">
 <div class="auth-frame">

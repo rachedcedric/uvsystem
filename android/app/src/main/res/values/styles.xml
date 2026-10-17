@@ -20,5 +20,8 @@
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
         <item name="windowSplashScreenBackground">@color/m_bg</item>
+        <!-- Sans cette ligne le splash reprend l'icône du LANCEUR. Elle est désormais « UV MASTER » : le splash garde le glyphe
+             « UV » validé (même fichier qu'avant, et que l'écran de chargement natif réutilise pour ne pas sauter au passage). -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
     </style>
 </resources>

@@ -16,6 +16,11 @@
         .seg a.on{background:var(--brand);color:#fff}
         .grid{display:grid;gap:16px;grid-template-columns:1fr}
         @media (min-width:760px){.grid{grid-template-columns:repeat(3,1fr)}}
+        /* Page des offres : titre, sélecteur et cartes centrés. Les cartes forment une rangée centrée (une ou deux offres
+           restent au milieu, pas à gauche d'une grille de trois colonnes) ; le contenu d'une carte reste aligné à gauche. */
+        .offres{text-align:center}
+        .offres .grid{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;text-align:left}
+        .offres .plan{flex:1 1 280px;max-width:340px}
         .plan{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;position:relative}
         .plan.featured{border:2px solid var(--brand)}.plan.accent{background:var(--accent)}
         .plan .tag{position:absolute;top:-12px;left:16px;background:var(--brand);color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:4px 12px}
@@ -31,6 +36,7 @@
         .alert{padding:10px 12px;border-radius:8px;margin:12px 0;font-size:14px;background:#fef2f2;color:var(--danger);border:1px solid #fecaca}
         a{color:var(--brand)}
     </style>
+    @include('partials.favicons')
 </head>
 <body>
 <div class="wrap">

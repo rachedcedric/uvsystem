@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Platform\Pages\Auth\Login;
 use App\Http\Middleware\EnforceTwoFactor;
+use App\Support\BrandAsset;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -38,7 +39,7 @@ class PlatformPanelProvider extends PanelProvider
             ->brandName(config('branding.name').' — Plateforme')
             ->brandLogo(asset('images/logo-wide.png'))
             ->brandLogoHeight('2.25rem')
-            ->favicon(asset('favicon-32.png'))
+            ->favicon(BrandAsset::url('favicon-32.png'))
             ->font('Inter')
             ->assets([
                 Css::make('auth-ui', asset('css/filament-auth.css').'?v='.(@filemtime(public_path('css/filament-auth.css')) ?: 1)),

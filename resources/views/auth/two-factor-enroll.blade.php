@@ -17,6 +17,7 @@
         ul.codes{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}ul.codes li{background:#f3f4f6;border-radius:6px;padding:8px;text-align:center;font-family:ui-monospace,monospace;font-size:13px}
         a{color:#047857}
     </style>
+    @include('partials.favicons')
 </head>
 <body>
 <div class="card">

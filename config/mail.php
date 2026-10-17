@@ -112,7 +112,9 @@ return [
 
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        // L'expéditeur affiché est la MARQUE (config/branding.php), jamais APP_NAME : une ancienne valeur de MAIL_FROM_NAME
+        // (ex. "${APP_NAME}") restée dans le .env d'un serveur ne doit pas réapparaître dans les boîtes de réception.
+        'name' => env('BRAND_NAME', 'UVMASTER'),
     ],
 
 ];

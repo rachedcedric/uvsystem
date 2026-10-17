@@ -1057,13 +1057,16 @@ button.m-row:active {
 .m-login__brand {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 22px;
     margin-bottom: 34px;
+    text-align: center;
 }
 
 .m-login__logo {
     width: 224px;
+    max-width: 100%;
+    margin-inline: auto;
 }
 
 .m-login__title {
