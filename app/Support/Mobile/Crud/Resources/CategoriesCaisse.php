@@ -44,7 +44,7 @@ class CategoriesCaisse extends MobileResource
 
     public static function group(): string
     {
-        return 'Caisse';
+        return 'Configuration';
     }
 
     public static function order(Builder $query): Builder

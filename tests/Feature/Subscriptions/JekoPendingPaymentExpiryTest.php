@@ -51,7 +51,7 @@ class JekoPendingPaymentExpiryTest extends SubscriptionTestCase
         $this->assertCount(1, Notification::sent($master, PaymentFailed::class), 'le master est prévenu');
 
         // Plus rien ne bloque : une nouvelle demande de changement est possible.
-        $new = app(SubscriptionBilling::class)->requestChange($tenant, $this->plan('entreprise'), SubscriptionCycle::Monthly, $master, 'jeko');
+        $new = app(SubscriptionBilling::class)->requestChange($tenant, $this->plan('entreprise'), SubscriptionCycle::Monthly, $master, 'jeko', 'wave');
         $this->assertSame(SubscriptionChangeRequest::PENDING, $new->status);
     }
 
@@ -183,7 +183,7 @@ class JekoPendingPaymentExpiryTest extends SubscriptionTestCase
         $master = $this->userIn($tenant);
         app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
 
-        $request = app(SubscriptionBilling::class)->requestChange($tenant, $this->plan('entreprise'), SubscriptionCycle::Monthly, $master, 'jeko');
+        $request = app(SubscriptionBilling::class)->requestChange($tenant, $this->plan('entreprise'), SubscriptionCycle::Monthly, $master, 'jeko', 'wave');
         $payment = TenantContext::withoutTenancy(fn () => SubscriptionPayment::query()->where('tenant_id', $tenant->id)->latest('id')->firstOrFail());
 
         return [$tenant, $master, $request, $payment];

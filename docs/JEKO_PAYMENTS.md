@@ -7,8 +7,7 @@ Ajouter à l’environnement de production les variables listées dans `.env.jek
 - `APP_URL` doit être l’URL publique HTTPS de l’application ;
 - `SUBSCRIPTIONS_PAYMENT_GATEWAY=jeko` active Jèko pour les renouvellements et changements d’offre initiés par les tenants ;
 - `JEKO_API_KEY`, `JEKO_API_KEY_ID` et `JEKO_STORE_ID` viennent du compte Jèko Business ;
-- `JEKO_WEBHOOK_SECRET` est le secret du webhook, distinct de la clé API ;
-- `JEKO_PAYMENT_METHOD` accepte `wave`, `orange`, `mtn`, `moov`, `djamo` ou `jeko`.
+- `JEKO_WEBHOOK_SECRET` est le secret du webhook, distinct de la clé API.
 
 Après modification :
 
@@ -18,6 +17,8 @@ php artisan config:cache
 ```
 
 Jèko est la passerelle par défaut et la seule proposée aux tenants. Le mode manuel ne sert qu'au super admin pour dépanner (par exemple un virement reçu hors Jèko) : l'action « Enregistrer un paiement » demande explicitement la passerelle `manual`. Un paiement Jèko en attente ne peut pas être confirmé à la main ; il l'est par le webhook ou la réconciliation.
+
+Le tenant choisit explicitement son moyen de paiement avant chaque nouveau checkout : Wave, Orange Money, MTN Money, Moov Money, Djamo ou Jèko. Aucun moyen n'est présélectionné et le serveur refuse de créer une demande Jèko sans choix valide. À l'échéance d'un renouvellement automatique, l'application envoie la notification avec le montant dû, mais attend ce choix sur l'écran « Mon abonnement » avant de créer le lien de paiement.
 
 Jèko exige des montants multiples de 100 FCFA. Les proratas Jèko sont donc arrondis au multiple de 100 le plus proche avant l’enregistrement du devis et du paiement ; le montant affiché reste ainsi identique au montant encaissé.
 

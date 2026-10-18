@@ -153,11 +153,12 @@ class ReadOnlyRoleTest extends TestCase
         $this->assertSame([], $leaks);
     }
 
-    public function test_the_partner_agents_resource_follows_the_agent_permissions_like_the_mobile_screen(): void
+    public function test_the_partner_agents_resource_is_closed_to_every_role(): void
     {
+        // Un master n'a que des agents : plus d'agents partenaires, quel que soit le rôle.
         $this->actingAs($this->userIn($this->a, 'comptable'))->get('/master/agent-partenaires/create')->assertForbidden();
-        $this->actingAs($this->userIn($this->a, 'commercial'))->get('/master/agent-partenaires/create')->assertOk();
-        $this->actingAs($this->ro)->get('/master/agent-partenaires')->assertOk();
+        $this->actingAs($this->userIn($this->a, 'commercial'))->get('/master/agent-partenaires/create')->assertForbidden();
+        $this->actingAs($this->ro)->get('/master/agent-partenaires')->assertForbidden();
     }
 
     public function test_no_edit_page_opens_for_a_read_only_account_even_on_a_resource_without_policy(): void

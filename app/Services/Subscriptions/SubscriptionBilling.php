@@ -2,6 +2,7 @@
 
 namespace App\Services\Subscriptions;
 
+use App\Enums\JekoPaymentMethod;
 use App\Enums\SubscriptionCycle;
 use App\Enums\SubscriptionStatus;
 use App\Exceptions\InvalidSubscriptionTransition;
@@ -48,7 +49,7 @@ class SubscriptionBilling
         return $subscription->plan->priceFor($subscription->cycle);
     }
 
-    public function request(Tenant $tenant, ?string $gateway = null): SubscriptionPayment
+    public function request(Tenant $tenant, ?string $gateway = null, ?string $paymentMethod = null): SubscriptionPayment
     {
         $subscription = $this->manager->current($tenant) ?? throw new InvalidSubscriptionTransition('Aucun abonnement à régler.');
         $provider = $this->gateway($gateway);
@@ -64,7 +65,10 @@ class SubscriptionBilling
             return $pending;
         }
 
-        return $provider->initiate($subscription, $provider->payableAmount($this->amountDue($tenant)), ['purpose' => 'renewal']);
+        return $provider->initiate($subscription, $provider->payableAmount($this->amountDue($tenant)), array_filter([
+            'purpose' => 'renewal',
+            'payment_method' => $this->jekoPaymentMethod($provider, $paymentMethod),
+        ], fn (mixed $value): bool => $value !== null));
     }
 
     // ------------------------------------------------------------------ changement d'offre à la demande du tenant
@@ -75,7 +79,7 @@ class SubscriptionBilling
      * EN ATTENTE du montant dû est créé et le changement s'applique à sa confirmation réelle (passerelle ou super admin).
      * Une seule demande en attente par tenant : la précédente est annulée.
      */
-    public function requestChange(Tenant $tenant, SubscriptionPlan $plan, SubscriptionCycle $cycle, ?User $by = null, ?string $gateway = null): SubscriptionChangeRequest
+    public function requestChange(Tenant $tenant, SubscriptionPlan $plan, SubscriptionCycle $cycle, ?User $by = null, ?string $gateway = null, ?string $paymentMethod = null): SubscriptionChangeRequest
     {
         if (! $plan->is_active) {
             throw new InvalidSubscriptionTransition("L'offre {$plan->name} n'est plus disponible.");
@@ -117,7 +121,11 @@ class SubscriptionBilling
         }
 
         try {
-            $provider->initiate($current, $quote['amount_due'], ['purpose' => 'plan_change', 'change_request_id' => $request->id]);
+            $provider->initiate($current, $quote['amount_due'], array_filter([
+                'purpose' => 'plan_change',
+                'change_request_id' => $request->id,
+                'payment_method' => $this->jekoPaymentMethod($provider, $paymentMethod),
+            ], fn (mixed $value): bool => $value !== null));
         } catch (Throwable $exception) {
             TenantContext::runAs((int) $tenant->getKey(), fn () => $request->forceFill([
                 'status' => SubscriptionChangeRequest::CANCELLED,
@@ -131,6 +139,16 @@ class SubscriptionBilling
             SubscriptionNotifier::contextFor($current, ['plan' => $plan->name, 'cycle' => $cycle->label(), 'amount' => $quote['amount_due']]));
 
         return $request;
+    }
+
+    private function jekoPaymentMethod(SubscriptionPaymentGateway $gateway, ?string $paymentMethod): ?string
+    {
+        if ($gateway->name() !== JekoSubscriptionPaymentGateway::NAME || $paymentMethod === null) {
+            return null;
+        }
+
+        return JekoPaymentMethod::tryFrom($paymentMethod)?->value
+            ?? throw new InvalidArgumentException('Moyen de paiement Jèko invalide.');
     }
 
     public function checkoutUrl(SubscriptionPayment $payment): ?string

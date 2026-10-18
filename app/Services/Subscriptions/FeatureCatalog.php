@@ -39,12 +39,26 @@ class FeatureCatalog
         return ['assistance_prioritaire', 'options_personnalisees'];
     }
 
+    /**
+     * Fonctionnalités OUVERTES : toujours accessibles à tout compte qui en a la permission, quelle que soit l'offre (ou
+     * même sans abonnement actif). Elles restent listées dans les offres (affichage commercial) mais ne verrouillent plus
+     * aucun écran.
+     *
+     * @return list<string>
+     */
+    public static function openFeatures(): array
+    {
+        return ['statistiques_essentielles', 'scoring_agents'];
+    }
+
     /** @return list<string> fonctionnalités techniques appliquées côté serveur */
     public static function enforcedFeatures(): array
     {
         return array_values(array_filter(
             array_keys(self::labels()),
-            fn (string $f) => ! in_array($f, self::serviceFeatures(), true) && ! str_starts_with($f, 'toutes_les_fonctions_')
+            fn (string $f) => ! in_array($f, self::serviceFeatures(), true)
+                && ! in_array($f, self::openFeatures(), true)
+                && ! str_starts_with($f, 'toutes_les_fonctions_')
         ));
     }
 

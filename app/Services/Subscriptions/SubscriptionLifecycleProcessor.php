@@ -8,6 +8,7 @@ use App\Models\TenantSubscription;
 use App\Notifications\Subscriptions\SubscriptionExpiring;
 use App\Notifications\Subscriptions\SubscriptionRenewalDue;
 use App\Notifications\Subscriptions\TrialExpiring;
+use App\Services\Subscriptions\Payments\JekoSubscriptionPaymentGateway;
 use App\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -78,6 +79,14 @@ class SubscriptionLifecycleProcessor
     private function invoiceRenewal(TenantSubscription $subscription): bool
     {
         $tenant = Tenant::query()->findOrFail($subscription->tenant_id);
+
+        if ($this->billing->gateway()->name() === JekoSubscriptionPaymentGateway::NAME) {
+            $amount = $this->billing->gateway()->payableAmount($this->billing->amountDue($tenant));
+
+            return $this->notifier->send($subscription, SubscriptionRenewalDue::class, "renewal_due:{$subscription->id}:{$subscription->current_period_ends_at->timestamp}",
+                SubscriptionNotifier::contextFor($subscription, ['amount' => $amount]));
+        }
+
         $payment = $this->billing->request($tenant);
 
         return $this->notifier->send($subscription, SubscriptionRenewalDue::class, "renewal_due:{$subscription->id}:{$subscription->current_period_ends_at->timestamp}",

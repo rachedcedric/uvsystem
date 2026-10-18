@@ -57,10 +57,10 @@ class HomeDashboard
 
         $rows = [
             ['key' => 'ventes', 'label' => 'Ventes du jour', 'icon' => 'banknotes', 'now' => $ventes($today), 'before' => $ventes($yesterday), 'good' => 'up'],
-            ['key' => 'appro', 'label' => 'Approvisionnements', 'icon' => 'truck', 'now' => $appro($today), 'before' => $appro($yesterday), 'good' => 'up'],
+            ['key' => 'commission', 'label' => 'Commission prévue', 'icon' => 'star', 'now' => $commissions->commissionPourJourneeMetier($today), 'before' => $commissions->commissionPourJourneeMetier($yesterday), 'good' => 'up'],
             ['key' => 'rembs', 'label' => 'Remboursements', 'icon' => 'arrow-uturn-left', 'now' => $rembs($today), 'before' => $rembs($yesterday), 'good' => 'up'],
             ['key' => 'dette', 'label' => 'Dettes en cours', 'icon' => 'exclamation-triangle', 'now' => $dette, 'before' => $detteHier, 'good' => 'down'],
-            ['key' => 'commission', 'label' => 'Commission prévue', 'icon' => 'star', 'now' => $commissions->commissionPourJourneeMetier($today), 'before' => $commissions->commissionPourJourneeMetier($yesterday), 'good' => 'up'],
+            ['key' => 'appro', 'label' => 'Approvisionnements', 'icon' => 'truck', 'now' => $appro($today), 'before' => $appro($yesterday), 'good' => 'up'],
         ];
 
         return array_map(fn (array $r): array => [

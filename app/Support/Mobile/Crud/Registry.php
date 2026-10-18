@@ -7,7 +7,12 @@ use App\Models\User;
 /** Liste des ressources mobiles génériques, indexées par slug. */
 class Registry
 {
-    /** @return list<class-string<MobileResource>> */
+    /**
+     * Un master n'a que des agents : SousDistributeurs et AgentsPartenaires restent dans le code (et leurs données en base)
+     * mais ne sont plus proposés ni accessibles.
+     *
+     * @return list<class-string<MobileResource>>
+     */
     public static function all(): array
     {
         return [
@@ -18,8 +23,6 @@ class Registry
             Resources\CategoriesCharges::class,
             Resources\CategoriesCaisse::class,
             Resources\Utilisateurs::class,
-            Resources\SousDistributeurs::class,
-            Resources\AgentsPartenaires::class,
             Resources\Ventes::class,
             Resources\Remboursements::class,
             Resources\Approvisionnements::class,

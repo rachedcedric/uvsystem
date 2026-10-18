@@ -40,7 +40,7 @@ class Paliers extends MobileResource
 
     public static function group(): string
     {
-        return 'Paramètres';
+        return 'Configuration';
     }
 
     public static function searchColumns(): array

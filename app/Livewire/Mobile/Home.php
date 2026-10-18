@@ -25,6 +25,32 @@ class Home extends Component
             'unread' => Route::has('m.notifications') ? $user->unreadNotifications()->count() : 0,
             'solde' => $dashboard->solde(),
             'kpis' => $dashboard->kpis(),
+            'kpiLinks' => $this->kpiLinks($user),
         ]);
+    }
+
+    /**
+     * Page ouverte au toucher de chaque carte du bandeau (seulement si l'utilisateur y a accès).
+     *
+     * @return array<string, string>
+     */
+    private function kpiLinks($user): array
+    {
+        $targets = [
+            'ventes' => ['m.ventes', 'view_uv_transactions'],
+            'commission' => ['m.commissions', 'view_commissions'],
+            'rembs' => ['m.remboursements', 'view_remboursements'],
+            'dette' => ['m.dettes', 'view_remboursements'],
+            'appro' => ['m.approvisionnements', 'view_approvisionnements'],
+        ];
+
+        $links = [];
+        foreach ($targets as $key => [$route, $permission]) {
+            if (Route::has($route) && $user->can($permission)) {
+                $links[$key] = route($route);
+            }
+        }
+
+        return $links;
     }
 }

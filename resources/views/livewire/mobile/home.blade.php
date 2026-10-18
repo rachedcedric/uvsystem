@@ -24,7 +24,8 @@
 
     <div class="m-strip" data-no-ptr>
         @foreach ($kpis as $kpi)
-            <div class="m-stat">
+            @php($target = $kpiLinks[$kpi['key']] ?? null)
+            <a @if ($target) href="{{ $target }}" wire:navigate data-haptic @endif class="m-stat" wire:key="kpi-{{ $kpi['key'] }}">
                 <div class="m-stat__label">
                     <x-m.icon :name="$kpi['icon']" class="m-ico-sm" />
                     <span>{{ $kpi['label'] }}</span>
@@ -33,7 +34,7 @@
                     {{ \App\Support\Mobile\Fcfa::number($kpi['value']) }}<span class="m-stat__unit"> FCFA</span>
                 </div>
                 <x-m.delta :trend="$kpi['trend']" :pct="$kpi['pct']" :good="$kpi['good']" suffix="" />
-            </div>
+            </a>
         @endforeach
     </div>
 

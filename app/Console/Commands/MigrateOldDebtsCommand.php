@@ -219,7 +219,7 @@ class MigrateOldDebtsCommand extends Command
                 'phone' => $oldDebt->numero_telephone ?? 'N/A',
                 'address' => $oldDebt->lieu ?? 'N/A',
                 'status' => 'active',
-                'commission_rate' => 5.00, // Taux par défaut
+                'commission_rate' => null,
                 'debt_limit' => null, // Pas de limite
             ]);
 

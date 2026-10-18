@@ -17,6 +17,7 @@ use App\Services\Subscriptions\SubscriptionManager;
 use App\Services\Subscriptions\SubscriptionProration;
 use App\Tenancy\TenantContext;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -261,6 +262,20 @@ class SubscriptionChangeRequestTest extends SubscriptionTestCase
         $this->assertSame(30000, $payments->first()->amount);
         $this->assertSame('renewal', $payments->first()->metadata['purpose']);
         Notification::assertSentToTimes($this->master, SubscriptionRenewalDue::class, 1);
+    }
+
+    public function test_jeko_auto_renew_notifies_without_creating_a_checkout_or_choosing_an_operator(): void
+    {
+        config()->set('subscriptions.default_gateway', 'jeko');
+        Http::fake();
+        $this->manager->setAutoRenew($this->tenant, true);
+        $this->travelToDate('2026-11-11 02:00:00');
+
+        $this->artisan('subscriptions:process')->assertSuccessful();
+
+        $this->assertCount(0, $this->pendingPayments($this->tenant));
+        Notification::assertSentToTimes($this->master, SubscriptionRenewalDue::class, 1);
+        Http::assertNothingSent();
     }
 
     public function test_without_auto_renew_no_invoice_is_issued(): void

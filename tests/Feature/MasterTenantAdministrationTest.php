@@ -72,7 +72,6 @@ class MasterTenantAdministrationTest extends TestCase
             CaisseCategorieResource::class,
             PalierCommissionResource::class,
             PaymentMethodResource::class,
-            SousDistributeurResource::class,
             UserResource::class,
         ] as $resource) {
             $this->assertTrue($resource::shouldRegisterNavigation(), "{$resource} est absent du menu Master.");
@@ -84,12 +83,17 @@ class MasterTenantAdministrationTest extends TestCase
         $this->get('/master/caisse-categories')->assertOk();
         $this->get('/master/palier-commissions')->assertOk();
         $this->get('/master/payment-methods')->assertOk();
-        $this->get('/master/sous-distributeurs')->assertOk();
         $this->get('/master/users')->assertOk();
     }
 
     public function test_inactive_partner_workflows_remain_hidden(): void
     {
+        // Un master n'a que des agents : ni sous-distributeurs ni agents partenaires, dans le menu comme par URL.
+        $this->assertFalse(SousDistributeurResource::shouldRegisterNavigation());
+        $this->assertFalse(SousDistributeurResource::canAccess());
+        $this->assertFalse(AgentPartenaireResource::canAccess());
+        $this->get('/master/sous-distributeurs')->assertForbidden();
+        $this->get('/master/agent-partenaires')->assertForbidden();
         $this->assertFalse(AgentPartenaireResource::shouldRegisterNavigation());
         $this->assertFalse(VenteUvResource::shouldRegisterNavigation());
         $this->assertFalse(RemboursementAgentResource::shouldRegisterNavigation());

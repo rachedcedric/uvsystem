@@ -35,14 +35,14 @@ Le refus a lieu **dans les modèles** (trait `BelongsToTenant`), donc Filament, 
 
 | Fonctionnalité | Où elle est appliquée (côté serveur) | Preuve |
 |---|---|---|
-| `statistiques_essentielles` | `m.statistiques`, page Filament Statistiques | `SubscriptionFeaturesTest::test_statistiques_essentielles` |
+| `statistiques_essentielles` | _Ouverte_ : `m.statistiques` et la page Filament Statistiques s'ouvrent à tout compte ayant la permission, quelle que soit l'offre | `SubscriptionFeaturesTest::test_statistics_and_scoring_are_open_to_every_master_whatever_the_plan` |
 | `statistiques_avancees` | page Filament « Rapports & Statistiques » | `…::test_statistiques_avancees` |
 | `exports_pdf`, `exports_excel` | **toute** génération PDF/Excel (Filament, `/m`, API, commandes) via `GatedPdf`/`GatedExcel` + `ExportGate` ; PDF = `exports_pdf`, Excel/CSV = `exports_excel` | `…::test_exports_pdf_and_excel`, `…::test_every_pdf_and_excel_generation_goes_through_the_gate…` |
 | `exports_avances` | commissions, caisse (jour/historique), fiche agent, exports par période | `…::test_exports_avances` |
 | `rapports_avances` | rapports quotidiens et planifiés (`uv:daily-report`, `reports:generate`) : le tenant est ignoré s'il ne l'a pas | `…::test_rapports_avances` |
 | `notifications_dettes` | alertes, rappels, SMS de dettes : `via()` des notifications (tous les points d'envoi) | `…::test_notifications_dettes` |
 | `notifications_push` | canal Firebase + enregistrement du jeton push | `…::test_notifications_push` |
-| `scoring_agents` | scoring Filament et `/m` | `SubscriptionTenantAccessTest::test_the_mobile_import_and_scoring_depend_on_the_plan_features` |
+| `scoring_agents` | _Ouverte_ : scoring Filament et `/m`, même règle (listée dans les offres Pro et Entreprise à titre commercial) | `SubscriptionFeaturesTest::test_statistics_and_scoring_are_open_to_every_master_whatever_the_plan` |
 | `import_donnees` | import Filament et `/m` (page et action) | idem |
 | `sauvegardes_dediees` | commande `tenancy:backup-dedicated` (hebdomadaire, rotation de 7) + téléchargement `/exports/mes-sauvegardes/{fichier}` (master) | `…::test_sauvegardes_dediees`, `…::test_dedicated_backups_are_rotated` |
 | `assistance_prioritaire`, `options_personnalisees` | **fonctionnalités de service** (aucun écran à verrouiller) : exposées par `hasFeature()` mais sans blocage applicatif | `…::test_every_enforced_feature_has_a_proof_and_service_features_are_declared` |

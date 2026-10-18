@@ -57,6 +57,19 @@
                     </div>
                 </div>
                 <div class="mt-4">
+                    @if (config('subscriptions.default_gateway') === 'jeko')
+                        <div class="mb-4 max-w-sm">
+                            <label for="payment-method" class="mb-1 block text-sm font-medium text-gray-950 dark:text-white">Moyen de paiement</label>
+                            <x-filament::input.wrapper>
+                                <x-filament::input.select id="payment-method" wire:model="paymentMethod">
+                                    <option value="">Choisir un moyen de paiement</option>
+                                    @foreach ($paymentMethods as $value => $label)
+                                        <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </x-filament::input.select>
+                            </x-filament::input.wrapper>
+                        </div>
+                    @endif
                     <x-filament::button
                         icon="heroicon-o-banknotes"
                         wire:click="renew"

@@ -1,7 +1,7 @@
 <div wire:poll.60s.visible>
     <x-m.appbar title="Ventes UV" />
 
-    <x-m.period-stats module="ventes" :summary="$stats" noun="vente" nouns="ventes" :can-export="$canExport" />
+    <x-m.period-dashboard module="ventes" :summary="$stats" :yesterday="$yesterday" :daily="$daily" :trend="$trend" noun="vente" nouns="ventes" :can-export="$canExport" />
 
     @if ($topToday->isNotEmpty() && trim($search) === '')
         @php($topMax = max(1, $topToday->max('amount')))

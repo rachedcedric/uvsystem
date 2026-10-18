@@ -83,7 +83,7 @@ class MobileSmokeTest extends TestCase
             $this->assertTrue($response->isOk(), "{$url} → HTTP {$response->getStatusCode()}");
         }
 
-        $this->assertGreaterThan(55, count($urls));
+        $this->assertGreaterThan(50, count($urls));
     }
 
     public function test_every_mobile_screen_loads_without_any_data(): void

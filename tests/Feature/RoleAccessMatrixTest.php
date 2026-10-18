@@ -36,11 +36,12 @@ class RoleAccessMatrixTest extends TestCase
         '/master/activity-logs' => [200, 200, 403, 403, 403],
         '/master/vente-uvs' => [403, 403, 403, 403, 403],
         '/master/remboursement-agents' => [403, 403, 403, 403, 403],
+        '/master/agent-partenaires' => [403, 403, 403, 403, 403],
+        '/master/sous-distributeurs' => [403, 403, 403, 403, 403],
         // Création : selon la permission de chaque métier
         '/master/agents/create' => [200, 200, 403, 200, 403],
         '/master/uv-transactions/create' => [200, 200, 403, 200, 403],
         '/master/agent-soldes/create' => [200, 200, 403, 403, 403],
-        '/master/agent-partenaires/create' => [200, 200, 403, 200, 403],
         // Consultation
         '/master' => [200, 200, 200, 200, 200],
         '/master/agents' => [200, 200, 200, 200, 200],

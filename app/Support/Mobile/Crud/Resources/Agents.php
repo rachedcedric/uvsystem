@@ -61,8 +61,9 @@ class Agents extends MobileResource
             Field::text('address', 'Adresse')->maxLength(500),
             Field::select('type', 'Type d\'agent', self::TYPES)->required()->default('standard'),
             Field::text('zone', 'Zone géographique')->maxLength(100)->placeholder('Ex. : Abidjan Nord'),
-            Field::money('debt_limit', 'Plafond de dette')->min(0)->max(999999999)->default(500000)->hint('Crédit maximum autorisé'),
-            Field::number('commission_rate', 'Taux de commission (%)')->min(0)->max(100)->default(5),
+            // Aucune valeur imposée : le master choisit. Laissés vides, les deux champs sont enregistrés vides (null).
+            Field::money('debt_limit', 'Plafond de dette')->min(0)->max(999999999)->hint('Crédit maximum autorisé. Laissez vide pour ne fixer aucune limite.'),
+            Field::number('commission_rate', 'Taux de commission (%)')->min(0)->max(100),
             Field::select('status', 'Statut', self::STATUSES)->required()->default('active'),
             Field::textarea('notes', 'Notes internes'),
             // Master et admin : lier la fiche à un compte de l'entreprise (le sien compris) pour qu'il retrouve ses propres

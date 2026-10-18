@@ -8,7 +8,7 @@ it('accorde le titre de création en genre et en élision', function () {
         ->mapWithKeys(fn (string $resource) => [$resource::slug() => $resource::newTitle()]);
 
     expect($titles['agents'])->toBe('Nouvel agent')
-        ->and($titles['agents-partenaires'])->toBe('Nouvel agent partenaire')
+        ->and($titles)->not->toHaveKeys(['agents-partenaires', 'sous-distributeurs'])
         ->and($titles['utilisateurs'])->toBe('Nouvel utilisateur')
         ->and($titles['approvisionnements'])->toBe('Nouvel approvisionnement')
         ->and($titles['ventes'])->toBe('Nouvelle vente')

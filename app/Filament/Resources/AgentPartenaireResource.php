@@ -14,10 +14,10 @@ class AgentPartenaireResource extends Resource
 {
     protected static ?string $model = AgentPartenaire::class;
 
-    // Même correspondance que l'écran mobile (Crud\Resources\AgentsPartenaires) : la ressource n'avait aucun contrôle.
+    // Un master n'a que des agents : la ressource reste dans le code (et ses données en base) mais n'est plus accessible.
     public static function canAccess(): bool
     {
-        return (bool) auth()->user()?->can('view_agents');
+        return false;
     }
 
     public static function canCreate(): bool

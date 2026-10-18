@@ -4,7 +4,6 @@ namespace App\Livewire\Mobile\Analytics;
 
 use App\Models\Agent;
 use App\Services\AnalyticsService;
-use App\Services\Subscriptions\SubscriptionEntitlements;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -18,7 +17,6 @@ class ScoringAgent extends Component
     public function mount(Agent $agent): void
     {
         abort_unless(auth()->user()->can('view_statistics') || auth()->user()->can('view_agents'), 403);
-        app(SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
 
         $this->agent = $agent;
     }

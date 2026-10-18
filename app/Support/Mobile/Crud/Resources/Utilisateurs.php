@@ -40,7 +40,7 @@ class Utilisateurs extends MobileResource
 
     public static function group(): string
     {
-        return 'Administration';
+        return 'Entreprise';
     }
 
     public static function searchColumns(): array

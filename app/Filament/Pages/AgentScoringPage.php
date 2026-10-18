@@ -5,7 +5,6 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\ScoringOverviewWidget;
 use App\Models\Agent;
 use App\Services\AnalyticsService;
-use App\Services\Subscriptions\SubscriptionEntitlements;
 use Filament\Pages\Page;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -31,11 +30,6 @@ class AgentScoringPage extends Page implements HasTable
     protected static ?int $navigationSort = 10;
 
     public ?int $selectedAgentId = null;
-
-    public function mount(): void
-    {
-        app(SubscriptionEntitlements::class)->abortUnlessFeature('scoring_agents');
-    }
 
     private ?Collection $scoringData = null;
 

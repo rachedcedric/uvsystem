@@ -299,22 +299,26 @@
     <!-- Barème de référence -->
     <div class="bareme-box" style="margin-top: 20px;">
         <h4>📋 Barème des Commissions (Référence)</h4>
+        @php
+            // Barème du master (paliers actifs en base), jamais une copie écrite ici. Seuils abrégés en millions : le maximum d'un
+            // palier vaut « presque » le minimum du suivant (1 499 999 → 1.5M), on l'arrondit au millier le plus proche puis on ajoute 1.
+            $millions = fn (float $montant): string => rtrim(rtrim(number_format($montant / 1_000_000, 2, '.', ''), '0'), '.').'M';
+            $lignes = \App\Models\PalierCommission::where('is_active', true)->orderBy('seuil_min')->get()
+                ->map(fn ($p) => $millions((float) $p->seuil_min).' - '.$millions(round((float) $p->seuil_max, -3) + 1).' → '.number_format((float) $p->commission, 0, ',', ' '))
+                ->chunk(3);
+        @endphp
         <table class="bareme-table">
-            <tr>
-                <td>1M - 1.5M → 6 360</td>
-                <td>1.5M - 2M → 8 420</td>
-                <td>2M - 2.5M → 10 200</td>
-            </tr>
-            <tr>
-                <td>2.5M - 3M → 11 700</td>
-                <td>3M - 4M → 14 895</td>
-                <td>4M - 5M → 19 150</td>
-            </tr>
-            <tr>
-                <td>5M - 10M → 31 915</td>
-                <td>10M - 20M → 52 725</td>
-                <td>20M - 30M → 60 125</td>
-            </tr>
+            @forelse ($lignes as $ligne)
+                <tr>
+                    @foreach ($ligne as $cellule)
+                        <td>{{ $cellule }}</td>
+                    @endforeach
+                </tr>
+            @empty
+                <tr>
+                    <td>Aucun palier défini.</td>
+                </tr>
+            @endforelse
         </table>
     </div>
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Mobile\Subscription;
 
+use App\Enums\JekoPaymentMethod;
 use App\Enums\SubscriptionCycle;
 use App\Enums\SubscriptionStatus;
 use App\Exceptions\InvalidSubscriptionTransition;
@@ -38,6 +39,8 @@ class Show extends Component
     /** Cycle affiché pour la comparaison des offres (le serveur recalcule tout à la demande). */
     public string $cycle = 'monthly';
 
+    public ?string $paymentMethod = null;
+
     public ?string $message = null;
 
     public ?string $error = null;
@@ -65,11 +68,19 @@ class Show extends Component
         $this->reset(['message', 'error']);
 
         try {
+            $tenant = Tenant::query()->findOrFail(TenantContext::requireId());
+            $plan = SubscriptionPlan::query()->findOrFail($planId);
+            $selectedCycle = SubscriptionCycle::tryFrom($cycle) ?? SubscriptionCycle::Monthly;
+            $current = app(SubscriptionManager::class)->current($tenant);
+            $amountDue = $current === null ? 0 : app(SubscriptionProration::class)->quote($current, $plan, $selectedCycle)['amount_due'];
+
             $request = app(SubscriptionBilling::class)->requestChange(
-                Tenant::query()->findOrFail(TenantContext::requireId()),
-                SubscriptionPlan::query()->findOrFail($planId),
-                SubscriptionCycle::tryFrom($cycle) ?? SubscriptionCycle::Monthly,
+                $tenant,
+                $plan,
+                $selectedCycle,
                 auth()->user(),
+                null,
+                $this->paymentMethodFor($amountDue),
             );
 
             $this->message = $request->status === SubscriptionChangeRequest::APPLIED
@@ -102,7 +113,11 @@ class Show extends Component
 
         try {
             $tenant = Tenant::query()->findOrFail(TenantContext::requireId());
-            $this->redirectToPayment(app(SubscriptionBilling::class)->request($tenant));
+            $this->redirectToPayment(app(SubscriptionBilling::class)->request(
+                $tenant,
+                null,
+                $this->paymentMethodFor(app(SubscriptionBilling::class)->amountDue($tenant)),
+            ));
         } catch (InvalidSubscriptionTransition $exception) {
             $this->fail($exception->getMessage());
         } catch (Throwable $exception) {
@@ -174,6 +189,7 @@ class Show extends Component
             'quotes' => $subscription ? $catalog->mapWithKeys(fn (SubscriptionPlan $p) => [$p->id => $proration->quote($subscription, $p, $cycle)])->all() : [],
             'pendingRequest' => SubscriptionChangeRequest::query()->with('plan')->where('status', SubscriptionChangeRequest::PENDING)->latest('id')->first(),
             'pendingPayments' => SubscriptionPayment::query()->where('status', SubscriptionPayment::PENDING)->latest('id')->get(),
+            'paymentMethods' => collect(JekoPaymentMethod::cases())->mapWithKeys(fn (JekoPaymentMethod $method) => [$method->value => $method->label()])->all(),
             'backups' => $canBackup ? collect(Storage::disk('local')->files(TenantContext::storagePath('backups')))->map(fn ($f) => basename($f))->sortDesc()->values()->all() : [],
         ]);
     }
@@ -183,6 +199,16 @@ class Show extends Component
     {
         $this->error = $message;
         $this->dispatch('m-toast', message: $message, type: 'error');
+    }
+
+    private function paymentMethodFor(int $amount): ?string
+    {
+        if ($amount <= 0 || config('subscriptions.default_gateway') !== 'jeko') {
+            return null;
+        }
+
+        return JekoPaymentMethod::tryFrom((string) $this->paymentMethod)?->value
+            ?? throw new InvalidSubscriptionTransition('Choisissez votre moyen de paiement.');
     }
 
     private function redirectToPayment(SubscriptionPayment $payment): void

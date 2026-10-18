@@ -22,7 +22,7 @@ class Nav
         $others = [
             ['label' => 'Agents', 'route' => 'm.agents', 'icon' => 'users', 'match' => '/m/agents', 'can' => 'view_agents'],
             ['label' => 'Ventes', 'route' => 'm.ventes', 'icon' => 'banknotes', 'match' => '/m/ventes', 'can' => 'view_uv_transactions'],
-            ['label' => 'Caisse', 'route' => 'm.caisse', 'icon' => 'wallet', 'match' => '/m/caisse', 'can' => 'view_caisse'],
+            ['label' => 'Dettes', 'route' => 'm.dettes', 'icon' => 'exclamation-triangle', 'match' => '/m/dettes', 'can' => 'view_remboursements'],
             ['label' => 'Plus', 'route' => 'm.more', 'icon' => 'squares-2x2', 'match' => '/m/plus', 'can' => null],
         ];
 
@@ -55,28 +55,32 @@ class Nav
     /**
      * Rubriques natives du menu « Plus » (hors onglets).
      *
-     * @return list<array{label:string, route:string, icon:string, external?:bool}>
+     * @return list<array{section:string, label:string, route:string, icon:string, external?:bool}>
      */
     public static function moreItems(?User $user): array
     {
         $items = [
-            ['label' => 'Dettes', 'route' => 'm.dettes', 'icon' => 'exclamation-triangle', 'can' => 'view_remboursements'],
-            ['label' => 'Commissions', 'route' => 'm.commissions', 'icon' => 'currency-dollar', 'can' => 'view_commissions'],
-            ['label' => 'Remboursements', 'route' => 'm.remboursements', 'icon' => 'arrow-uturn-left', 'can' => 'view_remboursements'],
-            ['label' => 'Approvisionnements', 'route' => 'm.approvisionnements', 'icon' => 'truck', 'can' => 'view_approvisionnements'],
-            ['label' => 'Charges', 'route' => 'm.charges', 'icon' => 'receipt-percent', 'can' => 'view_charges'],
-            ['label' => 'Statistiques', 'route' => 'm.statistiques', 'icon' => 'chart-bar', 'can' => 'view_statistics'],
-            ['label' => 'Scoring des agents', 'route' => 'm.scoring', 'icon' => 'trophy', 'can' => 'view_statistics'],
-            ['label' => 'Rapports et exports', 'route' => 'm.rapports', 'icon' => 'document-arrow-down', 'can' => 'view_reports'],
-            ['label' => 'Journal d\'activité', 'route' => 'm.activite', 'icon' => 'clipboard-document-list', 'can' => 'view_activity_log'],
-            ['label' => 'Import de données', 'route' => 'm.import', 'icon' => 'arrow-up-tray', 'can' => null, 'roles' => ['master', 'admin']],
-            ['label' => 'Sauvegardes', 'route' => 'm.sauvegardes', 'icon' => 'cloud-arrow-up', 'can' => null, 'roles' => ['super_admin']],
-            ['label' => 'Diagnostic des notifications', 'route' => 'm.diagnostic-notifications', 'icon' => 'bell-alert', 'can' => null, 'roles' => ['master', 'admin']],
-            ['label' => 'Mon abonnement', 'route' => 'm.abonnement', 'icon' => 'credit-card', 'can' => null, 'roles' => ['master', 'admin']],
-            ['label' => 'Profil de l\'entreprise', 'route' => 'm.profil', 'icon' => 'building-office', 'can' => 'view_system_settings'],
-            ['label' => 'Mon espace agent', 'route' => 'm.espace-agent', 'icon' => 'user-circle', 'can' => null, 'external' => true, 'when' => fn (?User $user): bool => $user?->agent()->exists() ?? false],
-            ['label' => 'Sécurité du compte', 'route' => 'm.securite', 'icon' => 'shield-check', 'can' => null],
-            ['label' => 'Notifications', 'route' => 'm.notifications', 'icon' => 'bell', 'can' => null],
+            // Argent
+            ['section' => 'Argent', 'label' => 'Caisse', 'route' => 'm.caisse', 'icon' => 'wallet', 'can' => 'view_caisse'],
+            ['section' => 'Argent', 'label' => 'Remboursements', 'route' => 'm.remboursements', 'icon' => 'arrow-uturn-left', 'can' => 'view_remboursements'],
+            ['section' => 'Argent', 'label' => 'Approvisionnements', 'route' => 'm.approvisionnements', 'icon' => 'truck', 'can' => 'view_approvisionnements'],
+            ['section' => 'Argent', 'label' => 'Charges', 'route' => 'm.charges', 'icon' => 'receipt-percent', 'can' => 'view_charges'],
+            ['section' => 'Argent', 'label' => 'Commissions', 'route' => 'm.commissions', 'icon' => 'currency-dollar', 'can' => 'view_commissions'],
+            // Analyse
+            ['section' => 'Analyse', 'label' => 'Statistiques', 'route' => 'm.statistiques', 'icon' => 'chart-bar', 'can' => 'view_statistics'],
+            ['section' => 'Analyse', 'label' => 'Scoring des agents', 'route' => 'm.scoring', 'icon' => 'trophy', 'can' => 'view_statistics'],
+            ['section' => 'Analyse', 'label' => 'Rapports et exports', 'route' => 'm.rapports', 'icon' => 'document-arrow-down', 'can' => 'view_reports'],
+            ['section' => 'Analyse', 'label' => 'Journal d\'activité', 'route' => 'm.activite', 'icon' => 'clipboard-document-list', 'can' => 'view_activity_log'],
+            // Entreprise (les utilisateurs, écran générique, y sont ajoutés par le menu Plus)
+            ['section' => 'Entreprise', 'label' => 'Profil de l\'entreprise', 'route' => 'm.profil', 'icon' => 'building-office', 'can' => 'view_system_settings'],
+            ['section' => 'Entreprise', 'label' => 'Mon abonnement', 'route' => 'm.abonnement', 'icon' => 'credit-card', 'can' => null, 'roles' => ['master', 'admin']],
+            ['section' => 'Entreprise', 'label' => 'Import de données', 'route' => 'm.import', 'icon' => 'arrow-up-tray', 'can' => null, 'roles' => ['master', 'admin']],
+            ['section' => 'Entreprise', 'label' => 'Sauvegardes', 'route' => 'm.sauvegardes', 'icon' => 'cloud-arrow-up', 'can' => null, 'roles' => ['super_admin']],
+            // Mon compte
+            ['section' => 'Mon compte', 'label' => 'Mon espace agent', 'route' => 'm.espace-agent', 'icon' => 'user-circle', 'can' => null, 'external' => true, 'when' => fn (?User $user): bool => $user?->agent()->exists() ?? false],
+            ['section' => 'Mon compte', 'label' => 'Notifications', 'route' => 'm.notifications', 'icon' => 'bell', 'can' => null],
+            ['section' => 'Mon compte', 'label' => 'Sécurité du compte', 'route' => 'm.securite', 'icon' => 'shield-check', 'can' => null],
+            ['section' => 'Mon compte', 'label' => 'Diagnostic des notifications', 'route' => 'm.diagnostic-notifications', 'icon' => 'bell-alert', 'can' => null, 'roles' => ['master', 'admin']],
         ];
 
         return self::visible($items, $user);

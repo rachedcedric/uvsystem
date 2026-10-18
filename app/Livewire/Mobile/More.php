@@ -48,6 +48,12 @@ use Livewire\Component;
 #[Title('Plus')]
 class More extends Component
 {
+    /** Rubriques du menu, dans l'ordre d'affichage ; `true` = repliée par défaut. */
+    private const SECTIONS = ['Argent' => false, 'Analyse' => false, 'Configuration' => true, 'Entreprise' => true, 'Mon compte' => false];
+
+    /** Ordre des écrans de configuration (par identifiant). */
+    private const CONFIGURATION_ORDER = ['fournisseurs', 'modes-paiement', 'categories-charges', 'categories-caisse', 'paliers'];
+
     #[Url(except: '')]
     public string $search = '';
 
@@ -117,6 +123,53 @@ class More extends Component
         }
     }
 
+    /**
+     * Écrans natifs et écrans génériques réunis par rubrique (voir SECTIONS), filtrés par la recherche.
+     * Une rubrique vide disparaît ; une rubrique inconnue est ajoutée à la suite plutôt que perdue.
+     *
+     * @return list<array{title:string, collapsible:bool, items:list<array{label:string, href:string, icon:string, external:bool}>}>
+     */
+    private function sections(User $user): array
+    {
+        $entries = [];
+
+        foreach (Nav::moreItems($user) as $item) {
+            $entries[] = [
+                'section' => $item['section'], 'label' => $item['label'], 'href' => route($item['route']),
+                'icon' => $item['icon'], 'external' => ! empty($item['external']), 'rank' => 1,
+            ];
+        }
+
+        foreach (Registry::menuFor($user) as $group => $resources) {
+            foreach ($resources as $resource) {
+                $slug = $resource::slug();
+                $entries[] = [
+                    'section' => $group, 'label' => $resource::plural(), 'href' => route('m.crud.index', $slug),
+                    'icon' => $resource::icon(), 'external' => false,
+                    // Configuration : ordre fixe ; Entreprise : les utilisateurs avant les pages natives.
+                    'rank' => $group === 'Configuration' ? (int) array_search($slug, self::CONFIGURATION_ORDER, true) : 0,
+                ];
+            }
+        }
+
+        $bySection = collect($entries)
+            ->filter(fn (array $entry): bool => $this->matchesSearch($entry['label']))
+            ->sortBy('rank') // tri stable : à rang égal, l'ordre de déclaration est conservé
+            ->groupBy('section');
+
+        $titles = array_merge(array_keys(self::SECTIONS), $bySection->keys()->diff(array_keys(self::SECTIONS))->all());
+
+        return collect($titles)
+            ->map(fn (string $title): array => [
+                'title' => $title,
+                'collapsible' => self::SECTIONS[$title] ?? false,
+                'items' => $bySection->get($title, collect())->map(fn (array $entry): array => collect($entry)->only(['label', 'href', 'icon', 'external'])->all())->values()->all(),
+            ])
+            ->filter(fn (array $section): bool => $section['items'] !== [])
+            ->values()
+            ->all();
+    }
+
     private function matchesSearch(string $value): bool
     {
         $needle = Str::lower(Str::ascii(trim($this->search)));
@@ -132,20 +185,11 @@ class More extends Component
         $company = $user->tenant;
         $hasLogo = $company && app(TenantDocumentBranding::class)->storedLogoPath($company) !== null;
 
-        $native = Nav::moreItems($user);
-        $resourceGroups = Registry::menuFor($user);
+        $sections = $this->sections($user);
         $groups = $this->fullVersionGroups();
         $searchActive = trim($this->search) !== '';
 
         if ($searchActive) {
-            $native = array_values(array_filter($native, fn (array $item): bool => $this->matchesSearch($item['label'])));
-            $resourceGroups = collect($resourceGroups)
-                ->map(fn (array $resources): array => array_values(array_filter(
-                    $resources,
-                    fn (string $resource): bool => $this->matchesSearch($resource::plural()),
-                )))
-                ->filter()
-                ->all();
             $groups = collect($groups)
                 ->map(function (array $group): array {
                     if ($this->matchesSearch($group['label'])) {
@@ -164,8 +208,7 @@ class More extends Component
                 ->all();
         }
 
-        $resultCount = count($native)
-            + collect($resourceGroups)->sum(fn (array $resources): int => count($resources))
+        $resultCount = collect($sections)->sum(fn (array $section): int => count($section['items']))
             + collect($groups)->sum(fn (array $group): int => count($group['items']));
 
         return view('livewire.mobile.more', [
@@ -173,8 +216,7 @@ class More extends Component
             'company' => $company,
             'companyLogo' => $hasLogo ? route('tenant.branding.logo', ['v' => $company->updated_at?->timestamp], false) : null,
             'role' => $user->getRoleNames()->first(),
-            'native' => $native,
-            'resourceGroups' => $resourceGroups,
+            'sections' => $sections,
             'groups' => $groups,
             'searchActive' => $searchActive,
             'resultCount' => $resultCount,

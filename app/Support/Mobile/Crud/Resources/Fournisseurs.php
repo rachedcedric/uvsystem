@@ -41,7 +41,7 @@ class Fournisseurs extends MobileResource
 
     public static function group(): string
     {
-        return 'Approvisionnement';
+        return 'Configuration';
     }
 
     public static function searchColumns(): array

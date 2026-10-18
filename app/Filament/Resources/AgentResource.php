@@ -9,6 +9,7 @@ use App\Models\Agent;
 use App\Models\User;
 use App\Notifications\PaymentReminderNotification;
 use App\Services\SmsService;
+use App\Support\Money;
 use App\Tenancy\TenantContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
@@ -96,13 +97,13 @@ class AgentResource extends Resource
                         Forms\Components\TextInput::make('debt_limit')
                             ->label('Plafond de dette')
                             ->money(min: 0, max: 999999999)
-                            ->default(500000)
-                            ->helperText('Montant maximum de crédit autorisé'),
+                            // Aucune valeur imposée : le master choisit. Laissé vide, le champ est enregistré VIDE (null), pas 0.
+                            ->dehydrateStateUsing(fn ($state) => ($state === null || $state === '') ? null : Money::toFloat($state))
+                            ->helperText('Montant maximum de crédit autorisé. Laissez vide pour ne fixer aucune limite.'),
                         Forms\Components\TextInput::make('commission_rate')
                             ->label('Taux de commission')
                             ->numeric()
                             ->suffix('%')
-                            ->default(5)
                             ->minValue(0)
                             ->maxValue(100)
                             ->step(0.5)

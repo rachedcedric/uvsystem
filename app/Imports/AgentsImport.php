@@ -40,8 +40,9 @@ class AgentsImport implements SkipsOnError, SkipsOnFailure, ToModel, WithBatchIn
             'email' => $row['email'] ?? null,
             'adresse' => $row['adresse'] ?? null,
             'zone' => $row['zone'] ?? null,
-            'commission_rate' => $row['commission_rate'] ?? 5.00,
-            'plafond_dette' => $row['plafond_dette'] ?? 500000,
+            // Aucune valeur imposée quand la colonne est absente : le champ reste vide (null).
+            'commission_rate' => $row['commission_rate'] ?? null,
+            'plafond_dette' => $row['plafond_dette'] ?? null,
             'status' => $row['status'] ?? 'active',
             'notes' => $row['notes'] ?? null,
         ]);

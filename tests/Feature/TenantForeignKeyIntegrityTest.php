@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Filament\Pages\ChargesPage;
 use App\Filament\Resources\AgentSoldeResource\Pages\CreateAgentSolde;
 use App\Filament\Resources\ApprovisionnementResource\Pages\CreateApprovisionnement;
-use App\Filament\Resources\SousDistributeurResource\Pages\CreateSousDistributeur;
 use App\Livewire\Mobile\Crud;
 use App\Models\Agent;
 use App\Models\AgentSolde;
@@ -226,10 +225,8 @@ class TenantForeignKeyIntegrityTest extends TestCase
             ->call('create')
             ->assertHasErrors(['fournisseur_id']);
 
-        Livewire::test(CreateSousDistributeur::class)
-            ->fillForm(['agent_id' => $this->agentB->id, 'nom' => 'Z', 'telephone' => '0700000004', 'type' => 'standard', 'statut' => 'actif'])
-            ->call('create')
-            ->assertHasErrors(['agent_id']);
+        // Les sous-distributeurs n'existent plus pour un master : le formulaire est fermé (la garde du modèle reste testée plus haut).
+        $this->get('/master/sous-distributeurs/create')->assertForbidden();
 
         Livewire::test(CreateAgentSolde::class)->fillForm(['agent_id' => $this->agentB->id])->call('create')->assertHasErrors(['agent_id']);
 

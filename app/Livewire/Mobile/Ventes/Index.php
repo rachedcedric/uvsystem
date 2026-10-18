@@ -103,6 +103,9 @@ class Index extends Component
             'filtersActive' => trim($this->search) !== '' || $this->period !== 'week',
             'canCreate' => auth()->user()->can('create', UvTransaction::class),
             'stats' => app(PeriodStats::class)->summary('ventes'),
+            'yesterday' => app(PeriodStats::class)->yesterday('ventes'),
+            'daily' => app(PeriodStats::class)->monthDaily('ventes'),
+            'trend' => app(PeriodStats::class)->weekTrend('ventes'),
             'topToday' => app(MonthOverview::class)->topAgentsToday(),
             'canExport' => auth()->user()->can('export_uv_transactions'),
         ]);

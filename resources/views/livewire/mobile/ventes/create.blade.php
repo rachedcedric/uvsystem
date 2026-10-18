@@ -20,7 +20,7 @@
         @endif
 
         <x-m.field label="Montant" :error="$errors->first('amount')">
-            <x-m.money model="amount" :quick="['25 000' => 25000, '50 000' => 50000, '100 000' => 100000, '250 000' => 250000]" />
+            <x-m.money model="amount" :quick="['500 000' => 500000, '1 000 000' => 1000000, '2 000 000' => 2000000, '5 000 000' => 5000000]" />
         </x-m.field>
 
         @if ($this->warning)

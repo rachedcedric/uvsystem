@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\JekoPaymentMethod;
 use App\Enums\SubscriptionCycle;
 use App\Enums\SubscriptionStatus;
 use App\Exceptions\InvalidSubscriptionTransition;
@@ -42,6 +43,8 @@ class SubscriptionPage extends Page
 
     public string $cycle = 'monthly';
 
+    public ?string $paymentMethod = null;
+
     public static function canAccess(): bool
     {
         return auth()->user()?->can('viewAny', TenantSubscription::class) ?? false;
@@ -65,11 +68,19 @@ class SubscriptionPage extends Page
         $this->authorizeTenantManager();
 
         try {
+            $tenant = $this->tenant();
+            $plan = SubscriptionPlan::query()->active()->findOrFail($planId);
+            $cycle = SubscriptionCycle::tryFrom($this->cycle) ?? SubscriptionCycle::Monthly;
+            $current = app(SubscriptionManager::class)->current($tenant);
+            $amountDue = $current === null ? 0 : app(SubscriptionProration::class)->quote($current, $plan, $cycle)['amount_due'];
+
             $request = app(SubscriptionBilling::class)->requestChange(
-                $this->tenant(),
-                SubscriptionPlan::query()->active()->findOrFail($planId),
-                SubscriptionCycle::tryFrom($this->cycle) ?? SubscriptionCycle::Monthly,
+                $tenant,
+                $plan,
+                $cycle,
                 auth()->user(),
+                null,
+                $this->paymentMethodFor($amountDue),
             );
 
             Notification::make()
@@ -106,7 +117,12 @@ class SubscriptionPage extends Page
         $this->authorizeTenantManager();
 
         try {
-            $this->redirectToPayment(app(SubscriptionBilling::class)->request($this->tenant()));
+            $tenant = $this->tenant();
+            $this->redirectToPayment(app(SubscriptionBilling::class)->request(
+                $tenant,
+                null,
+                $this->paymentMethodFor(app(SubscriptionBilling::class)->amountDue($tenant)),
+            ));
         } catch (InvalidSubscriptionTransition $exception) {
             Notification::make()->title('Renouvellement impossible')->body($exception->getMessage())->danger()->send();
         } catch (Throwable $exception) {
@@ -191,12 +207,23 @@ class SubscriptionPage extends Page
                 ->with('plan')->where('status', SubscriptionChangeRequest::PENDING)->latest('id')->first(),
             'pendingPayments' => SubscriptionPayment::query()
                 ->where('status', SubscriptionPayment::PENDING)->latest('id')->get(),
+            'paymentMethods' => collect(JekoPaymentMethod::cases())->mapWithKeys(fn (JekoPaymentMethod $method) => [$method->value => $method->label()])->all(),
         ];
     }
 
     private function authorizeTenantManager(): void
     {
         abort_unless(static::canAccess(), 403);
+    }
+
+    private function paymentMethodFor(int $amount): ?string
+    {
+        if ($amount <= 0 || config('subscriptions.default_gateway') !== 'jeko') {
+            return null;
+        }
+
+        return JekoPaymentMethod::tryFrom((string) $this->paymentMethod)?->value
+            ?? throw new InvalidSubscriptionTransition('Choisissez votre moyen de paiement.');
     }
 
     private function tenant(): Tenant

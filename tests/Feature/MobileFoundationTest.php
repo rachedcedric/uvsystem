@@ -159,7 +159,8 @@ class MobileFoundationTest extends TestCase
             ->assertOk()
             ->assertSee($user->name)
             ->assertSee('Se déconnecter')
-            ->assertSee('Opérations')
+            ->assertSee('Mon compte')
+            ->assertDontSee('Argent')
             ->assertDontSee('Ventes UV');
     }
 
@@ -202,15 +203,15 @@ class MobileFoundationTest extends TestCase
 
         $labels = fn (User $u) => array_column(Nav::tabs($u), 'label');
 
-        // Tous les onglets : Agents, Ventes, [Accueil], Caisse, Plus.
+        // Tous les onglets : Agents, Ventes, [Accueil], Dettes, Plus (la Caisse est dans le menu « Plus »).
         $master = User::factory()->create();
         $master->assignRole('master');
-        $this->assertSame(['Agents', 'Ventes', 'Accueil', 'Caisse', 'Plus'], $labels($master));
+        $this->assertSame(['Agents', 'Ventes', 'Accueil', 'Dettes', 'Plus'], $labels($master));
 
         // Un onglet masqué par les permissions ne décale pas Accueil vers un bord.
         $limited = User::factory()->create();
-        $limited->givePermissionTo(['view_uv_transactions', 'view_caisse']);
-        $this->assertSame(['Ventes', 'Accueil', 'Caisse', 'Plus'], $labels($limited));
+        $limited->givePermissionTo(['view_uv_transactions', 'view_remboursements']);
+        $this->assertSame(['Ventes', 'Accueil', 'Dettes', 'Plus'], $labels($limited));
 
         $minimal = User::factory()->create();
         $this->assertSame(['Accueil', 'Plus'], $labels($minimal));
@@ -218,8 +219,8 @@ class MobileFoundationTest extends TestCase
         // La barre rendue respecte cet ordre.
         $html = $this->actingAs($master)->get('/m')->getContent();
         preg_match('/<nav class="m-tabbar".*?<\/nav>/s', $html, $nav);
-        preg_match_all('/<span>(Agents|Ventes|Accueil|Caisse|Plus)<\/span>/', $nav[0], $found);
-        $this->assertSame(['Agents', 'Ventes', 'Accueil', 'Caisse', 'Plus'], $found[1]);
+        preg_match_all('/<span>(Agents|Ventes|Accueil|Dettes|Plus)<\/span>/', $nav[0], $found);
+        $this->assertSame(['Agents', 'Ventes', 'Accueil', 'Dettes', 'Plus'], $found[1]);
     }
 
     public function test_fcfa_formatting(): void

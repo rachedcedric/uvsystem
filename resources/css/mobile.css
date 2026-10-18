@@ -401,6 +401,9 @@ html {
 }
 
 .m-stat {
+    display: block;
+    color: inherit;
+    text-decoration: none;
     flex: none;
     width: 152px;
     padding: 13px 14px 12px;
@@ -410,7 +413,7 @@ html {
     transition: transform 0.12s;
 }
 
-a.m-stat:active {
+a.m-stat[href]:active {
     transform: scale(0.97);
 }
 
@@ -2011,6 +2014,38 @@ body:has(.m-offline[data-show]) .m-appbar {
     aspect-ratio: 1;
     object-fit: contain;
     border-radius: inherit;
+}
+
+.m-fold {
+    margin-top: 22px;
+}
+
+.m-fold__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 8px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.m-fold__head::-webkit-details-marker {
+    display: none;
+}
+
+.m-fold__head .m-section__title {
+    margin: 0;
+}
+
+.m-fold__chev {
+    width: 18px;
+    height: 18px;
+    color: var(--fg-3);
+    transition: transform 0.18s;
+}
+
+.m-fold[open] .m-fold__chev {
+    transform: rotate(180deg);
 }
 
 .m-sound-tests {

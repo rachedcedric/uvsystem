@@ -4,7 +4,6 @@ namespace Tests\Feature\Subscriptions;
 
 use App\Enums\SubscriptionCycle;
 use App\Livewire\Mobile\Admin\Import;
-use App\Livewire\Mobile\Analytics\Scoring;
 use App\Livewire\Mobile\Crud;
 use App\Livewire\Mobile\Subscription\Show;
 use App\Models\Agent;
@@ -91,17 +90,15 @@ class SubscriptionTenantAccessTest extends SubscriptionTestCase
         $this->assertSame(1, User::withoutGlobalScopes()->where('tenant_id', $tenant->id)->count());
     }
 
-    public function test_the_mobile_import_and_scoring_depend_on_the_plan_features(): void
+    public function test_the_mobile_import_depends_on_the_plan_features(): void
     {
         $essentiel = $this->tenantOn('essentiel');
         $this->actingAs($this->userIn($essentiel));
         Livewire::test(Import::class)->assertForbidden();
-        Livewire::test(Scoring::class)->assertForbidden();
 
         $pro = $this->tenantOn('pro');
         $this->actingAs($this->userIn($pro));
         Livewire::test(Import::class)->assertSuccessful();
-        Livewire::test(Scoring::class)->assertSuccessful();
     }
 
     public function test_the_mobile_import_stops_at_the_agent_limit_and_reports_the_rows(): void

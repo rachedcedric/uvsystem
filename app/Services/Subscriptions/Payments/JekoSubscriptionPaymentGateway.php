@@ -2,6 +2,7 @@
 
 namespace App\Services\Subscriptions\Payments;
 
+use App\Enums\JekoPaymentMethod;
 use App\Models\SubscriptionPayment;
 use App\Models\TenantSubscription;
 use App\Tenancy\TenantContext;
@@ -38,6 +39,9 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
             throw new InvalidArgumentException('Jèko exige un montant d’au moins 100 FCFA et multiple de 100.');
         }
 
+        $paymentMethod = JekoPaymentMethod::tryFrom((string) ($metadata['payment_method'] ?? ''))
+            ?? throw new InvalidArgumentException('Moyen de paiement Jèko invalide.');
+
         $payment = TenantContext::runAs((int) $subscription->tenant_id, fn () => SubscriptionPayment::create([
             'tenant_subscription_id' => $subscription->getKey(),
             'amount' => $amount,
@@ -45,7 +49,7 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
             'status' => SubscriptionPayment::PENDING,
             'gateway' => self::NAME,
             'metadata' => array_merge($metadata, [
-                'payment_method' => config('services.jeko.payment_method', 'wave'),
+                'payment_method' => $paymentMethod->value,
             ]),
         ]));
 
@@ -60,7 +64,7 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
                 'paymentDetails' => [
                     'type' => 'redirect',
                     'data' => [
-                        'paymentMethod' => config('services.jeko.payment_method', 'wave'),
+                        'paymentMethod' => $paymentMethod->value,
                         'successUrl' => $this->callbackUrl('payments.jeko.success', $merchantReference),
                         'errorUrl' => $this->callbackUrl('payments.jeko.error', $merchantReference),
                     ],

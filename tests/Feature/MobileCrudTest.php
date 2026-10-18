@@ -11,7 +11,6 @@ use App\Models\Charge;
 use App\Models\ChargeCategorie;
 use App\Models\Fournisseur;
 use App\Models\PalierCommission;
-use App\Models\SousDistributeur;
 use App\Models\User;
 use App\Support\Mobile\Crud\Registry;
 use App\Support\Mobile\Crud\Resources\CategoriesCaisse;
@@ -91,8 +90,11 @@ class MobileCrudTest extends TestCase
     {
         Agent::factory()->create(['phone' => '0700000001']);
 
+        // Le plafond de dette et le taux de commission ne portent AUCUNE valeur imposée : le master les choisit.
+        // Seul le statut garde son défaut.
         Livewire::test(Crud\Form::class, ['resource' => 'agents'])
-            ->assertSet('data.debt_limit', '500000')
+            ->assertSet('data.debt_limit', '')
+            ->assertSet('data.commission_rate', '')
             ->assertSet('data.status', 'active')
             ->set('data.name', 'Doublon')->set('data.phone', '0700000001')
             ->call('save')
@@ -222,18 +224,20 @@ class MobileCrudTest extends TestCase
         $this->assertFalse(CategoriesCharges::canDelete($this->master, $cat));
     }
 
-    public function test_sub_distributor_form_and_pages_render(): void
+    public function test_masters_have_no_sub_distributors_nor_partner_agents(): void
     {
-        $agent = Agent::factory()->create(['name' => 'Agent Parent']);
+        // Un master n'a que des agents : ces deux écrans ne sont ni dans le menu « Plus » ni accessibles par URL.
+        $this->assertNull(Registry::find('sous-distributeurs'));
+        $this->assertNull(Registry::find('agents-partenaires'));
 
-        Livewire::test(Crud\Form::class, ['resource' => 'sous-distributeurs'])
-            ->set('data.agent_id', (string) $agent->id)->set('data.nom', 'Sous Moussa')->set('data.telephone', '0712121212')
-            ->call('save')->assertHasNoErrors();
+        foreach (['sous-distributeurs', 'agents-partenaires'] as $slug) {
+            $this->get(route('m.crud.index', $slug))->assertNotFound();
+            $this->get(route('m.crud.create', $slug))->assertNotFound();
+        }
 
-        $sd = SousDistributeur::firstOrFail();
-        $this->get(route('m.crud.index', 'sous-distributeurs'))->assertOk()->assertSee('Sous Moussa');
-        $this->get(route('m.crud.show', ['sous-distributeurs', $sd->id]))->assertOk()->assertSee('Agent Parent');
-        $this->get(route('m.crud.edit', ['sous-distributeurs', $sd->id]))->assertOk();
+        $menu = collect(Registry::menuFor($this->master))->flatten()->map(fn ($resource) => $resource::slug());
+        $this->assertFalse($menu->contains('sous-distributeurs'));
+        $this->assertFalse($menu->contains('agents-partenaires'));
     }
 
     public function test_agent_screens_expose_create_edit_and_delete(): void

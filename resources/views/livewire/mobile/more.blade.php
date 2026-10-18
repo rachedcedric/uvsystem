@@ -27,6 +27,38 @@
         @endif
     </div>
 
+
+    @if ($searchActive && $resultCount === 0)
+        <div class="m-group m-more-empty">
+            <x-m.empty icon="magnifying-glass" title="Aucun résultat" text="Essayez un autre mot-clé." />
+        </div>
+    @endif
+
+    @foreach ($sections as $section)
+        @if ($section['collapsible'])
+            {{-- Rubriques rarement utilisées : repliées, sauf pendant une recherche. --}}
+            <details class="m-fold" wire:key="more-{{ $section['title'] }}" @if ($searchActive) open @endif>
+                <summary class="m-fold__head">
+                    <h2 class="m-section__title">{{ $section['title'] }}</h2>
+                    <x-m.icon name="chevron-down" class="m-fold__chev" />
+                </summary>
+                <div class="m-group">
+                    @foreach ($section['items'] as $item)
+                        <x-m.row :href="$item['href']" :icon="$item['icon']" :title="$item['label']" :external="$item['external']" />
+                    @endforeach
+                </div>
+            </details>
+        @else
+            <x-m.section :title="$section['title']" wire:key="more-{{ $section['title'] }}">
+                <div class="m-group">
+                    @foreach ($section['items'] as $item)
+                        <x-m.row :href="$item['href']" :icon="$item['icon']" :title="$item['label']" :external="$item['external']" />
+                    @endforeach
+                </div>
+            </x-m.section>
+        @endif
+    @endforeach
+
     @unless ($searchActive)
         <x-m.section title="Préférences">
         <div class="m-group">
@@ -54,32 +86,6 @@
         </div>
         </x-m.section>
     @endunless
-
-    @if ($searchActive && $resultCount === 0)
-        <div class="m-group m-more-empty">
-            <x-m.empty icon="magnifying-glass" title="Aucun résultat" text="Essayez un autre mot-clé." />
-        </div>
-    @endif
-
-    @if ($native)
-        <x-m.section title="Opérations">
-            <div class="m-group">
-                @foreach ($native as $item)
-                    <x-m.row :href="route($item['route'])" :icon="$item['icon']" :title="$item['label']" :external="! empty($item['external'])" />
-                @endforeach
-            </div>
-        </x-m.section>
-    @endif
-
-    @foreach ($resourceGroups as $groupLabel => $resources)
-        <x-m.section :title="$groupLabel">
-            <div class="m-group">
-                @foreach ($resources as $resource)
-                    <x-m.row :href="route('m.crud.index', $resource::slug())" :icon="$resource::icon()" :title="$resource::plural()" />
-                @endforeach
-            </div>
-        </x-m.section>
-    @endforeach
 
     @if ($groups)
         <div class="m-section__head m-more-external__head">

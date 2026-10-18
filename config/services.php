@@ -35,7 +35,6 @@ return [
         'api_key_id' => env('JEKO_API_KEY_ID'),
         'store_id' => env('JEKO_STORE_ID'),
         'webhook_secret' => env('JEKO_WEBHOOK_SECRET'),
-        'payment_method' => env('JEKO_PAYMENT_METHOD', 'wave'),
         'redirect_hosts' => ['pay.jeko.africa', 'link.jeko.africa'],
     ],
 

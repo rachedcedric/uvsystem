@@ -68,11 +68,18 @@
     @if ($subscription)
         <x-m.section title="Renouvellement">
             <div class="m-group">
+                @if (config('subscriptions.default_gateway') === 'jeko')
+                    <div style="padding:12px 14px">
+                        <x-m.field label="Moyen de paiement">
+                            <x-m.option-picker :options="$paymentMethods" model="paymentMethod" :selected="$paymentMethod" label="Choisir un moyen de paiement" />
+                        </x-m.field>
+                    </div>
+                @endif
                 <x-m.row icon="arrow-path" :chevron="false" title="Renouvellement automatique"
                          :sub="$subscription->auto_renew ? 'Activée : une facture est émise à l\'échéance.' : 'Désactivée.'">
                     <x-slot:end><button type="button" class="m-btn m-btn--ghost" style="min-height:44px;min-width:44px" wire:click="toggleAutoRenew">{{ $subscription->auto_renew ? 'Désactiver' : 'Activer' }}</button></x-slot:end>
                 </x-m.row>
-                <x-m.row icon="banknotes" :chevron="false" title="Renouveler maintenant" sub="Paiement sécurisé via Jèko.">
+                <x-m.row icon="banknotes" :chevron="false" title="Renouveler maintenant" sub="Choisissez votre moyen, puis payez via Jèko.">
                     <x-slot:end><button type="button" class="m-btn" style="min-height:44px" wire:click="renew">Payer</button></x-slot:end>
                 </x-m.row>
             </div>

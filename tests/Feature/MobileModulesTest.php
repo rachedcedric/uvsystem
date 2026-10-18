@@ -495,7 +495,7 @@ class MobileModulesTest extends TestCase
     public function test_more_page_offers_native_sections_without_duplicating_ported_screens(): void
     {
         Livewire::test(More::class)
-            ->assertSee('Opérations')->assertSee('Remboursements')->assertSee('Approvisionnements')->assertSee('Charges');
+            ->assertSee('Argent')->assertSee('Remboursements')->assertSee('Approvisionnements')->assertSee('Charges');
     }
 
     public function test_mobile_pages_render_through_http_for_an_admin(): void

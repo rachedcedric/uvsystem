@@ -41,7 +41,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         ]);
     }
 
-    public function test_it_creates_a_jeko_checkout_request_and_persists_the_redirect_url(): void
+    public function test_it_creates_a_jeko_checkout_with_the_selected_payment_method(): void
     {
         Http::fake([
             'https://api.jeko.africa/partner_api/payment_requests' => Http::response([
@@ -55,12 +55,13 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $tenant = $this->tenant();
         app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
 
-        $payment = app(SubscriptionBilling::class)->request($tenant, 'jeko');
+        $payment = app(SubscriptionBilling::class)->request($tenant, 'jeko', 'orange');
 
         $this->assertSame(SubscriptionPayment::PENDING, $payment->status);
         $this->assertSame('jeko', $payment->gateway);
         $this->assertSame('payreq-123', $payment->provider_reference);
         $this->assertSame('https://pay.jeko.africa/pay_request/pr/payreq-123', $payment->metadata['redirect_url']);
+        $this->assertSame('orange', $payment->metadata['payment_method']);
         $this->assertNotEmpty($payment->metadata['merchant_reference']);
 
         Http::assertSent(function (Request $request) use ($payment): bool {
@@ -72,10 +73,25 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
                 && $request['currency'] === 'XOF'
                 && $request['reference'] === $payment->metadata['merchant_reference']
                 && $request['paymentDetails']['type'] === 'redirect'
-                && $request['paymentDetails']['data']['paymentMethod'] === 'wave'
+                && $request['paymentDetails']['data']['paymentMethod'] === 'orange'
                 && str_starts_with($request['paymentDetails']['data']['successUrl'], 'https://uvmaster.test/paiements/jeko/succes')
                 && str_starts_with($request['paymentDetails']['data']['errorUrl'], 'https://uvmaster.test/paiements/jeko/erreur');
         });
+    }
+
+    public function test_an_invalid_payment_method_is_rejected_without_calling_jeko(): void
+    {
+        Http::fake();
+
+        $tenant = $this->tenant();
+        app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
+
+        $this->assertThrows(
+            fn () => app(SubscriptionBilling::class)->request($tenant, 'jeko', 'card'),
+            \InvalidArgumentException::class,
+        );
+
+        Http::assertNothingSent();
     }
 
     public function test_a_signed_success_webhook_renews_once_and_rejects_tampering(): void
@@ -92,7 +108,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $tenant = $this->tenant();
         $manager = app(SubscriptionManager::class);
         $manager->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
-        $payment = app(SubscriptionBilling::class)->request($tenant, 'jeko');
+        $payment = app(SubscriptionBilling::class)->request($tenant, 'jeko', 'wave');
         $initialEnd = $manager->current($tenant)->current_period_ends_at->copy();
 
         $payload = [
@@ -158,7 +174,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
 
         $this->assertThrows(
-            fn () => app(SubscriptionBilling::class)->request($tenant, 'jeko'),
+            fn () => app(SubscriptionBilling::class)->request($tenant, 'jeko', 'wave'),
             RuntimeException::class,
         );
 
@@ -224,7 +240,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $subscription = app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
 
         $this->assertThrows(
-            fn () => app(JekoSubscriptionPaymentGateway::class)->initiate($subscription, 10000),
+            fn () => app(JekoSubscriptionPaymentGateway::class)->initiate($subscription, 10000, ['payment_method' => 'wave']),
             RuntimeException::class,
             'base_url doit être en HTTPS'
         );
@@ -249,7 +265,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $tenant = $this->tenant();
         app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
         $billing = app(SubscriptionBilling::class);
-        $request = $billing->requestChange($tenant, $this->plan('entreprise'), SubscriptionCycle::Monthly, null, 'jeko');
+        $request = $billing->requestChange($tenant, $this->plan('entreprise'), SubscriptionCycle::Monthly, null, 'jeko', 'wave');
 
         $this->assertThrows(
             fn () => $billing->cancelPendingRequests($tenant),
@@ -289,6 +305,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
             SubscriptionCycle::Monthly,
             null,
             'jeko',
+            'wave',
         );
         $payment = TenantContext::withoutTenancy(fn () => SubscriptionPayment::query()->where('tenant_id', $tenant->id)->latest('id')->firstOrFail());
 
@@ -316,6 +333,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
                 SubscriptionCycle::Monthly,
                 null,
                 'jeko',
+                'wave',
             ),
             RuntimeException::class,
         );
@@ -384,11 +402,31 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
         $this->actingAs($this->userIn($tenant));
 
-        $component = Livewire::test(Show::class)->call('renew')->assertNoRedirect();
+        $component = Livewire::test(Show::class)
+            ->set('paymentMethod', 'orange')
+            ->call('renew')
+            ->assertNoRedirect();
 
         $scripts = implode(' ', array_map(fn ($script) => is_array($script) ? ($script['expression'] ?? '') : (string) $script, $component->effects['xjs'] ?? []));
         $this->assertStringContainsString('window.uvmasterOpenExternal', $scripts, 'ouverture par le pont natif (onglet intégré à l\'appli)');
         $this->assertStringContainsString('https://pay.jeko.africa/pay_request/pr/payreq-in-app', $scripts);
+    }
+
+    public function test_the_mobile_checkout_requires_an_explicit_payment_method(): void
+    {
+        config()->set('subscriptions.default_gateway', 'jeko');
+        Http::fake();
+        $tenant = $this->tenant();
+        app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
+        $this->actingAs($this->userIn($tenant));
+
+        Livewire::test(Show::class)
+            ->call('renew')
+            ->assertSet('error', 'Choisissez votre moyen de paiement.')
+            ->assertDispatched('m-toast');
+
+        Http::assertNothingSent();
+        $this->assertSame([], TenantContext::runAs($tenant->id, fn () => SubscriptionPayment::query()->pluck('status')->all()));
     }
 
     public function test_a_one_shot_message_does_not_survive_the_next_refresh_of_the_page(): void
@@ -414,6 +452,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $this->actingAs($this->userIn($tenant));
 
         Livewire::test(Show::class)
+            ->set('paymentMethod', 'wave')
             ->call('renew')
             ->assertSet('error', 'Le service Jèko ne répond pas. Réessayez dans quelques instants.')
             ->assertDispatched('m-toast');

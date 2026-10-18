@@ -89,10 +89,14 @@ class DataImporter
         if ($email && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->fail('Adresse e-mail invalide.');
         }
-        $rate = $row['commission_rate'] ?? 5;
-        if (! is_numeric($rate) || $rate < 0 || $rate > 100) {
+        // Colonne absente ou cellule vide : aucune valeur imposée, le champ reste vide (null).
+        $rate = $row['commission_rate'] ?? null;
+        $rate = ($rate === null || trim((string) $rate) === '') ? null : $rate;
+        if ($rate !== null && (! is_numeric($rate) || $rate < 0 || $rate > 100)) {
             $this->fail('Taux de commission invalide (0 à 100).');
         }
+        $limit = $row['plafond_dette'] ?? null;
+        $limit = ($limit === null || trim((string) $limit) === '') ? null : Money::toFloat($limit);
         $status = $row['status'] ?? 'active';
         if (! in_array($status, ['active', 'inactive', 'suspended'], true)) {
             $this->fail('Statut invalide (active, inactive ou suspended).');
@@ -105,8 +109,8 @@ class DataImporter
             'address' => $row['adresse'] ?? null,
             'zone' => $row['zone'] ?? null,
             'type' => 'standard',
-            'debt_limit' => Money::toFloat($row['plafond_dette'] ?? 500000),
-            'commission_rate' => (float) $rate,
+            'debt_limit' => $limit,
+            'commission_rate' => $rate === null ? null : (float) $rate,
             'status' => $status,
             'notes' => $row['notes'] ?? null,
         ]);

@@ -74,9 +74,11 @@ class RecalculateCommissionsCommand extends Command
                     continue;
                 }
 
-                // Calculer la commission
-                $commissionRate = $agent->commission_rate ?? 5.00; // Taux par défaut 5%
-                $commissionAmount = ($transaction->amount * $commissionRate) / 100;
+                // Un taux vide reste vide : seul le master peut en choisir un.
+                $commissionRate = $agent->commission_rate;
+                $commissionAmount = $commissionRate === null
+                    ? null
+                    : ($transaction->amount * $commissionRate) / 100;
 
                 if (! $dryRun) {
                     $transaction->update([
@@ -87,7 +89,7 @@ class RecalculateCommissionsCommand extends Command
                 }
 
                 $updated++;
-                $totalCommissions += $commissionAmount;
+                $totalCommissions += $commissionAmount ?? 0;
                 $progressBar->advance();
 
             } catch (\Exception $e) {

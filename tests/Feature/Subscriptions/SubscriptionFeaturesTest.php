@@ -6,8 +6,10 @@ use App\Contracts\PushNotification;
 use App\Enums\SubscriptionCycle;
 use App\Exceptions\SubscriptionLimitReached;
 use App\Exports\AgentsExport;
+use App\Filament\Pages\AgentScoringPage;
 use App\Filament\Pages\RapportStatistiques;
 use App\Filament\Pages\StatisticsPage;
+use App\Livewire\Mobile\Analytics\Scoring;
 use App\Livewire\Mobile\Analytics\Statistics;
 use App\Models\Agent;
 use App\Models\Charge;
@@ -45,15 +47,13 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
 {
     /** fonctionnalité => test qui prouve son application */
     private const COVERAGE = [
-        'statistiques_essentielles' => 'test_statistiques_essentielles',
         'statistiques_avancees' => 'test_statistiques_avancees',
         'exports_pdf' => 'test_exports_pdf_and_excel',
         'exports_excel' => 'test_exports_pdf_and_excel',
         'exports_avances' => 'test_exports_avances',
         'notifications_dettes' => 'test_notifications_dettes',
         'notifications_push' => 'test_notifications_push',
-        'scoring_agents' => 'SubscriptionTenantAccessTest::test_the_mobile_import_and_scoring_depend_on_the_plan_features',
-        'import_donnees' => 'SubscriptionTenantAccessTest::test_the_mobile_import_and_scoring_depend_on_the_plan_features',
+        'import_donnees' => 'SubscriptionTenantAccessTest::test_the_mobile_import_depends_on_the_plan_features',
         'rapports_avances' => 'test_rapports_avances',
         'sauvegardes_dediees' => 'test_sauvegardes_dediees',
     ];
@@ -93,19 +93,23 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
 
     // ---------------------------------------------------------------- statistiques
 
-    public function test_statistiques_essentielles(): void
+    public function test_statistics_and_scoring_are_open_to_every_master_whatever_the_plan(): void
     {
-        [, $without] = $this->tenantWith(['exports_pdf']);
-        [, $with] = $this->tenantWith(['statistiques_essentielles']);
+        $this->assertSame(['statistiques_essentielles', 'scoring_agents'], FeatureCatalog::openFeatures());
+        $this->assertNotContains('scoring_agents', FeatureCatalog::enforcedFeatures());
 
-        $this->actingAs($without);
-        Livewire::test(Statistics::class)->assertForbidden();
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-        Livewire::test(StatisticsPage::class)->assertForbidden();
+        // Offre sans ces fonctionnalités, puis tenant sans aucun abonnement : les pages restent ouvertes au master.
+        [, $withoutFeatures] = $this->tenantWith(['exports_pdf']);
+        $noSubscription = $this->userIn($this->tenant());
 
-        $this->actingAs($with);
-        Livewire::test(Statistics::class)->assertSuccessful();
-        Livewire::test(StatisticsPage::class)->assertSuccessful();
+        foreach ([$withoutFeatures, $noSubscription] as $master) {
+            $this->actingAs($master);
+            Livewire::test(Statistics::class)->assertSuccessful();
+            Livewire::test(Scoring::class)->assertSuccessful();
+            Filament::setCurrentPanel(Filament::getPanel('admin'));
+            Livewire::test(StatisticsPage::class)->assertSuccessful();
+            Livewire::test(AgentScoringPage::class)->assertSuccessful();
+        }
     }
 
     public function test_statistiques_avancees(): void
