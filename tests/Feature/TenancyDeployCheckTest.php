@@ -21,6 +21,7 @@ class TenancyDeployCheckTest extends TestCase
         Storage::fake('local');
         Storage::fake('public');
         config(['filesystems.default' => 'local']);
+        config(['security.authentication.2fa_enforce_from' => '2099-01-01']);
     }
 
     public function test_a_clean_installation_passes(): void
@@ -51,6 +52,14 @@ class TenancyDeployCheckTest extends TestCase
         config(['app.debug' => true]);
         $this->assertSame(1, Artisan::call('tenancy:deploy-check'));
         $this->assertStringContainsString('APP_DEBUG', Artisan::output());
+    }
+
+    public function test_missing_2fa_enforcement_date_is_flagged(): void
+    {
+        config(['security.authentication.2fa_enforce_from' => null]);
+
+        $this->assertSame(0, Artisan::call('tenancy:deploy-check'));
+        $this->assertStringContainsString('SECURITY_2FA_ENFORCE_FROM vide', Artisan::output());
     }
 
     public function test_it_never_modifies_anything(): void
