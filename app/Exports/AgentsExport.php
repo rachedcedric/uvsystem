@@ -17,12 +17,9 @@ class AgentsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMappi
 {
     protected ?string $status;
 
-    protected ?string $type;
-
-    public function __construct(?string $status = null, ?string $type = null)
+    public function __construct(?string $status = null)
     {
         $this->status = $status;
-        $this->type = $type;
     }
 
     public function query(): Builder
@@ -31,10 +28,6 @@ class AgentsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMappi
 
         if ($this->status) {
             $query->where('status', $this->status);
-        }
-
-        if ($this->type) {
-            $query->where('type', $this->type);
         }
 
         return $query->orderBy('name');
@@ -54,7 +47,6 @@ class AgentsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMappi
             'Email',
             'Adresse',
             'Zone',
-            'Type',
             'Statut',
             'Taux Commission (%)',
             'Plafond Dette (FCFA)',
@@ -70,12 +62,6 @@ class AgentsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMappi
             ? round(($agent->current_debt / $agent->debt_limit) * 100, 1)
             : 0;
 
-        $typeLabels = [
-            'standard' => 'Standard',
-            'premium' => 'Premium',
-            'vip' => 'VIP',
-        ];
-
         $statusLabels = [
             'active' => 'Actif',
             'inactive' => 'Inactif',
@@ -90,7 +76,6 @@ class AgentsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMappi
             $agent->email ?? '-',
             $agent->address ?? '-',
             $agent->zone ?? '-',
-            $typeLabels[$agent->type] ?? $agent->type ?? 'Standard',
             $statusLabels[$agent->status] ?? $agent->status,
             $agent->commission_rate ?? 0,
             number_format($agent->debt_limit ?? 0, 0, ',', ' '),

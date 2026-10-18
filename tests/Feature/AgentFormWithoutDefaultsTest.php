@@ -72,13 +72,13 @@ class AgentFormWithoutDefaultsTest extends TestCase
     public function test_the_web_form_starts_with_empty_debt_limit_and_commission_rate(): void
     {
         Livewire::test(CreateAgent::class)
-            ->assertFormSet(['debt_limit' => null, 'commission_rate' => null, 'status' => 'active', 'type' => 'standard']);
+            ->assertFormSet(['debt_limit' => null, 'commission_rate' => null, 'status' => 'active']);
     }
 
     public function test_an_agent_created_on_the_web_without_them_has_no_limit_and_no_rate(): void
     {
         Livewire::test(CreateAgent::class)
-            ->fillForm(['name' => 'Sans valeurs', 'phone' => '0700000011', 'type' => 'standard', 'status' => 'active'])
+            ->fillForm(['name' => 'Sans valeurs', 'phone' => '0700000011', 'status' => 'active'])
             ->call('create')
             ->assertHasNoFormErrors();
 
@@ -90,7 +90,7 @@ class AgentFormWithoutDefaultsTest extends TestCase
     public function test_values_typed_by_the_master_on_the_web_are_kept_as_typed(): void
     {
         Livewire::test(CreateAgent::class)
-            ->fillForm(['name' => 'Avec valeurs', 'phone' => '0700000012', 'type' => 'standard', 'status' => 'active', 'debt_limit' => '1 250 000', 'commission_rate' => 3.5])
+            ->fillForm(['name' => 'Avec valeurs', 'phone' => '0700000012', 'status' => 'active', 'debt_limit' => '1 250 000', 'commission_rate' => 3.5])
             ->call('create')
             ->assertHasNoFormErrors();
 
@@ -121,7 +121,7 @@ class AgentFormWithoutDefaultsTest extends TestCase
             ->assertSet('data.debt_limit', '')
             ->assertSet('data.commission_rate', '')
             ->assertSet('data.status', 'active')
-            ->set('data.name', 'Mobile vide')->set('data.phone', '0700000013')->set('data.type', 'standard')
+            ->set('data.name', 'Mobile vide')->set('data.phone', '0700000013')
             ->call('save')->assertHasNoErrors();
 
         $agent = $this->agentNamed('Mobile vide');
@@ -132,7 +132,7 @@ class AgentFormWithoutDefaultsTest extends TestCase
     public function test_the_mobile_form_keeps_what_the_master_types(): void
     {
         Livewire::test(Crud\Form::class, ['resource' => 'agents'])
-            ->set('data.name', 'Mobile rempli')->set('data.phone', '0700000014')->set('data.type', 'standard')
+            ->set('data.name', 'Mobile rempli')->set('data.phone', '0700000014')
             ->set('data.debt_limit', '750000')->set('data.commission_rate', '4.5')
             ->call('save')->assertHasNoErrors();
 

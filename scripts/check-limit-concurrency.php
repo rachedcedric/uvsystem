@@ -44,11 +44,11 @@ if (($argv[1] ?? '') === '--worker') {
 
     try {
         if ($mode === 'real') {
-            TenantContext::runAs((int) $tenantId, fn () => Agent::create(['name' => "Agent {$index}", 'phone' => sprintf('07%08d', $index), 'type' => 'standard', 'debt_limit' => 0, 'status' => 'active']));
+            TenantContext::runAs((int) $tenantId, fn () => Agent::create(['name' => "Agent {$index}", 'phone' => sprintf('07%08d', $index), 'debt_limit' => 0, 'status' => 'active']));
         } else { // naïf : contrôle puis insertion, sans transaction ni verrou, avec une pause qui élargit la fenêtre de course
             app(SubscriptionEntitlements::class)->assertCanCreateAgent((int) $tenantId);
             usleep(150_000);
-            DB::table('agents')->insert(['tenant_id' => $tenantId, 'name' => "Naïf {$index}", 'phone' => sprintf('06%08d', $index), 'type' => 'standard', 'debt_limit' => 0, 'status' => 'active', 'created_at' => now(), 'updated_at' => now()]);
+            DB::table('agents')->insert(['tenant_id' => $tenantId, 'name' => "Naïf {$index}", 'phone' => sprintf('06%08d', $index), 'debt_limit' => 0, 'status' => 'active', 'created_at' => now(), 'updated_at' => now()]);
         }
         echo "OK\n";
     } catch (SubscriptionLimitReached) {

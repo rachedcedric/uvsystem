@@ -22,7 +22,6 @@ class AgentFactory extends Factory
         return [
             'name' => fake()->name(),
             'phone' => fake()->unique()->numerify('7#########'),
-            'type' => fake()->randomElement(['standard', 'premium']),
             'debt_limit' => fake()->randomElement([0, 100000, 250000, 500000, 1000000]),
             'status' => 'active',
         ];
@@ -45,17 +44,6 @@ class AgentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'suspended',
-        ]);
-    }
-
-    /**
-     * Indicate that the agent is premium.
-     */
-    public function premium(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'type' => 'premium',
-            'debt_limit' => 2000000,
         ]);
     }
 

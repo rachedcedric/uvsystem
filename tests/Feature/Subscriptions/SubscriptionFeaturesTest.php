@@ -154,8 +154,8 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
 
         // Filament, API, commandes : tout passe par les mêmes facades Pdf / Excel liées au conteneur.
         $this->assertThrows(fn () => Pdf::loadView('exports.transactions-pdf', []), HttpException::class);
-        $this->assertThrows(fn () => Excel::download(new AgentsExport(null, null), 'x.xlsx'), HttpException::class);
-        $this->assertThrows(fn () => Excel::raw(new AgentsExport(null, null), \Maatwebsite\Excel\Excel::XLSX), HttpException::class);
+        $this->assertThrows(fn () => Excel::download(new AgentsExport(null), 'x.xlsx'), HttpException::class);
+        $this->assertThrows(fn () => Excel::raw(new AgentsExport(null), \Maatwebsite\Excel\Excel::XLSX), HttpException::class);
         // Documents transactionnels (reçus) : jamais bloqués.
         $this->assertNull(ExportGate::featureForPdfView('receipts.remboursement'));
     }

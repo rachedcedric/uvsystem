@@ -108,7 +108,6 @@ class DataImporter
             'email' => $email ?: null,
             'address' => $row['adresse'] ?? null,
             'zone' => $row['zone'] ?? null,
-            'type' => 'standard',
             'debt_limit' => $limit,
             'commission_rate' => $rate === null ? null : (float) $rate,
             'status' => $status,

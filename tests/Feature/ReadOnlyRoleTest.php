@@ -185,7 +185,7 @@ class ReadOnlyRoleTest extends TestCase
         $agent = TenantContext::runAs($this->a->id, fn () => Agent::query()->find($this->agentA->id));
 
         $attempts = [
-            'create' => fn () => Agent::create(['name' => 'Pirate', 'phone' => '0700000001', 'type' => 'standard', 'status' => 'active', 'debt_limit' => 1, 'commission_rate' => 1]),
+            'create' => fn () => Agent::create(['name' => 'Pirate', 'phone' => '0700000001', 'status' => 'active', 'debt_limit' => 1, 'commission_rate' => 1]),
             'update' => fn () => $agent->update(['name' => 'Renommé']),
             'saveQuietly' => fn () => $agent->forceFill(['current_debt' => 999])->saveQuietly(),
             'withoutEvents' => fn () => Agent::withoutEvents(fn () => $agent->forceFill(['name' => 'Silencieux'])->save()),
@@ -210,7 +210,7 @@ class ReadOnlyRoleTest extends TestCase
     {
         Sanctum::actingAs($this->ro, ['*']);
 
-        $payload = ['name' => 'Via API', 'phone' => '0700000002', 'type' => 'standard', 'status' => 'active', 'debt_limit' => 1, 'commission_rate' => 1];
+        $payload = ['name' => 'Via API', 'phone' => '0700000002', 'status' => 'active', 'debt_limit' => 1, 'commission_rate' => 1];
         $this->postJson('/api/agents', $payload)->assertForbidden();
         $this->putJson('/api/agents/'.$this->agentA->id, ['name' => 'Renommé'])->assertForbidden();
         $this->deleteJson('/api/agents/'.$this->agentA->id)->assertForbidden();
@@ -262,7 +262,7 @@ class ReadOnlyRoleTest extends TestCase
         $this->actingAs($this->master->fresh());
 
         $this->expectException(AuthorizationException::class);
-        Agent::create(['name' => 'Interdit', 'phone' => '0700000003', 'type' => 'standard', 'status' => 'active', 'debt_limit' => 1, 'commission_rate' => 1]);
+        Agent::create(['name' => 'Interdit', 'phone' => '0700000003', 'status' => 'active', 'debt_limit' => 1, 'commission_rate' => 1]);
     }
 
     // ------------------------------------------------------------------ isolation maintenue

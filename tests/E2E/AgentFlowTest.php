@@ -46,7 +46,6 @@ class AgentFlowTest extends TestCase
         $agentData = [
             'name' => 'Agent E2E Test',
             'phone' => '0612345678',
-            'type' => 'standard',
             'debt_limit' => 500000,
             'status' => 'active',
         ];
@@ -123,7 +122,6 @@ class AgentFlowTest extends TestCase
         $agent = Agent::create([
             'name' => 'Agent Limite Test',
             'phone' => '0698765432',
-            'type' => 'standard',
             'debt_limit' => 100000,
             'status' => 'active',
         ]);
@@ -165,7 +163,6 @@ class AgentFlowTest extends TestCase
             $agents[] = Agent::create([
                 'name' => "Agent Multi $i",
                 'phone' => "060000000$i",
-                'type' => 'standard',
                 'status' => 'active',
             ]);
         }

@@ -27,7 +27,6 @@ class Agent extends Model
         'email',
         'address',
         'zone',
-        'type',
         'debt_limit',
         'current_debt',
         'commission_rate',
@@ -203,11 +202,6 @@ class Agent extends Model
     public function scopeWithDebt(Builder $query): void
     {
         $query->where('current_debt', '>', 0);
-    }
-
-    public function scopePremium(Builder $query): void
-    {
-        $query->where('type', 'premium');
     }
 
     /**

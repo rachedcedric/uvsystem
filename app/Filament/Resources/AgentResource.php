@@ -80,16 +80,6 @@ class AgentResource extends Resource
                     ->description('Paramètres de l\'activité de l\'agent')
                     ->icon('heroicon-o-cog-6-tooth')
                     ->schema([
-                        Forms\Components\Select::make('type')
-                            ->label('Type d\'agent')
-                            ->options([
-                                'standard' => '📦 Standard',
-                                'premium' => '⭐ Premium',
-                                'vip' => '👑 VIP',
-                            ])
-                            ->required()
-                            ->default('standard')
-                            ->native(false),
                         Forms\Components\TextInput::make('zone')
                             ->label('Zone géographique')
                             ->placeholder('Ex: Abidjan Nord')
@@ -171,21 +161,6 @@ class AgentResource extends Resource
                     ->label('Téléphone')
                     ->searchable()
                     ->copyable(),
-                Tables\Columns\TextColumn::make('type')
-                    ->label('Type')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'standard' => '📦 Standard',
-                        'premium' => '⭐ Premium',
-                        'vip' => '👑 VIP',
-                        default => $state,
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        'standard' => 'primary',
-                        'premium' => 'success',
-                        'vip' => 'warning',
-                        default => 'gray',
-                    }),
                 Tables\Columns\TextColumn::make('zone')
                     ->label('Zone')
                     ->searchable()
@@ -233,12 +208,6 @@ class AgentResource extends Resource
                         'active' => 'Actif',
                         'inactive' => 'Inactif',
                         'suspended' => 'Suspendu',
-                    ]),
-                Tables\Filters\SelectFilter::make('type')
-                    ->label('Type')
-                    ->options([
-                        'standard' => 'Standard',
-                        'premium' => 'Premium',
                     ]),
                 Tables\Filters\Filter::make('has_debt')
                     ->label('Avec dette')

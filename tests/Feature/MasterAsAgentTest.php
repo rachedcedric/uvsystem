@@ -57,7 +57,7 @@ class MasterAsAgentTest extends TestCase
 
     private function agentData(array $overrides = []): array
     {
-        return $overrides + ['name' => 'Agent '.uniqid(), 'phone' => '07'.random_int(10000000, 99999999), 'type' => 'standard', 'status' => 'active', 'debt_limit' => 500000, 'commission_rate' => 5];
+        return $overrides + ['name' => 'Agent '.uniqid(), 'phone' => '07'.random_int(10000000, 99999999), 'status' => 'active', 'debt_limit' => 500000, 'commission_rate' => 5];
     }
 
     // ------------------------------------------------------------------ le master gère ses agents
@@ -218,7 +218,7 @@ class MasterAsAgentTest extends TestCase
     {
         $this->act($this->master);
         Livewire::test(Crud\Form::class, ['resource' => 'agents'])
-            ->set('data.name', 'Master mobile')->set('data.phone', '0701020304')->set('data.type', 'standard')->set('data.status', 'active')
+            ->set('data.name', 'Master mobile')->set('data.phone', '0701020304')->set('data.status', 'active')
             ->set('data.debt_limit', '100000')->set('data.commission_rate', '5')->set('data.user_id', (string) $this->master->id)
             ->call('save')->assertHasNoErrors();
         $this->assertSame($this->master->id, Agent::where('name', 'Master mobile')->value('user_id'));
@@ -226,7 +226,7 @@ class MasterAsAgentTest extends TestCase
         $admin = $this->userIn($this->tenant, 'admin');
         $this->act($admin);
         Livewire::test(Crud\Form::class, ['resource' => 'agents'])
-            ->set('data.name', 'Admin mobile')->set('data.phone', '0701020305')->set('data.type', 'standard')->set('data.status', 'active')
+            ->set('data.name', 'Admin mobile')->set('data.phone', '0701020305')->set('data.status', 'active')
             ->set('data.debt_limit', '100000')->set('data.commission_rate', '5')->set('data.user_id', (string) $admin->id)
             ->call('save')->assertHasNoErrors();
         $this->assertSame($admin->id, Agent::where('name', 'Admin mobile')->value('user_id'));
@@ -234,7 +234,7 @@ class MasterAsAgentTest extends TestCase
         $commercial = $this->userIn($this->tenant, 'commercial');
         $this->act($commercial);
         Livewire::test(Crud\Form::class, ['resource' => 'agents'])
-            ->set('data.name', 'Commercial mobile')->set('data.phone', '0701020306')->set('data.type', 'standard')->set('data.status', 'active')
+            ->set('data.name', 'Commercial mobile')->set('data.phone', '0701020306')->set('data.status', 'active')
             ->set('data.debt_limit', '100000')->set('data.commission_rate', '5')->set('data.user_id', (string) $commercial->id)
             ->call('save');
         $this->assertNull(Agent::where('name', 'Commercial mobile')->value('user_id'), 'champ absent pour un rôle non administrateur : valeur forgée ignorée');

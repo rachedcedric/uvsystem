@@ -44,7 +44,6 @@ class AgentSituationExport implements FromQuery, ShouldAutoSize, WithHeadings, W
         return [
             'Nom',
             'Téléphone',
-            'Type',
             'Statut',
             'Plafond (FCFA)',
             'Dette actuelle (FCFA)',
@@ -66,7 +65,6 @@ class AgentSituationExport implements FromQuery, ShouldAutoSize, WithHeadings, W
         return [
             $agent->name,
             $agent->phone,
-            ucfirst($agent->type ?? 'standard'),
             match ($agent->status) {
                 'active' => 'Actif',
                 'inactive' => 'Inactif',

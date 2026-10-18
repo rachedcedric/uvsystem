@@ -157,20 +157,6 @@
             font-weight: bold;
         }
 
-        .type-standard {
-            color: #6b7280;
-        }
-
-        .type-premium {
-            color: #22c55e;
-            font-weight: bold;
-        }
-
-        .type-vip {
-            color: #f59e0b;
-            font-weight: bold;
-        }
-
         .debt-critical {
             background-color: #fef2f2 !important;
         }
@@ -260,7 +246,6 @@
     <!-- Filtres appliqués -->
     <div class="filters-box">
         <span><strong>Statut:</strong> {{ $filters['status'] }}</span>
-        <span><strong>Type:</strong> {{ $filters['type'] }}</span>
         <span><strong>Total:</strong> {{ $agents->count() }} agent(s)</span>
     </div>
 
@@ -272,7 +257,6 @@
                 <th style="width: 18%;">Nom</th>
                 <th style="width: 12%;">Téléphone</th>
                 <th style="width: 10%;">Zone</th>
-                <th style="width: 8%;">Type</th>
                 <th style="width: 8%;">Statut</th>
                 <th style="width: 8%;" class="text-right">Comm. %</th>
                 <th style="width: 12%;" class="text-right">Plafond</th>
@@ -296,20 +280,6 @@
                     <td><strong>{{ $agent->name }}</strong></td>
                     <td>{{ $agent->phone }}</td>
                     <td>{{ $agent->zone ?? '-' }}</td>
-                    <td class="type-{{ $agent->type ?? 'standard' }}">
-                        @switch($agent->type)
-                            @case('premium')
-                                Premium
-                            @break
-
-                            @case('vip')
-                                VIP
-                            @break
-
-                            @default
-                                Standard
-                        @endswitch
-                    </td>
                     <td class="status-{{ $agent->status }}">
                         @switch($agent->status)
                             @case('active')

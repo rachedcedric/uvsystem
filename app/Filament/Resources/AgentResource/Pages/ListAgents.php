@@ -37,26 +37,17 @@ class ListAgents extends ListRecords
                                 'active' => 'Actifs uniquement',
                                 'inactive' => 'Inactifs uniquement',
                                 'suspended' => 'Suspendus uniquement',
-                            ])
-                            ->default(''),
-                        Select::make('type')
-                            ->label('Filtrer par type')
-                            ->options([
-                                '' => 'Tous les types',
-                                'standard' => 'Standard',
-                                'premium' => 'Premium',
-                                'vip' => 'VIP',
+                                'blocked' => 'Bloqués uniquement',
                             ])
                             ->default(''),
                     ])
                     ->action(function (array $data) {
                         $status = $data['status'] ?: null;
-                        $type = $data['type'] ?: null;
 
                         $filename = 'agents_'.now()->format('Y-m-d_His').'.xlsx';
                         $path = TenantContext::storagePath('exports/'.$filename);
 
-                        Excel::store(new AgentsExport($status, $type), $path, 'local');
+                        Excel::store(new AgentsExport($status), $path, 'local');
 
                         return redirect()->route('exports.download', ['filename' => $filename]);
                     }),
@@ -73,15 +64,7 @@ class ListAgents extends ListRecords
                                 'active' => 'Actifs uniquement',
                                 'inactive' => 'Inactifs uniquement',
                                 'suspended' => 'Suspendus uniquement',
-                            ])
-                            ->default(''),
-                        Select::make('type')
-                            ->label('Filtrer par type')
-                            ->options([
-                                '' => 'Tous les types',
-                                'standard' => 'Standard',
-                                'premium' => 'Premium',
-                                'vip' => 'VIP',
+                                'blocked' => 'Bloqués uniquement',
                             ])
                             ->default(''),
                     ])
@@ -91,17 +74,12 @@ class ListAgents extends ListRecords
                         if (! empty($data['status'])) {
                             $query->where('status', $data['status']);
                         }
-                        if (! empty($data['type'])) {
-                            $query->where('type', $data['type']);
-                        }
-
                         $agents = $query->orderBy('name')->get();
 
                         $pdf = Pdf::loadView('exports.agents-liste-pdf', [
                             'agents' => $agents,
                             'filters' => [
                                 'status' => $data['status'] ?: 'Tous',
-                                'type' => $data['type'] ?: 'Tous',
                             ],
                             'generatedAt' => now(),
                             'generatedBy' => Auth::user()?->name ?? 'Système',

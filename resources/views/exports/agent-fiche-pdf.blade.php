@@ -311,10 +311,6 @@
                 <div class="info-value">{{ $agent->phone }}</div>
             </div>
             <div class="info-row">
-                <div class="info-label">Type:</div>
-                <div class="info-value">{{ ucfirst($agent->type ?? 'Standard') }}</div>
-            </div>
-            <div class="info-row">
                 <div class="info-label">Statut:</div>
                 <div class="info-value">
                     <span class="badge badge-{{ $agent->status }}">

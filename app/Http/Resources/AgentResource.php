@@ -19,7 +19,6 @@ class AgentResource extends JsonResource
             'name' => $this->name,
             'phone' => $this->phone,
             'address' => $this->address,
-            'type' => $this->type,
             'debt_limit' => $this->debt_limit,
             // Anciennes clés conservées pour les clients existants (elles retournaient null : colonnes disparues)
             'nom' => $this->name,

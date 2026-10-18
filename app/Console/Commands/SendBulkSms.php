@@ -11,9 +11,8 @@ class SendBulkSms extends Command
 {
     use RunsForOneTenant;
 
-    protected $signature = 'uv:send-sms {--tenant= : Identifiant du tenant (obligatoire)} 
-                            {--type=all : Filter by agent type (all, standard, premium, vip)}
-                            {--status=active : Filter by agent status (all, active, inactive)}
+    protected $signature = 'uv:send-sms {--tenant= : Identifiant du tenant (obligatoire)}
+                            {--status=active : Filter by agent status (all, active, inactive, suspended, blocked)}
                             {--min-debt=0 : Minimum debt amount}
                             {--message= : Custom message to send}
                             {--template=reminder : Message template (reminder, alert, custom)}
@@ -32,12 +31,6 @@ class SendBulkSms extends Command
 
         // Build query
         $query = Agent::query();
-
-        // Filter by type
-        $type = $this->option('type');
-        if ($type !== 'all') {
-            $query->where('type', $type);
-        }
 
         // Filter by status
         $status = $this->option('status');

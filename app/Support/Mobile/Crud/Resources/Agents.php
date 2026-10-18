@@ -12,8 +12,6 @@ use Illuminate\Database\Eloquent\Model;
 /** Formulaires de création / modification des agents (liste et fiche : écrans dédiés). */
 class Agents extends MobileResource
 {
-    public const TYPES = ['standard' => 'Standard', 'premium' => 'Premium', 'vip' => 'VIP'];
-
     public const STATUSES = ['active' => 'Actif', 'inactive' => 'Inactif', 'suspended' => 'Suspendu', 'blocked' => 'Bloqué'];
 
     public static function slug(): string
@@ -59,7 +57,6 @@ class Agents extends MobileResource
                 ->rules('regex:/^[0-9+\s]{8,20}$/')->hint('8 à 15 chiffres')->placeholder('+225 01 23 45 67 89'),
             Field::email('email', 'E-mail')->maxLength(255)->unique('agents'),
             Field::text('address', 'Adresse')->maxLength(500),
-            Field::select('type', 'Type d\'agent', self::TYPES)->required()->default('standard'),
             Field::text('zone', 'Zone géographique')->maxLength(100)->placeholder('Ex. : Abidjan Nord'),
             // Aucune valeur imposée : le master choisit. Laissés vides, les deux champs sont enregistrés vides (null).
             Field::money('debt_limit', 'Plafond de dette')->min(0)->max(999999999)->hint('Crédit maximum autorisé. Laissez vide pour ne fixer aucune limite.'),

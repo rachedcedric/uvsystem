@@ -44,7 +44,7 @@ class DashboardFlowTest extends TestCase
     public function dashboard_displays_correct_statistics(): void
     {
         $this->sale($this->agent('Agent Stats 1'), 100000);
-        $this->sale($this->agent('Agent Stats 2', ['type' => 'premium']), 200000);
+        $this->sale($this->agent('Agent Stats 2'), 200000);
 
         $this->getJson('/api/dashboard/realtime')
             ->assertOk()

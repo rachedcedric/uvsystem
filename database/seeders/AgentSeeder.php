@@ -28,23 +28,13 @@ class AgentSeeder extends Seeder
 
         $this->command->info("Création de {$demoCount} agents de démonstration...");
 
-        // Types d'agents configurables
-        $types = ['standard', 'premium'];
-        $statuses = ['active', 'inactive'];
-
         for ($i = 1; $i <= $demoCount; $i++) {
-            $type = $types[array_rand($types)];
             $status = $i === $demoCount ? 'inactive' : 'active'; // Dernier agent inactif
-
-            // Limites de dette selon le type
-            $debtLimit = $type === 'premium'
-                ? rand(1000000, 2000000)
-                : rand(250000, 500000);
+            $debtLimit = rand(250000, 2000000);
 
             $agent = Agent::create([
                 'name' => "Agent Démo #{$i}",
                 'phone' => '77'.str_pad($i, 6, '0', STR_PAD_LEFT),
-                'type' => $type,
                 'debt_limit' => $debtLimit,
                 'status' => $status,
             ]);
@@ -57,7 +47,7 @@ class AgentSeeder extends Seeder
                 'solde_restant' => 0,
             ]);
 
-            $this->command->info("✅ Agent créé: {$agent->name} ({$type}, limite: ".number_format($debtLimit).' FCFA)');
+            $this->command->info("✅ Agent créé: {$agent->name} (limite: ".number_format($debtLimit).' FCFA)');
         }
 
         $this->command->info("✅ {$demoCount} agents de démonstration créés avec succès!");

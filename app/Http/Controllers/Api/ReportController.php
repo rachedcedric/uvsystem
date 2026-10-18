@@ -153,7 +153,6 @@ class ReportController extends Controller
                         'id' => $agent->id,
                         'name' => $agent->name,
                         'phone' => $agent->phone,
-                        'type' => $agent->type,
                         'status' => $agent->status,
                         'transactions_count' => $agent->transactions_count,
                         'total_amount' => $agent->transactions_sum_amount ?? 0,
@@ -273,7 +272,6 @@ class ReportController extends Controller
             ->map(fn ($a) => [
                 'Nom' => $a->name,
                 'Téléphone' => $a->phone,
-                'Type' => $a->type,
                 'Statut' => $a->status,
                 'Transactions' => $a->transactions_count,
                 'Montant Total' => $a->transactions_sum_amount ?? 0,

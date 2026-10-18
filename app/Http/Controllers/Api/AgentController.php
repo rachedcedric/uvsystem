@@ -82,7 +82,6 @@ class AgentController extends Controller
             'email' => ['nullable', 'email', Rule::unique('agents', 'email')->where('tenant_id', TenantContext::id())],
             'address' => 'nullable|string|max:500',
             'zone' => 'nullable|string|max:100',
-            'type' => 'sometimes|in:standard,premium,vip',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'debt_limit' => 'nullable|numeric|min:0|max:999999999',
             'notes' => 'nullable|string',
@@ -112,10 +111,9 @@ class AgentController extends Controller
             'email' => ['nullable', 'email', Rule::unique('agents', 'email')->where('tenant_id', TenantContext::id())->ignore($agent->id)],
             'address' => 'nullable|string|max:500',
             'zone' => 'nullable|string|max:100',
-            'type' => 'sometimes|in:standard,premium,vip',
             'commission_rate' => 'nullable|numeric|min:0|max:100',
             'debt_limit' => 'nullable|numeric|min:0|max:999999999',
-            'status' => 'sometimes|in:active,inactive,suspended',
+            'status' => 'sometimes|in:active,inactive,suspended,blocked',
             'notes' => 'nullable|string',
         ]);
 
