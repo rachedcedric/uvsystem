@@ -171,11 +171,11 @@
 <body>
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-title">🏢 {{ config('branding.name') }} - RAPPORT FINANCIER</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark'){{ config('branding.name') }} - RAPPORT FINANCIER</div>
         <div class="page-header-subtitle">
             Situation Financière des Agents | Généré le {{ now()->format('d/m/Y à H:i') }}
         </div>
-        <div class="confidential">🔒 DOCUMENT CONFIDENTIEL - USAGE INTERNE UNIQUEMENT</div>
+        <div class="confidential">DOCUMENT CONFIDENTIEL - USAGE INTERNE UNIQUEMENT</div>
     </div>
 
     <!-- Page Footer -->
@@ -195,7 +195,7 @@
 
     <!-- Content -->
     <div class="header">
-        <h1>👥 Situation Financière des Agents</h1>
+        <h1>Situation Financière des Agents</h1>
         <div class="meta">
             Total Agents: {{ $agents->count() }} | Rapport au {{ now()->format('d/m/Y') }}
         </div>
@@ -203,11 +203,11 @@
 
     <div class="summary">
         <h3>Résumé Global</h3>
-        <span class="summary-item">👥 Total Agents: <strong>{{ $agents->count() }}</strong></span>
-        <span class="summary-item">✅ Actifs: <strong>{{ $agents->where('status', 'active')->count() }}</strong></span>
-        <span class="summary-item">💰 Dette Totale:
+        <span class="summary-item">Total Agents: <strong>{{ $agents->count() }}</strong></span>
+        <span class="summary-item">Actifs: <strong>{{ $agents->where('status', 'active')->count() }}</strong></span>
+        <span class="summary-item">Dette Totale:
             <strong>{{ number_format($agents->sum('current_debt'), 0, ',', ' ') }} FCFA</strong></span>
-        <span class="summary-item">⚠️ Alertes:
+        <span class="summary-item">⚠Alertes:
             <strong>{{ $agents->filter(fn($a) => $a->debt_limit > 0 && ($a->current_debt / $a->debt_limit) * 100 > 80)->count() }}</strong></span>
     </div>
 
@@ -233,7 +233,7 @@
                     <td><strong>{{ $agent->name }}</strong></td>
                     <td>{{ $agent->phone }}</td>
                     <td class="status-{{ $agent->status }}">
-                        {{ $agent->status === 'active' ? '✓ Actif' : ($agent->status === 'suspended' ? '⏸ Suspendu' : '✗ Inactif') }}
+                        {{ $agent->status === 'active' ? '✓ Actif' : ($agent->status === 'suspended' ? 'Suspendu' : '✗ Inactif') }}
                     </td>
                     <td style="text-align: right;">{{ number_format($agent->debt_limit, 0, ',', ' ') }}</td>
                     <td style="text-align: right;">{{ number_format($agent->current_debt, 0, ',', ' ') }}</td>
@@ -263,10 +263,10 @@
     <!-- Notes et légende -->
     <div
         style="margin-top: 20px; padding: 10px; background-color: #fef3c7; border-left: 4px solid #f59e0b; font-size: 9px;">
-        <strong>⚠️ Légende :</strong><br>
-        🔴 Fond rouge : Dette critique (>90% du plafond) - Action immédiate requise<br>
-        🟡 Fond jaune : Dette élevée (>70% du plafond) - Surveillance renforcée<br>
-        ✅ Actif | ⏸ Suspendu | ✗ Inactif
+        <strong>⚠Légende :</strong><br>
+        Fond rouge : Dette critique (>90% du plafond) - Action immédiate requise<br>
+        Fond jaune : Dette élevée (>70% du plafond) - Surveillance renforcée<br>
+        Actif | Suspendu | ✗ Inactif
     </div>
 </body>
 

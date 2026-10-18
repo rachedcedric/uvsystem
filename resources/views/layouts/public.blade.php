@@ -35,11 +35,33 @@
         .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:520px;margin:0 auto}
         .alert{padding:10px 12px;border-radius:8px;margin:12px 0;font-size:14px;background:#fef2f2;color:var(--danger);border:1px solid #fecaca}
         a{color:var(--brand)}
+        .brand-link{display:block;text-align:center;margin:4px 0 18px}
+        .brand-logo{height:44px;width:auto;max-width:70%;mix-blend-mode:multiply}
+        /* Ordinateur : ces pages étaient conçues pour un téléphone (colonne étroite, gros texte). Au-dessus de 900 px on les
+           présente comme des pages de bureau : fond de marque, titres plus grands, cartes d'offre plus larges, formulaire sur deux colonnes. */
+        @media (min-width:900px){
+            body{min-height:100vh;background:radial-gradient(1100px 520px at 85% -10%,rgba(16,185,129,.14),transparent 60%),radial-gradient(900px 480px at -5% 0,rgba(4,120,87,.10),transparent 55%),var(--bg);background-repeat:no-repeat;background-attachment:fixed}
+            .wrap{max-width:1160px;padding:36px 32px 72px}
+            .brand-link{margin:0 0 34px}.brand-logo{height:54px}
+            h1{font-size:40px;line-height:1.12;margin:6px 0 10px;letter-spacing:-.02em}
+            .offres>p{font-size:18px;max-width:640px;margin:0 auto}
+            .seg{margin:26px 0 34px}
+            .offres .grid{gap:26px;align-items:stretch}
+            .offres .plan{flex:1 1 320px;max-width:370px;padding:30px;box-shadow:0 18px 44px -26px rgba(4,60,45,.35)}
+            .offres .plan:only-child{max-width:460px}
+            .plan h2{font-size:22px}.price{font-size:36px}li{font-size:16px;padding:6px 0}
+            .card{max-width:760px;padding:44px 48px;box-shadow:0 22px 56px -30px rgba(4,60,45,.35)}
+            .card>p{font-size:17px}
+            .card form.cols{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}
+            .card form.cols .field{min-width:0;display:flex;flex-direction:column;justify-content:flex-end}.card form.cols .wide{grid-column:1/-1}
+            @media (prefers-color-scheme:dark){.brand-logo{mix-blend-mode:normal;border-radius:8px}}
+        }
     </style>
     @include('partials.favicons')
 </head>
 <body>
 <div class="wrap">
+    <a href="{{ url('/') }}" class="brand-link" aria-label="{{ config('branding.name') }}"><img src="{{ \App\Support\BrandAsset::url('images/logo-wide.png') }}" alt="{{ config('branding.name') }}" class="brand-logo"></a>
     @if ($errors->any())<div class="alert" role="alert">@foreach ($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>@endif
     @yield('content')
 </div>

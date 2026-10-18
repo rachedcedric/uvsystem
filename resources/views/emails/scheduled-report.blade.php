@@ -110,6 +110,7 @@
 <body>
     <div class="container">
         <div class="header">
+            <div style="margin: 0 0 10px;"><span style="display: inline-block; background: #ffffff; border-radius: 8px; padding: 6px 12px;"><img src="{{ rtrim((string) config('branding.url'), '/') }}/images/logo-wide.png{{ \App\Support\BrandAsset::version('images/logo-wide.png') }}" alt="{{ config('branding.name') }}" width="150" style="display: block; height: auto; border: 0;"></span></div>
             <h1>📊 {{ $periodLabel }}</h1>
             <div class="date">Généré le {{ $generatedAt->format('d/m/Y à H:i') }}</div>
         </div>

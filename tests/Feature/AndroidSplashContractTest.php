@@ -113,7 +113,7 @@ class AndroidSplashContractTest extends TestCase
     {
         $layout = $this->source('resources/views/components/layouts/mobile.blade.php');
 
-        $this->assertStringContainsString('<source media="(prefers-color-scheme: dark)" srcset="{{ asset(\'images/logo-wide-dark.png\') }}">', $layout);
+        $this->assertStringContainsString('<source media="(prefers-color-scheme: dark)" srcset="{{ \\App\\Support\\BrandAsset::url(\'images/logo-wide-dark.png\') }}">', $layout);
         $this->assertMatchesRegularExpression(
             '/\.m-logo\.m-splash__logo\s*\{[^}]*padding:\s*0;[^}]*background:\s*none;/s',
             $this->source('resources/css/mobile.css'),

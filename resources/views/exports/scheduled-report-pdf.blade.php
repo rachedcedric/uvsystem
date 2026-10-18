@@ -212,7 +212,7 @@
 <body>
     <!-- En-tête -->
     <div class="header">
-        <h1>📊 {{ $periodLabel }}</h1>
+        <h1>{{ $periodLabel }}</h1>
         <div class="subtitle">{{ config('branding.tagline') }}</div>
         <div class="date">Généré le {{ $generatedAt->format('d/m/Y à H:i') }}</div>
     </div>
@@ -224,7 +224,7 @@
     
     <!-- Statistiques clés -->
     <div class="section">
-        <div class="section-title">📈 Statistiques Clés</div>
+        <div class="section-title">Statistiques Clés</div>
         
         <table>
             <tr>
@@ -273,7 +273,7 @@
     <!-- Top 5 Agents -->
     @if($data['top_agents']->count() > 0)
     <div class="section">
-        <div class="section-title">🏆 Top 5 Agents (par volume)</div>
+        <div class="section-title">Top 5 Agents (par volume)</div>
         
         <table>
             <thead>
@@ -303,11 +303,11 @@
     <!-- Agents avec dette critique -->
     @if($data['agents_with_debt']->count() > 0)
     <div class="section">
-        <div class="section-title">⚠️ Agents avec dette ({{ $data['agents_with_debt']->count() }})</div>
+        <div class="section-title">⚠Agents avec dette ({{ $data['agents_with_debt']->count() }})</div>
         
         @if($data['agents_with_debt']->where('current_debt', '>', function($q) { return $q->debt_limit * 0.9; })->count() > 0)
         <div class="alert-box alert-danger">
-            <strong>⚠️ Attention :</strong> {{ $data['stats']['nb_agents_endettes'] }} agents ont une dette en cours.
+            <strong>⚠Attention :</strong> {{ $data['stats']['nb_agents_endettes'] }} agents ont une dette en cours.
             Certains approchent de leur plafond autorisé.
         </div>
         @endif
@@ -361,7 +361,7 @@
     
     <!-- Résumé financier -->
     <div class="section">
-        <div class="section-title">💰 Résumé Financier</div>
+        <div class="section-title">Résumé Financier</div>
         
         <div class="summary-box">
             <h3>Bilan de la période</h3>

@@ -176,7 +176,7 @@
 <body>
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-title">📊 RAPPORT QUOTIDIEN - {{ config('branding.name') }}</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark')RAPPORT QUOTIDIEN - {{ config('branding.name') }}</div>
         <div class="page-header-subtitle">
             Synthèse de l'activité du {{ $date->translatedFormat('l d F Y') }}
         </div>
@@ -193,7 +193,7 @@
 
     <!-- Content -->
     <div class="header">
-        <h1>📊 Rapport Quotidien UV</h1>
+        <h1>Rapport Quotidien UV</h1>
         <div class="date">{{ $date->translatedFormat('l d F Y') }}</div>
     </div>
 
@@ -219,7 +219,7 @@
     </div>
 
     <div class="section section-blue">
-        <h3>📦 Transactions du jour</h3>
+        <h3>Transactions du jour</h3>
         <div class="stat-grid">
             <div class="stat-row">
                 <div class="stat-label">Nombre de transactions:</div>
@@ -242,7 +242,7 @@
     </div>
 
     <div class="section section-green">
-        <h3>💵 Remboursements du jour</h3>
+        <h3>Remboursements du jour</h3>
         <div class="stat-grid">
             <div class="stat-row">
                 <div class="stat-label">Nombre:</div>
@@ -256,7 +256,7 @@
     </div>
 
     <div class="section section-yellow">
-        <h3>👥 Situation des Agents</h3>
+        <h3>Situation des Agents</h3>
         <div class="stat-grid">
             <div class="stat-row">
                 <div class="stat-label">Agents actifs:</div>
@@ -275,18 +275,18 @@
 
     @if ($agents['critical'] > 0)
         <div class="section section-red">
-            <h3>🚨 ALERTES CRITIQUES</h3>
+            <h3>ALERTES CRITIQUES</h3>
             <p style="margin: 0;">
                 <strong>{{ $agents['critical'] }} agent(s)</strong> ont atteint un niveau de dette critique (>90% du
                 plafond).
-                ⚠️ Action immédiate recommandée : relance, suspension ou réajustement du plafond.
+                ⚠Action immédiate recommandée : relance, suspension ou réajustement du plafond.
             </p>
         </div>
     @endif
 
     <!-- Performance Indicator -->
     <div style="margin-top: 20px; padding: 15px; background-color: #f0f9ff; border-left: 4px solid #3b82f6;">
-        <h3 style="margin: 0 0 10px 0; color: #1e40af;">📈 Indicateurs de Performance</h3>
+        <h3 style="margin: 0 0 10px 0; color: #1e40af;">Indicateurs de Performance</h3>
         <div class="stat-grid">
             <div class="stat-row">
                 <div class="stat-label">Taux de recouvrement :</div>

@@ -6,6 +6,7 @@ use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
 use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
+use App\Services\TenantDocumentBranding;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -150,7 +151,7 @@ class MaCaisseJourPage extends Page implements HasTable
                     $service = app(CaisseService::class);
                     $date = $this->businessDate();
                     $pdf = Pdf::loadView('exports.caisse-jour-pdf', [
-                        'tenant' => config('app.name'),
+                        'tenant' => app(TenantDocumentBranding::class)->tenantName(),
                         'periode' => $this->periodLabel(),
                         'date' => $date,
                         'totals' => $this->totals(),

@@ -210,7 +210,7 @@
 <body>
     <!-- En-tête fixe -->
     <div class="page-header">
-        <div class="page-header-title">💰 {{ config('branding.name') }} - Rapport des Commissions</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark'){{ config('branding.name') }} - Rapport des Commissions</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -231,7 +231,7 @@
 
     <!-- Contenu -->
     <div class="header">
-        <h1>📊 Rapport des Commissions</h1>
+        <h1>Rapport des Commissions</h1>
         <div class="subtitle">
             Commissions calculées par volume de transactions
         </div>
@@ -274,7 +274,7 @@
 
     <!-- Résumé -->
     <div class="summary">
-        <h3>📈 Résumé des Commissions</h3>
+        <h3>Résumé des Commissions</h3>
         <div class="summary-grid">
             <div class="summary-item">
                 <div class="summary-value">{{ $commissions->count() }}</div>
@@ -298,7 +298,7 @@
 
     <!-- Barème de référence -->
     <div class="bareme-box" style="margin-top: 20px;">
-        <h4>📋 Barème des Commissions (Référence)</h4>
+        <h4>Barème des Commissions (Référence)</h4>
         @php
             // Barème du master (paliers actifs en base), jamais une copie écrite ici. Seuils abrégés en millions : le maximum d'un
             // palier vaut « presque » le minimum du suivant (1 499 999 → 1.5M), on l'arrondit au millier le plus proche puis on ajoute 1.

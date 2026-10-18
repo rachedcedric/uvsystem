@@ -204,7 +204,7 @@
 <body>
     <!-- En-tête fixe -->
     <div class="page-header">
-        <div class="page-header-title">💳 {{ config('branding.name') }} - Rapport des Remboursements</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark'){{ config('branding.name') }} - Rapport des Remboursements</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -225,7 +225,7 @@
 
     <!-- Contenu -->
     <div class="header">
-        <h1>📊 Rapport des Remboursements</h1>
+        <h1>Rapport des Remboursements</h1>
         <div class="subtitle">
             Historique des paiements reçus des agents
         </div>
@@ -256,10 +256,10 @@
         <tbody>
             @php
                 $methodLabels = [
-                    'cash' => '💵 Espèces',
-                    'mobile_money' => '📱 Mobile Money',
-                    'bank_transfer' => '🏦 Virement',
-                    'cheque' => '📝 Chèque',
+                    'cash' => 'Espèces',
+                    'mobile_money' => 'Mobile Money',
+                    'bank_transfer' => 'Virement',
+                    'cheque' => 'Chèque',
                 ];
             @endphp
             @foreach ($remboursements as $index => $remboursement)
@@ -283,7 +283,7 @@
 
     <!-- Résumé -->
     <div class="summary">
-        <h3>📈 Résumé des Encaissements</h3>
+        <h3>Résumé des Encaissements</h3>
         <div class="summary-grid">
             <div class="summary-item">
                 <div class="summary-value">{{ $remboursements->count() }}</div>

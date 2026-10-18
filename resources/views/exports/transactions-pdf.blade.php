@@ -166,7 +166,7 @@
 <body>
     <!-- Page Header -->
     <div class="page-header">
-        <div class="page-header-title">📊 {{ config('branding.name') }} - RAPPORT TRANSACTIONS</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark'){{ config('branding.name') }} - RAPPORT TRANSACTIONS</div>
         <div class="page-header-subtitle">
             @if ($agent)
                 Agent: {{ $agent->name }} |
@@ -192,7 +192,7 @@
 
     <!-- Content -->
     <div class="header">
-        <h1>📊 Rapport des Transactions UV</h1>
+        <h1>Rapport des Transactions UV</h1>
         <div class="meta">
             @if ($agent)
                 Agent: <strong>{{ $agent->name }}</strong> |
@@ -204,8 +204,8 @@
 
     <div class="summary">
         <h3>Résumé</h3>
-        <span class="summary-item">📦 Total Transactions: <strong>{{ $transactions->count() }}</strong></span>
-        <span class="summary-item">💰 Montant Total:
+        <span class="summary-item">Total Transactions: <strong>{{ $transactions->count() }}</strong></span>
+        <span class="summary-item">Montant Total:
             <strong>{{ number_format($transactions->sum('amount'), 0, ',', ' ') }} FCFA</strong></span>
     </div>
 
@@ -266,7 +266,7 @@
     <!-- Notes -->
     <div
         style="margin-top: 20px; padding: 10px; background-color: #fffbeb; border-left: 4px solid #f59e0b; font-size: 9px;">
-        <strong>📝 Notes :</strong><br>
+        <strong>Notes :</strong><br>
         ↗ Distribution : UV vendus aux agents (augmente la dette)<br>
         ↙ Retour : UV retournés par les agents (diminue la dette)
     </div>

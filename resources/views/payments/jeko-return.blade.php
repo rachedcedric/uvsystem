@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex,nofollow">
-    <title>{{ $title }} · {{ config('app.name') }}</title>
+    <title>{{ $title }} · {{ config('branding.name') }}</title>
+    @include('partials.favicons')
     <style>
         :root { color-scheme: light; font-family: ui-sans-serif, system-ui, sans-serif; }
         body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #f4f7f6; color: #132a25; }
@@ -16,6 +17,7 @@
 </head>
 <body>
     <main>
+        <img src="{{ \App\Support\BrandAsset::url('images/logo-wide.png') }}" alt="{{ config('branding.name') }}" style="display:block;height:2.25rem;margin:0 auto 1.5rem">
         <div class="status" aria-hidden="true">{{ $successful ? '✓' : '!' }}</div>
         <h1>{{ $title }}</h1>
         <p>{{ $message }}</p>

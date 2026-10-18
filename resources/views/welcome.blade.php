@@ -9,6 +9,7 @@
         <title>{{ config('branding.name') }} — Pilotez vos opérations UV</title>
         <link rel="canonical" href="{{ rtrim(config('branding.url'), '/') }}/">
         <meta property="og:site_name" content="{{ config('branding.name') }}">
+        <meta property="og:image" content="{{ \App\Support\BrandAsset::url('apple-touch-icon.png') }}">
         <meta property="og:title" content="{{ config('branding.name') }} — {{ config('branding.tagline') }}">
 
         @include('partials.favicons')
@@ -20,7 +21,7 @@
         <header class="site-header">
             <nav class="site-nav shell" aria-label="Navigation principale">
                 <a class="brand" href="/" aria-label="{{ config('branding.name') }} — Accueil">
-                    <img src="{{ asset('images/logo-wide.png') }}" width="205" alt="{{ config('branding.name') }}">
+                    <img src="{{ \App\Support\BrandAsset::url('images/logo-wide.png') }}" width="205" alt="{{ config('branding.name') }}">
                 </a>
 
                 <div class="nav-links" aria-label="Navigation de la page">

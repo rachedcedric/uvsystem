@@ -182,7 +182,7 @@
 
 <body>
     <div class="page-header">
-        <div class="page-header-title">💰 {{ config('branding.name') }} - Rapport des Charges</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark'){{ config('branding.name') }} - Rapport des Charges</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -200,7 +200,7 @@
     <div class="watermark">{{ config('branding.name') }}</div>
 
     <div class="header">
-        <h1>📊 Gestion des Charges</h1>
+        <h1>Gestion des Charges</h1>
         <div class="subtitle">Revenu (commissions) - Charges d'exploitation = Revenu net</div>
     </div>
 
@@ -238,7 +238,7 @@
     </table>
 
     <div class="summary">
-        <h3>📈 Résumé de la période</h3>
+        <h3>Résumé de la période</h3>
         <div class="summary-grid">
             <div class="summary-item">
                 <div class="summary-value" style="color: #22c55e;">

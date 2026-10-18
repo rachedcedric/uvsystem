@@ -392,6 +392,7 @@ html {
     padding: 0 12px 2px;
     overflow-x: auto;
     scroll-snap-type: x proximity;
+    scroll-padding-inline: 12px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
 }
@@ -1116,6 +1117,7 @@ button.m-row:active {
 
 .m-pw {
     position: relative;
+    display: block;
 }
 
 .m-pw .m-input {
@@ -2155,36 +2157,59 @@ body:has(.m-offline[data-show]) .m-appbar {
     font-weight: 600;
 }
 
-/* ------------------------------------------- tablette / ordinateur (≥ 600 px) */
+/* ------------------------------------------- adaptatif : tablette et grands écrans */
 
-/* L'interface est pensée pour un téléphone : on la garde en colonne centrée plutôt que de l'étirer
-   sur toute la largeur (cartes, barre d'onglets et feuilles incluses). */
+/* L'application remplit tout l'écran, quelle que soit sa taille (téléphone, tablette, pliable, écran partagé) :
+   elle réagit à la LARGEUR réelle de la fenêtre, pas au modèle d'appareil.
+     ≥ 600 px : pleine largeur, cartes en grille, feuilles et messages centrés de largeur raisonnable ;
+     ≥ 900 px (ou téléphone en paysage) : la barre d'onglets du bas devient un rail de navigation à gauche ;
+     contenu plafonné à --m-content-max pour rester lisible sur un très grand écran. */
 @media (min-width: 600px) {
     :root {
-        --m-col: 560px;
+        --m-content-max: 1100px;
+        --m-dialog-max: 600px;
+        --rail-w: 0px;
     }
 
-    html {
-        background: color-mix(in srgb, var(--bg) 82%, #000);
+    .m-main {
+        max-width: var(--m-content-max);
+        margin-inline: auto;
+        padding-left: calc(var(--sal) + 8px);
+        padding-right: calc(var(--sar) + 8px);
     }
 
-    .m-app {
-        max-width: var(--m-col);
-        margin: 0 auto;
-        background: var(--bg);
-        box-shadow: 0 0 0 1px var(--line), 0 12px 40px rgba(0, 0, 0, 0.12);
+    /* Bandeau de KPI : une grille qui retourne à la ligne, au lieu d'un défilement horizontal qui coupe les cartes. */
+    .m-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(176px, 1fr));
+        overflow: visible;
     }
 
-    .m-tabbar,
-    .m-sheet,
-    .m-offline {
-        left: 50%;
-        right: auto;
-        width: min(100%, var(--m-col));
-        transform: translateX(-50%);
+    .m-strip .m-stat {
+        width: auto;
     }
 
+    .m-grid {
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+
+    /* Un formulaire de 1 000 px de large est illisible : on le garde à une largeur de saisie confortable. */
+    .m-form {
+        max-width: 720px;
+        margin-inline: auto;
+    }
+
+    .m-login {
+        max-width: 480px;
+        margin-inline: auto;
+        padding-top: calc(var(--sat) + max(72px, 12dvh));
+    }
+
+    /* Feuilles, messages et FAB : centrés sur la zone de contenu (rail exclu), jamais étirés sur tout l'écran. */
     .m-sheet {
+        left: calc(50% + var(--rail-w) / 2);
+        right: auto;
+        width: min(100%, var(--m-dialog-max));
         transform: translate(-50%, 105%);
     }
 
@@ -2192,27 +2217,63 @@ body:has(.m-offline[data-show]) .m-appbar {
         transform: translate(-50%, 0);
     }
 
-    .m-offline {
-        transform: translate(-50%, -120%);
-    }
-
-    .m-offline[data-show] {
-        transform: translateX(-50%);
-    }
-
-    .m-fab {
-        right: max(16px, calc(50% - var(--m-col) / 2 + 16px));
-    }
-
     .m-toast {
-        left: 50%;
+        left: calc(50% + var(--rail-w) / 2);
         right: auto;
-        width: calc(min(100%, var(--m-col)) - 32px);
+        width: min(calc(100% - 32px), 520px);
         transform: translate(-50%, 24px);
     }
 
     .m-toast[data-show] {
         transform: translateX(-50%);
+    }
+
+    .m-fab {
+        right: max(24px, calc(var(--sar) + 24px), calc((100vw - var(--rail-w) - var(--m-content-max)) / 2 + 24px));
+    }
+
+    .m-ptr {
+        left: calc(50% + var(--rail-w) / 2);
+    }
+}
+
+/* Rail de navigation : tablette en paysage / grand écran, et téléphone en paysage (où la barre du bas mangerait
+   un sixième de la hauteur). */
+@media (min-width: 900px), (min-width: 600px) and (orientation: landscape) and (max-height: 520px) {
+    :root {
+        /* La zone sûre gauche (encoche en paysage) est comprise dans le rail : ses icônes gardent leurs 88 px. */
+        --rail-w: calc(88px + var(--sal));
+        --tab-h: 0px;
+    }
+
+    body.m-app {
+        padding-left: var(--rail-w);
+    }
+
+    .m-tabbar {
+        top: 0;
+        right: auto;
+        width: var(--rail-w);
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        overflow-y: auto;
+        padding: calc(var(--sat) + 12px) 8px calc(var(--sab) + 12px) calc(var(--sal) + 8px);
+        box-shadow: 1px 0 0 var(--line);
+    }
+
+    .m-tab {
+        flex: none;
+        padding: 8px 0 6px;
+    }
+
+    .m-offline {
+        left: var(--rail-w);
+    }
+
+    .m-main {
+        padding-left: 8px;
+        padding-bottom: calc(var(--sab) + 28px);
     }
 }
 

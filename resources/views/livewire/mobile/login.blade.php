@@ -1,6 +1,6 @@
 <div class="m-login" x-data="{ show: false }">
     <div class="m-login__brand">
-        <img class="m-logo m-login__logo" src="{{ asset('images/logo-wide.png') }}" alt="{{ config('branding.name') }}">
+        <img class="m-logo m-login__logo" src="{{ \App\Support\BrandAsset::url('images/logo-wide.png') }}" alt="{{ config('branding.name') }}">
         <div>
             <h1 class="m-login__title">Bon retour.</h1>
             <p class="m-login__lead">Connectez-vous pour suivre vos ventes, vos dettes et votre caisse.</p>

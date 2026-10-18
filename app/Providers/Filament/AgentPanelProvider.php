@@ -37,10 +37,12 @@ class AgentPanelProvider extends PanelProvider
                 Css::make('compact-ui', asset('css/filament-compact.css')),
             ])
             ->brandName(config('branding.name').' - Portail Agent')
-            ->brandLogo(asset('images/logo.png'))
-            ->darkModeBrandLogo(asset('images/logo-dark.png'))
+            ->brandLogo(BrandAsset::url('images/logo.png'))
+            ->darkModeBrandLogo(BrandAsset::url('images/logo-wide-dark.png'))
             ->brandLogoHeight('2.5rem')
             ->favicon(BrandAsset::url('favicon-32.png'))
+            // Icônes d'onglet complètes (.ico + écran d'accueil), versionnées : le navigateur redemande aussi /favicon.ico tout seul.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('partials.favicons'))
             // Pont Capacitor (APK Android) : bouton retour natif et lien « ← Application » ; inactif dans un navigateur classique.
             ->renderHook(
                 PanelsRenderHook::BODY_END,

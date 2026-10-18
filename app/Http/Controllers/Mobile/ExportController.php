@@ -21,6 +21,7 @@ use App\Services\CaisseService;
 use App\Services\Mobile\AgentHistory;
 use App\Services\Mobile\PeriodStats;
 use App\Services\Subscriptions\SubscriptionEntitlements;
+use App\Services\TenantDocumentBranding;
 use App\Support\Mobile\ChargePeriods;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -384,7 +385,7 @@ class ExportController extends Controller
         $periods = app(CaissePeriodResolver::class);
 
         $pdf = Pdf::loadView('exports.caisse-jour-pdf', [
-            'tenant' => config('app.name'),
+            'tenant' => app(TenantDocumentBranding::class)->tenantName(),
             'periode' => $day->format('d/m/Y').' 00h00 → '.$periods->endLabelMoment($day)->format('d/m/Y').' 23h59',
             'date' => $day,
             'totals' => $service->dayTotals($day),
@@ -412,7 +413,7 @@ class ExportController extends Controller
         $sorties = $days->reduce(fn ($c, $d) => bcadd($c, $d['sorties'], 2), '0');
 
         $pdf = Pdf::loadView('exports.caisse-historique-pdf', [
-            'tenant' => config('app.name'),
+            'tenant' => app(TenantDocumentBranding::class)->tenantName(),
             'periode' => $from ? 'Du '.$from->format('d/m/Y').' au '.$to->format('d/m/Y') : 'Toutes les journées',
             'days' => $days,
             'totalEntrees' => $entrees,

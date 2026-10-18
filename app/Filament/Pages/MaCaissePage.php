@@ -7,6 +7,7 @@ use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
 use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
+use App\Services\TenantDocumentBranding;
 use App\Support\Money;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -270,7 +271,7 @@ class MaCaissePage extends Page
         $sorties = $days->reduce(fn ($c, $d) => bcadd($c, $d['sorties'], 2), '0');
 
         $pdf = Pdf::loadView('exports.caisse-historique-pdf', [
-            'tenant' => config('app.name'),
+            'tenant' => app(TenantDocumentBranding::class)->tenantName(),
             'periode' => $this->periodLabel($from, $to),
             'days' => $days,
             'totalEntrees' => $entrees,

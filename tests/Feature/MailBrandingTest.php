@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Notifications\Subscriptions\TrialExpiring;
 use App\Notifications\Subscriptions\VerifySignupNotification;
+use App\Support\BrandAsset;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Tests\TestCase;
@@ -40,7 +41,7 @@ class MailBrandingTest extends TestCase
         $this->assertStringNotContainsStringIgnoringCase('MODEL'.'EC', $html);
 
         // Logo en image absolue (un e-mail s'ouvre hors du site), avec la marque en texte alternatif.
-        $this->assertStringContainsString('<img src="'.rtrim(config('branding.url'), '/').'/images/logo-wide.png"', $html);
+        $this->assertStringContainsString('<img src="'.rtrim(config('branding.url'), '/').'/images/logo-wide.png'.BrandAsset::version('images/logo-wide.png').'"', $html);
         $this->assertStringContainsString('alt="'.config('branding.name').'"', $html);
         $this->assertSame('UVMASTER', config('branding.name'));
 

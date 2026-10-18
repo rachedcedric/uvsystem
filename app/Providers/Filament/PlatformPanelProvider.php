@@ -37,9 +37,11 @@ class PlatformPanelProvider extends PanelProvider
             // Vert de la marque (même vert que la page d'accueil).
             ->colors(['primary' => Color::hex('#168447')])
             ->brandName(config('branding.name').' — Plateforme')
-            ->brandLogo(asset('images/logo-wide.png'))
+            ->brandLogo(BrandAsset::url('images/logo-wide.png'))
             ->brandLogoHeight('2.25rem')
             ->favicon(BrandAsset::url('favicon-32.png'))
+            // Icônes d'onglet complètes (.ico + écran d'accueil), versionnées : le navigateur redemande aussi /favicon.ico tout seul.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('partials.favicons'))
             ->font('Inter')
             ->assets([
                 Css::make('auth-ui', asset('css/filament-auth.css').'?v='.(@filemtime(public_path('css/filament-auth.css')) ?: 1)),

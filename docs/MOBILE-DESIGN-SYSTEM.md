@@ -77,6 +77,24 @@ Classes ajoutées : `m-badge--muted`, `m-amount(.is-cancelled)`, `m-note`, `m-ca
 Voir `docs/ANDROID-TEST-SCENARIOS.md` §3. Règles : `enterkeyhint` calculé par formulaire (`next` / `done` / `search` /
 `enter`), Entrée = champ suivant, champ actif ramené au-dessus du clavier (`visualViewport`), `adjustResize` côté Android.
 
+## 5 bis. Tablettes et grands écrans
+
+L'application s'adapte à la **largeur réelle de la fenêtre** (pas au modèle d'appareil) : tablette, pliable, écran partagé,
+téléphone en paysage. Tout est dans `mobile.css`, bloc « adaptatif », uniquement dans des media queries : un téléphone en
+portrait (< 600 px) est strictement inchangé.
+
+| Largeur | Comportement |
+|---|---|
+| < 600 px | Téléphone : mise en page d'origine |
+| ≥ 600 px | Pleine largeur (plafond `--m-content-max` = 1100 px, centré). Le bandeau de KPI (`.m-strip`) et `.m-grid` deviennent des grilles `auto-fit` au lieu d'un défilement horizontal qui coupait les cartes. Feuilles (`.m-sheet`) et messages (`.m-toast`) centrés, 600 / 520 px au plus. Formulaires (`.m-form`) 720 px au plus, connexion (`.m-login`) 480 px |
+| ≥ 900 px, ou téléphone en paysage (≥ 600 px de large, ≤ 520 px de haut) | La barre d'onglets du bas devient un **rail de navigation à gauche** (`--rail-w` = 88 px + zone sûre gauche, `--tab-h` passe à 0) |
+
+Règles pour un nouvel écran : ne jamais fixer de largeur en px sur un conteneur de page ; utiliser `.m-grid` / `.m-strip` pour
+des cartes ; ne pas compter sur `--tab-h` pour réserver la place de la barre (il vaut 0 avec le rail) ; centrer tout ce qui est
+en `position: fixed` avec `left: calc(50% + var(--rail-w) / 2)`. Garde-fous : `tests/Feature/MobileResponsiveLayoutTest.php`.
+Validation manuelle : aucun débordement horizontal sur 390, 600, 820, 1280, 1920 px et 844×390 (paysage) pour tous les écrans
+`/m` accessibles au master ; écran natif de chargement/erreur vérifié sur une tablette simulée de 800 × 1280 dp.
+
 ## 6. Fiche de validation du pilote « Ventes UV »
 
 Légende : ✅ fait · 🧪 testé automatiquement · 👁 vérifié dans un navigateur (viewport mobile) · 📄 vérifié statiquement (code/CSS) · 📱 exige un vrai appareil Android · 🐬 exige MySQL.

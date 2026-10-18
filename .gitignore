@@ -13,6 +13,7 @@
 /.nova
 /.phpunit.cache
 /.vscode
+/.claude/
 /.zed
 /auth.json
 /node_modules
@@ -49,7 +50,7 @@ yarn-error.log
 *.jks
 *.keystore
 keystore.properties
-/android/keystore.properties
+/android/keystore.properties*
 
 # Dev local mobile
 .env.mobiledev

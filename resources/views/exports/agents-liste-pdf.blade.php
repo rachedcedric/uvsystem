@@ -230,7 +230,7 @@
 <body>
     <!-- En-tête fixe -->
     <div class="page-header">
-        <div class="page-header-title">📊 {{ config('branding.name') }} - Gestion des Agents</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark'){{ config('branding.name') }} - Gestion des Agents</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -251,7 +251,7 @@
 
     <!-- Contenu -->
     <div class="header">
-        <h1>📋 Liste des Agents</h1>
+        <h1>Liste des Agents</h1>
         <div class="subtitle">
             Export complet du répertoire agents
         </div>
@@ -299,33 +299,33 @@
                     <td class="type-{{ $agent->type ?? 'standard' }}">
                         @switch($agent->type)
                             @case('premium')
-                                ⭐ Premium
+                                Premium
                             @break
 
                             @case('vip')
-                                👑 VIP
+                                VIP
                             @break
 
                             @default
-                                📦 Standard
+                                Standard
                         @endswitch
                     </td>
                     <td class="status-{{ $agent->status }}">
                         @switch($agent->status)
                             @case('active')
-                                ✅ Actif
+                                Actif
                             @break
 
                             @case('inactive')
-                                ⏸️ Inactif
+                                Inactif
                             @break
 
                             @case('suspended')
-                                ⚠️ Suspendu
+                                ⚠Suspendu
                             @break
 
                             @case('blocked')
-                                🚫 Bloqué
+                                Bloqué
                             @break
 
                             @default
@@ -349,7 +349,7 @@
 
     <!-- Résumé -->
     <div class="summary">
-        <h3>📈 Résumé</h3>
+        <h3>Résumé</h3>
         <div class="summary-grid">
             <div class="summary-item">
                 <div class="summary-value">{{ $agents->count() }}</div>

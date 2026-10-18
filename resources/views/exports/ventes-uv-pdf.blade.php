@@ -198,7 +198,7 @@
 <body>
     <!-- En-tête fixe -->
     <div class="page-header">
-        <div class="page-header-title">💰 {{ config('branding.name') }} - Rapport des Ventes</div>
+        <div class="page-header-title">@include('exports.partials.brand-mark'){{ config('branding.name') }} - Rapport des Ventes</div>
         <div class="page-header-subtitle">
             Généré le {{ $generatedAt->format('d/m/Y à H:i') }} par {{ $generatedBy }}
         </div>
@@ -219,7 +219,7 @@
 
     <!-- Contenu -->
     <div class="header">
-        <h1>📊 Rapport des Ventes UV</h1>
+        <h1>Rapport des Ventes UV</h1>
         <div class="subtitle">
             Historique des transactions de distribution
         </div>
@@ -257,9 +257,9 @@
                     <td>{{ $transaction->fournisseur?->name ?? '-' }}</td>
                     <td class="type-{{ $transaction->transaction_type }}">
                         @if ($transaction->transaction_type === 'distribution')
-                            📤 Distribution
+                            Distribution
                         @elseif($transaction->transaction_type === 'retour')
-                            📥 Retour
+                            Retour
                         @else
                             {{ $transaction->transaction_type }}
                         @endif
@@ -274,7 +274,7 @@
 
     <!-- Résumé -->
     <div class="summary">
-        <h3>📈 Résumé Financier</h3>
+        <h3>Résumé Financier</h3>
         <div class="summary-grid">
             <div class="summary-item">
                 <div class="summary-value">{{ $transactions->count() }}</div>

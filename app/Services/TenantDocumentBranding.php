@@ -14,6 +14,14 @@ class TenantDocumentBranding
     /** Au-delà de cette taille (octets), un logo est réduit à la volée avant d'être intégré à un PDF (anciens envois). */
     private const LOGO_EMBED_LIMIT = 120_000;
 
+    /** Nom de l'entreprise courante pour un en-tête de document (jamais le nom technique de l'application). */
+    public function tenantName(): string
+    {
+        $id = TenantContext::id();
+
+        return ($id !== null ? Tenant::query()->whereKey($id)->value('name') : null) ?: (string) config('branding.name');
+    }
+
     /**
      * @return array{
      *     name: string,

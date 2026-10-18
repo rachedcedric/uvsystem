@@ -3,7 +3,7 @@
 <aside class="pf-aside" aria-label="Présentation de {{ config('branding.name') }}">
     <div class="pf-aside__inner">
         <p class="pf-aside__brand">
-            <img class="pf-aside__logo" src="{{ asset('images/logo-wide.png') }}" alt="{{ config('branding.name') }}">
+            <img class="pf-aside__logo" src="{{ \App\Support\BrandAsset::url('images/logo-wide.png') }}" alt="{{ config('branding.name') }}">
             <span>{{ cms('settings.brand.name') }} <small>{{ $subtitle }}</small></span>
         </p>
 

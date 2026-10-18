@@ -12,8 +12,8 @@
 <div class="auth-frame">
     <header class="auth-brand">
         <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="{{ asset(config('branding.logo.dark_path')) }}">
-            <img class="auth-brand__logo" src="{{ asset(config('branding.logo.path')) }}" alt="{{ config('branding.name') }}">
+            <source media="(prefers-color-scheme: dark)" srcset="{{ \App\Support\BrandAsset::url(config('branding.logo.dark_path')) }}">
+            <img class="auth-brand__logo" src="{{ \App\Support\BrandAsset::url(config('branding.logo.path')) }}" alt="{{ config('branding.name') }}">
         </picture>
         <p>{{ config('branding.tagline') }}</p>
     </header>

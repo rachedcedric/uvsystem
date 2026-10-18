@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Tenant;
+use App\Support\BrandAsset;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Storage;
 use Tests\Feature\Subscriptions\SubscriptionTestCase;
@@ -24,8 +25,8 @@ class UiAdjustmentsTest extends SubscriptionTestCase
 
         $panel = Filament::getPanel('admin');
 
-        $this->assertSame(asset('images/logo-wide.png'), (string) $panel->getBrandLogo());
-        $this->assertSame(asset('images/logo-wide-dark.png'), (string) $panel->getDarkModeBrandLogo());
+        $this->assertSame(BrandAsset::url('images/logo-wide.png'), (string) $panel->getBrandLogo());
+        $this->assertSame(BrandAsset::url('images/logo-wide-dark.png'), (string) $panel->getDarkModeBrandLogo());
         $this->assertStringNotContainsString('branding', (string) $panel->getBrandLogo());
         $this->assertFileExists(public_path('images/logo-wide.png'));
         $this->assertFileExists(public_path('images/logo-wide-dark.png'));

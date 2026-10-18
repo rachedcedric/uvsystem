@@ -35,8 +35,8 @@ return [
         'alt' => 'UVMASTER',
 
         // Logo pour thème sombre
-        'dark_path' => 'images/logo-dark.png',
-        'dark_url' => '/images/logo-dark.png',
+        'dark_path' => 'images/logo-wide-dark.png',
+        'dark_url' => '/images/logo-wide-dark.png',
 
         // Dimensions
         'width' => 393,

@@ -142,7 +142,12 @@
 
 <body>
     <div class="header">
-        <h1>🏦 {{ config('branding.name') }}</h1>
+        @php($brandLogo = \App\Support\BrandAsset::dataUri('images/logo-wide.png'))
+        @if ($brandLogo)
+            <img src="{{ $brandLogo }}" alt="{{ config('branding.name') }}" style="height: 44px; margin-bottom: 6px;">
+        @else
+            <h1>{{ config('branding.name') }}</h1>
+        @endif
         <p>{{ config('branding.tagline') }}</p>
         <div class="receipt-number">{{ $numero_recu }}</div>
     </div>
@@ -150,7 +155,7 @@
     <h2 style="text-align: center; margin-bottom: 20px;">REÇU DE REMBOURSEMENT</h2>
 
     <div class="section">
-        <div class="section-title">📋 Informations Agent</div>
+        <div class="section-title">Informations Agent</div>
         <div class="info-row">
             <span class="info-label">Nom:</span>
             <span class="info-value">{{ $agent->name ?? 'N/A' }}</span>
@@ -166,7 +171,7 @@
     </div>
 
     <div class="section">
-        <div class="section-title">💳 Détails du Remboursement</div>
+        <div class="section-title">Détails du Remboursement</div>
         <div class="info-row">
             <span class="info-label">Date de paiement:</span>
             <span class="info-value">{{ $date }}</span>
@@ -191,7 +196,7 @@
 
     @if ($remboursement->notes)
         <div class="section">
-            <div class="section-title">📝 Notes</div>
+            <div class="section-title">Notes</div>
             <p>{{ $remboursement->notes }}</p>
         </div>
     @endif

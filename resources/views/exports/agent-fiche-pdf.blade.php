@@ -266,7 +266,7 @@
     <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-left">
-            <span class="logo-placeholder">🏢</span>
+            @include('exports.partials.brand-mark')
             <div style="display: inline-block; vertical-align: middle;">
                 <div class="company-name">{{ config('branding.name') }}</div>
                 <div class="page-header-subtitle">Gestion de la distribution des UV</div>
@@ -295,12 +295,12 @@
 
     <!-- Content -->
     <div class="header">
-        <h1>📋 Fiche Agent - {{ $agent->name }}</h1>
+        <h1>Fiche Agent - {{ $agent->name }}</h1>
         <div class="subtitle">Rapport détaillé de l'activité</div>
     </div>
 
     <div class="info-box">
-        <h3>👤 Informations Générales</h3>
+        <h3>Informations Générales</h3>
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Nom complet:</div>
@@ -318,7 +318,7 @@
                 <div class="info-label">Statut:</div>
                 <div class="info-value">
                     <span class="badge badge-{{ $agent->status }}">
-                        {{ $agent->status === 'active' ? '✓ Actif' : ($agent->status === 'suspended' ? '⏸ Suspendu' : '✗ Inactif') }}
+                        {{ $agent->status === 'active' ? '✓ Actif' : ($agent->status === 'suspended' ? 'Suspendu' : '✗ Inactif') }}
                     </span>
                 </div>
             </div>
@@ -331,7 +331,7 @@
     </div>
 
     <div class="financial-box">
-        <h3>💰 Situation Financière</h3>
+        <h3>Situation Financière</h3>
         <div class="info-grid">
             <div class="info-row">
                 <div class="info-label">Plafond de dette:</div>
@@ -369,7 +369,7 @@
     </div>
 
     @if ($agent->transactions->count() > 0)
-        <h3 class="section-title">📦 Dernières Transactions ({{ $agent->transactions->count() }} total)</h3>
+        <h3 class="section-title">Dernières Transactions ({{ $agent->transactions->count() }} total)</h3>
         <table>
             <thead>
                 <tr>
@@ -403,7 +403,7 @@
     @endif
 
     @if ($agent->remboursements->count() > 0)
-        <h3 class="section-title">💵 Derniers Remboursements ({{ $agent->remboursements->count() }} total)</h3>
+        <h3 class="section-title">Derniers Remboursements ({{ $agent->remboursements->count() }} total)</h3>
         <table>
             <thead>
                 <tr>

@@ -1,40 +1,10 @@
-# Images du Système UV
+# Images de marque UVMASTER
 
-## Logo Entreprise
+- `logo-wide.png` : logo principal (fond blanc, texte sombre) : connexion, pages publiques, e-mails, PDF.
+- `logo-wide-dark.png` : variante à texte clair pour le mode sombre.
+- `logo.png` et `logo-dark.png` : copies conservées pour compatibilité (même visuel que les deux ci-dessus).
+- `../favicon-32.png`, `../favicon.ico`, `../apple-touch-icon.png` : icônes d'onglet et d'écran d'accueil, générées depuis
+  `resources/branding/app-icon.png` par `scripts/generate-app-icons.py`.
 
-Placez votre logo d'entreprise dans ce dossier avec le nom `logo.png`.
-
-### Spécifications recommandées:
-
--   **Format**: PNG avec fond transparent
--   **Dimensions**: 200x200px ou 300x300px
--   **Poids**: < 100KB
--   **Usage**:
-    -   En-têtes des PDF
-    -   Interface Filament
-    -   Emails
-
-### Exemple de structure:
-
-```
-public/images/
-├── logo.png           # Logo principal
-├── logo-dark.png      # Logo pour thème sombre (optionnel)
-├── favicon.ico        # Favicon du site
-└── watermark.png      # Filigrane pour documents (optionnel)
-```
-
-## Pour ajouter votre logo:
-
-1. Préparez votre logo au format PNG
-2. Renommez-le en `logo.png`
-3. Copiez-le dans ce dossier
-4. Le logo sera automatiquement utilisé dans:
-    - Les PDF générés
-    - Le panneau d'administration
-    - Les emails de notification
-
-## Logo temporaire
-
-Un logo temporaire (emoji) est actuellement utilisé (🏢).
-Remplacez-le par votre vrai logo dès que possible.
+Le serveur web sert ces images avec `Cache-Control: immutable` (30 jours). Ne les référencez jamais directement : passez par
+`App\Support\BrandAsset::url()` (ajoute `?v=` + date du fichier), sinon un navigateur garde l'ancienne image.

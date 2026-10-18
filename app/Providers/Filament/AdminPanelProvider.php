@@ -38,10 +38,12 @@ class AdminPanelProvider extends PanelProvider
             ->brandName(fn (): string => auth()->user()?->tenant?->name ?: config('branding.name'))
             // Le panneau porte TOUJOURS le logo du produit. Le logo téléversé par une entreprise (profil de l'entreprise) sert à
             // ses documents (PDF, exports) et à sa carte dans l'application mobile, jamais à l'interface d'administration.
-            ->brandLogo(asset('images/logo-wide.png'))
-            ->darkModeBrandLogo(asset('images/logo-wide-dark.png'))
+            ->brandLogo(BrandAsset::url('images/logo-wide.png'))
+            ->darkModeBrandLogo(BrandAsset::url('images/logo-wide-dark.png'))
             ->brandLogoHeight('2.5rem')
             ->favicon(BrandAsset::url('favicon-32.png'))
+            // Icônes d'onglet complètes (.ico + écran d'accueil), versionnées : le navigateur redemande aussi /favicon.ico tout seul.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('partials.favicons'))
             ->colors([
                 'primary' => Color::Blue,
                 'danger' => Color::Rose,
@@ -124,7 +126,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::SIMPLE_PAGE_START,
-                fn () => '<img class="pf-logo" src="'.e(asset('images/logo-wide.png')).'" alt="'.e(config('branding.name')).'">',
+                fn () => '<img class="pf-logo" src="'.e(BrandAsset::url('images/logo-wide.png')).'" alt="'.e(config('branding.name')).'">',
                 scopes: Login::class,
             )
             ->renderHook(

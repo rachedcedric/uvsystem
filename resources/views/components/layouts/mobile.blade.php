@@ -23,8 +23,8 @@
     @persist('m-splash')
         <div id="m-splash" class="m-splash" aria-hidden="true">
             <picture>
-                <source media="(prefers-color-scheme: dark)" srcset="{{ asset('images/logo-wide-dark.png') }}">
-                <img class="m-logo m-splash__logo" src="{{ asset('images/logo-wide.png') }}" alt="">
+                <source media="(prefers-color-scheme: dark)" srcset="{{ \App\Support\BrandAsset::url('images/logo-wide-dark.png') }}">
+                <img class="m-logo m-splash__logo" src="{{ \App\Support\BrandAsset::url('images/logo-wide.png') }}" alt="">
             </picture>
             <div class="m-splash__bar"></div>
         </div>

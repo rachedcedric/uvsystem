@@ -152,9 +152,9 @@ class ResendService
             'message' => $message,
             'priority' => $priority,
             'company' => [
-                'name' => config('branding.company_name'),
-                'email' => config('branding.company_email'),
-                'phone' => config('branding.company_phone'),
+                'name' => config('branding.company.name'),
+                'email' => config('branding.company.email'),
+                'phone' => config('branding.company.phone'),
             ],
         ])->render();
 
