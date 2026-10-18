@@ -11,7 +11,7 @@ gzip -dc "$SRC/db.sql.gz" | dc exec -T -e MYSQL_PWD="$ROOTPW" db mysql -uroot "$
 BAD=0
 while IFS=$'\t' read -r t expected; do
   [ "$expected" = "NA" ] && continue
-  got=$(dc exec -T -e MYSQL_PWD="$ROOTPW" db mysql -uroot -N -B "$TMP" -e "SELECT COUNT(*) FROM \`$t\`" 2>/dev/null || echo "MANQUANTE")
+  got=$(dc exec -T -e MYSQL_PWD="$ROOTPW" db mysql -uroot -N -B "$TMP" -e "SELECT COUNT(*) FROM \`$t\`" </dev/null 2>/dev/null || echo "MANQUANTE")
   if [ "$got" != "$expected" ]; then echo "ÉCART $t : sauvegarde=$expected restauré=$got"; BAD=1; else echo "OK    $t = $got"; fi
 done < "$SRC/counts.tsv"
 tar -tzf "$SRC/storage.tar.gz" >/dev/null && echo "OK    archive des fichiers lisible ($(tar -tzf "$SRC/storage.tar.gz" | wc -l | tr -d ' ') entrées)"

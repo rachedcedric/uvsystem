@@ -6,6 +6,16 @@ use PHPUnit\Framework\TestCase;
 
 class DeploymentScriptTest extends TestCase
 {
+    public function test_restore_verification_does_not_consume_the_counts_manifest(): void
+    {
+        $script = file_get_contents(__DIR__.'/../../deploy/scripts/verify-restore.sh');
+
+        $this->assertStringContainsString(
+            'SELECT COUNT(*) FROM \`$t\`" </dev/null',
+            $script,
+        );
+    }
+
     public function test_deployment_synchronizes_authorization_reference_data_before_validation(): void
     {
         $script = file_get_contents(__DIR__.'/../../deploy/scripts/deploy.sh');
