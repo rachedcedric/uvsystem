@@ -22,7 +22,7 @@ class SubscriptionChangeRequested extends SubscriptionNotification
             'subject' => 'Demande de changement d\'offre',
             'lines' => [
                 'Une demande de passage à l\'offre {plan} ({cycle}) a été enregistrée.',
-                'Montant à régler : {amount} (prorata déduit). Le changement s\'applique dès la réception du paiement.',
+                'Montant à régler : {amount}. Le changement s\'applique dès la réception du paiement.',
             ],
         ];
     }

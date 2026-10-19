@@ -72,7 +72,7 @@ class SubscriptionChangeRequestTest extends SubscriptionTestCase
         $this->assertSame('2026-11-10', substr($quote['new_period_ends_at'], 0, 10), 'même échéance en cas de même cycle');
     }
 
-    public function test_a_downgrade_costs_nothing_and_a_cycle_change_starts_a_fresh_period(): void
+    public function test_a_downgrade_costs_nothing_and_an_annual_cycle_starts_at_full_price(): void
     {
         $proration = app(SubscriptionProration::class);
         $current = $this->manager->current($this->tenant);
@@ -80,9 +80,26 @@ class SubscriptionChangeRequestTest extends SubscriptionTestCase
         $this->assertSame(0, $proration->quote($current, $this->plan('essentiel'), SubscriptionCycle::Monthly)['amount_due']);
 
         $yearly = $proration->quote($current, $this->plan('pro'), SubscriptionCycle::Yearly);
-        $this->assertSame(300000 - (int) round(30000 * 16 / 31), $yearly['amount_due']);
+        $this->assertSame(0, $yearly['credit']);
+        $this->assertSame(300000, $yearly['amount_due']);
         $this->assertSame('2027-10-25', substr($yearly['new_period_ends_at'], 0, 10));
         $this->assertTrue($yearly['cycle_changed']);
+    }
+
+    public function test_agent_master_annual_cycle_charges_exactly_500000_fcfa(): void
+    {
+        $agentMaster = $this->plan('entreprise');
+        $agentMaster->update(['name' => 'Agent Master', 'yearly_price' => 500000]);
+
+        $quote = app(SubscriptionProration::class)->quote(
+            $this->manager->current($this->tenant),
+            $agentMaster,
+            SubscriptionCycle::Yearly,
+        );
+
+        $this->assertSame(500000, $quote['charge']);
+        $this->assertSame(0, $quote['credit']);
+        $this->assertSame(500000, $quote['amount_due']);
     }
 
     public function test_nothing_is_due_during_a_trial_or_for_a_grandfathered_subscription(): void

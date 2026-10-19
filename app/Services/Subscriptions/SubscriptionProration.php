@@ -14,7 +14,8 @@ use Carbon\CarbonInterface;
  *  - ratio   = temps restant de la période / durée de la période (0 à 1) ;
  *  - crédit  = prix payé de la période en cours × ratio (la part non consommée) ;
  *  - même cycle   : coût = prix de la nouvelle offre × ratio, l'échéance est conservée ;
- *  - cycle changé : coût = prix complet de la nouvelle période, qui démarre maintenant ;
+ *  - passage à l'annuel : prix annuel complet, sans déduction de la période mensuelle restante ;
+ *  - autre cycle changé : coût = prix complet de la nouvelle période, qui démarre maintenant ;
  *  - à régler = max(0, coût − crédit) (une rétrogradation ne génère pas de remboursement automatique).
  * Rien à régler pendant un essai, ni pour un abonnement hérité (prix appliqué 0, sans échéance).
  */
@@ -37,7 +38,8 @@ class SubscriptionProration
         $total = max(1, $start->diffInSeconds($end, true));
         $ratio = max(0.0, min(1.0, $at->diffInSeconds($end, false) / $total));
 
-        $credit = (int) round($current->applied_price * $ratio);
+        $startsAnnualCycle = $changedCycle && $cycle === SubscriptionCycle::Yearly;
+        $credit = $startsAnnualCycle ? 0 : (int) round($current->applied_price * $ratio);
         $newPrice = $plan->priceFor($cycle);
         $charge = $changedCycle ? $newPrice : (int) round($newPrice * $ratio);
 

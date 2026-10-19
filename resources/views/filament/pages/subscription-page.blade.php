@@ -158,7 +158,7 @@
         @endif
 
         <x-filament::section heading="Comparer les offres">
-            <x-slot name="description">Les montants dus sont calculés automatiquement en tenant compte de la période déjà payée.</x-slot>
+            <x-slot name="description">Le passage à l'annuel est facturé au tarif annuel complet. Les changements mensuels tiennent compte de la période déjà payée.</x-slot>
 
             <div class="mb-4 flex flex-wrap gap-2" role="group" aria-label="Cycle de facturation">
                 @foreach (\App\Enums\SubscriptionCycle::cases() as $option)

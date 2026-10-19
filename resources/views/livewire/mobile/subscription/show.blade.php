@@ -120,14 +120,14 @@
                 @php($isCurrent = $plan && $offer->id === $plan->id && $subscription->cycle === $viewCycle)
                 @php($quote = $quotes[$offer->id] ?? null)
                 <x-m.row :icon="$isCurrent ? 'check-circle' : 'rectangle-stack'" :chevron="false" :title="$offer->name"
-                         :sub="number_format($offer->priceFor($viewCycle), 0, ',', ' ').' FCFA / '.($viewCycle === \App\Enums\SubscriptionCycle::Yearly ? 'an' : 'mois').' — '.($offer->max_users ?? 'utilisateurs illimités').($offer->max_users ? ' utilisateurs' : '').', '.($offer->max_agents ?? 'agents illimités').($offer->max_agents ? ' agents' : '').($quote && ! $isCurrent && $subscription && $subscription->current_period_ends_at ? ' — à régler : '.number_format($quote['amount_due'], 0, ',', ' ').' FCFA (prorata déduit)' : '')">
+                         :sub="number_format($offer->priceFor($viewCycle), 0, ',', ' ').' FCFA / '.($viewCycle === \App\Enums\SubscriptionCycle::Yearly ? 'an' : 'mois').' — '.($offer->max_users ?? 'utilisateurs illimités').($offer->max_users ? ' utilisateurs' : '').', '.($offer->max_agents ?? 'agents illimités').($offer->max_agents ? ' agents' : '').($quote && ! $isCurrent && $subscription && $subscription->current_period_ends_at ? ' — à régler : '.number_format($quote['amount_due'], 0, ',', ' ').' FCFA'.($viewCycle === \App\Enums\SubscriptionCycle::Yearly ? ' (tarif annuel complet)' : ' (prorata déduit)') : '')">
                     @unless ($isCurrent || ! $subscription)
                         <x-slot:end><button type="button" class="m-btn" style="min-height:44px;min-width:44px" wire:click="requestChange({{ $offer->id }}, '{{ $viewCycle->value }}')">Choisir</button></x-slot:end>
                     @endunless
                 </x-m.row>
             @endforeach
         </div>
-        <p class="m-row__sub" style="padding:8px 14px;white-space:normal">Le montant à régler tient compte de la part non consommée de votre période en cours. Si rien n'est à payer, le changement est appliqué immédiatement ; sinon il s'applique à la confirmation de votre paiement. Vos données existantes sont toujours conservées.</p>
+        <p class="m-row__sub" style="padding:8px 14px;white-space:normal">Le passage à l'annuel est facturé au tarif annuel complet. Pour un changement mensuel, le montant tient compte de la part non consommée de la période en cours. Le changement s'applique à la confirmation du paiement et vos données sont conservées.</p>
     </x-m.section>
 
     @if (count($backups))
