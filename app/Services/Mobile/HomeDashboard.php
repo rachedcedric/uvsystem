@@ -4,6 +4,7 @@ namespace App\Services\Mobile;
 
 use App\Models\Agent;
 use App\Models\Approvisionnement;
+use App\Models\Fournisseur;
 use App\Models\Remboursement;
 use App\Models\User;
 use App\Models\UvTransaction;
@@ -150,7 +151,7 @@ class HomeDashboard
             ->whereNull('deleted_at')
             ->select([
                 DB::raw("'approvisionnement' as type"), 'id', 'reference',
-                'user_id as tiers_id', DB::raw("'user' as tiers_type"),
+                'fournisseur_id as tiers_id', DB::raw("'fournisseur' as tiers_type"),
                 'amount', 'date_approvisionnement as date_operation', DB::raw("'completed' as status"),
             ]);
 
@@ -172,14 +173,17 @@ class HomeDashboard
             ->get();
 
         $agentNames = Agent::withTrashed()->whereIn('id', $rows->where('tiers_type', 'agent')->pluck('tiers_id')->unique()->filter())->pluck('name', 'id');
+        $fournisseurNames = Fournisseur::withTrashed()->whereIn('id', $rows->where('tiers_type', 'fournisseur')->pluck('tiers_id')->unique()->filter())->pluck('name', 'id');
         $userNames = User::whereIn('id', $rows->where('tiers_type', 'user')->pluck('tiers_id')->unique()->filter())->pluck('name', 'id');
 
         return $rows->map(fn ($row): array => [
             'type' => $row->type,
             'reference' => $row->reference,
-            'tiers' => $row->tiers_type === 'agent'
-                ? ($agentNames[$row->tiers_id] ?? 'Agent inconnu')
-                : ($userNames[$row->tiers_id] ?? 'Utilisateur inconnu'),
+            'tiers' => match ($row->tiers_type) {
+                'agent' => $agentNames[$row->tiers_id] ?? 'Agent inconnu',
+                'fournisseur' => $fournisseurNames[$row->tiers_id] ?? 'Fournisseur inconnu',
+                default => $userNames[$row->tiers_id] ?? 'Utilisateur inconnu',
+            },
             'amount' => (float) $row->amount,
             'date' => (string) $row->date_operation,
             'status' => $row->status,

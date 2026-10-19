@@ -81,6 +81,25 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         });
     }
 
+    public function test_an_annual_checkout_uses_the_exact_yearly_price(): void
+    {
+        Http::fake([
+            'https://api.jeko.africa/partner_api/payment_requests' => Http::response([
+                'id' => 'payreq-yearly',
+                'status' => 'pending',
+                'redirectUrl' => 'https://pay.jeko.africa/pay_request/pr/payreq-yearly',
+            ], 201),
+        ]);
+
+        $tenant = $this->tenant();
+        app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Yearly);
+
+        $payment = app(SubscriptionBilling::class)->request($tenant, 'jeko', 'wave');
+
+        $this->assertSame(300000, $payment->amount);
+        Http::assertSent(fn (Request $request): bool => $request['amountCents'] === 30000000);
+    }
+
     public function test_a_legacy_or_outdated_pending_checkout_is_replaced_with_the_current_offer_price(): void
     {
         Http::fake([
