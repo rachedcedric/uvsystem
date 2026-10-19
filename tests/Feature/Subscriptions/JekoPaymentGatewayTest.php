@@ -58,10 +58,12 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $payment = app(SubscriptionBilling::class)->request($tenant, 'jeko', 'orange');
 
         $this->assertSame(SubscriptionPayment::PENDING, $payment->status);
+        $this->assertSame(30000, $payment->amount);
         $this->assertSame('jeko', $payment->gateway);
         $this->assertSame('payreq-123', $payment->provider_reference);
         $this->assertSame('https://pay.jeko.africa/pay_request/pr/payreq-123', $payment->metadata['redirect_url']);
         $this->assertSame('orange', $payment->metadata['payment_method']);
+        $this->assertSame(JekoSubscriptionPaymentGateway::AMOUNT_UNIT_VERSION, $payment->metadata['amount_unit_version']);
         $this->assertNotEmpty($payment->metadata['merchant_reference']);
 
         Http::assertSent(function (Request $request) use ($payment): bool {
@@ -69,7 +71,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
                 && $request->hasHeader('X-API-KEY', 'test-api-key')
                 && $request->hasHeader('X-API-KEY-ID', 'test-api-key-id')
                 && $request['storeId'] === 'store-test-id'
-                && $request['amountCents'] === 30000
+                && $request['amountCents'] === 3000000
                 && $request['currency'] === 'XOF'
                 && $request['reference'] === $payment->metadata['merchant_reference']
                 && $request['paymentDetails']['type'] === 'redirect'
@@ -77,6 +79,29 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
                 && str_starts_with($request['paymentDetails']['data']['successUrl'], 'https://uvmaster.test/paiements/jeko/succes')
                 && str_starts_with($request['paymentDetails']['data']['errorUrl'], 'https://uvmaster.test/paiements/jeko/erreur');
         });
+    }
+
+    public function test_a_legacy_or_outdated_pending_checkout_is_replaced_with_the_current_offer_price(): void
+    {
+        Http::fake([
+            'https://api.jeko.africa/partner_api/payment_requests' => Http::response([
+                'id' => 'payreq-current-price',
+                'status' => 'pending',
+                'redirectUrl' => 'https://pay.jeko.africa/pay_request/pr/payreq-current-price',
+            ], 201),
+        ]);
+
+        $tenant = $this->tenant();
+        app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
+        $legacy = $this->pendingPayment($tenant, 'payreq-legacy');
+        $this->plan('pro')->update(['monthly_price' => 45050]);
+
+        $payment = app(SubscriptionBilling::class)->request($tenant, 'jeko', 'wave');
+
+        $this->assertNotSame($legacy->id, $payment->id);
+        $this->assertSame(SubscriptionPayment::CANCELLED, $legacy->fresh()->status);
+        $this->assertSame(45050, $payment->amount);
+        Http::assertSent(fn (Request $request): bool => $request['amountCents'] === 4505000);
     }
 
     public function test_an_invalid_payment_method_is_rejected_without_calling_jeko(): void
@@ -113,7 +138,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
 
         $payload = [
             'id' => 'txn-456',
-            'amount' => ['amount' => $payment->amount, 'currency' => 'XOF'],
+            'amount' => ['amount' => $payment->amount * 100, 'currency' => 'XOF'],
             'status' => 'success',
             'paymentMethod' => 'wave',
             'transactionType' => 'payment',
@@ -142,7 +167,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $tenant = $this->tenant();
         app(SubscriptionManager::class)->activate($tenant, $this->plan('pro'), SubscriptionCycle::Monthly);
         $payment = $this->pendingPayment($tenant, 'payreq-mismatch');
-        $payload = $this->successfulPayload($payment, ['amount' => ['amount' => $payment->amount + 100, 'currency' => 'XOF']]);
+        $payload = $this->successfulPayload($payment, ['amount' => ['amount' => ($payment->amount * 100) + 100, 'currency' => 'XOF']]);
 
         $this->postWebhook($payload)->assertUnprocessable();
         $this->assertSame(SubscriptionPayment::PENDING, $payment->fresh()->status);
@@ -199,7 +224,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
                 'status' => 'success',
                 'transaction' => [
                     'id' => 'txn-reconcile',
-                    'amount' => ['amount' => $payment->amount, 'currency' => 'XOF'],
+                    'amount' => ['amount' => $payment->amount * 100, 'currency' => 'XOF'],
                     'status' => 'success',
                 ],
             ]),
@@ -284,7 +309,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         $this->assertSame(SubscriptionChangeRequest::CANCELLED, $request->fresh()->status);
     }
 
-    public function test_a_prorated_plan_change_is_rounded_to_the_jeko_payment_increment(): void
+    public function test_a_prorated_plan_change_keeps_the_exact_fcfa_amount_for_jeko(): void
     {
         $this->travelToDate('2026-10-10 10:00:00');
         $tenant = $this->tenant();
@@ -309,9 +334,9 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
         );
         $payment = TenantContext::withoutTenancy(fn () => SubscriptionPayment::query()->where('tenant_id', $tenant->id)->latest('id')->firstOrFail());
 
-        $this->assertSame(15500, $request->quote['amount_due']);
-        $this->assertSame(15500, $payment->amount);
-        Http::assertSent(fn (Request $sent): bool => $sent['amountCents'] === 15500);
+        $this->assertSame(15484, $request->quote['amount_due']);
+        $this->assertSame(15484, $payment->amount);
+        Http::assertSent(fn (Request $sent): bool => $sent['amountCents'] === 1548400);
     }
 
     public function test_a_plan_change_is_cancelled_when_jeko_cannot_create_its_checkout(): void
@@ -485,7 +510,7 @@ class JekoPaymentGatewayTest extends SubscriptionTestCase
     {
         return array_replace_recursive([
             'id' => 'txn-'.$payment->provider_reference,
-            'amount' => ['amount' => $payment->amount, 'currency' => $payment->currency],
+            'amount' => ['amount' => $payment->amount * 100, 'currency' => $payment->currency],
             'status' => 'success',
             'paymentMethod' => 'wave',
             'transactionType' => 'payment',

@@ -108,7 +108,7 @@ class JekoPendingPaymentExpiryTest extends SubscriptionTestCase
             'storeId' => 'store-test-id',
             'paymentMethod' => 'wave',
             'transactionDetails' => ['id' => $payment->provider_reference, 'reference' => $payment->metadata['merchant_reference']],
-            'amount' => ['amount' => $payment->amount, 'currency' => 'XOF'],
+            'amount' => ['amount' => $payment->amount * 100, 'currency' => 'XOF'],
         ]);
 
         $this->call('POST', '/api/webhooks/jeko', [], [], [], [
@@ -169,7 +169,7 @@ class JekoPendingPaymentExpiryTest extends SubscriptionTestCase
             ];
 
             if ($status === 'success') {
-                $body['transaction'] = ['id' => 'txn-'.$id, 'status' => 'success', 'amount' => ['amount' => $payment->amount, 'currency' => 'XOF']];
+                $body['transaction'] = ['id' => 'txn-'.$id, 'status' => 'success', 'amount' => ['amount' => $payment->amount * 100, 'currency' => 'XOF']];
             }
 
             return Http::response($body);

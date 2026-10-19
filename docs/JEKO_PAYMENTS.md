@@ -20,7 +20,7 @@ Jèko est la passerelle par défaut et la seule proposée aux tenants. Le mode m
 
 Le tenant choisit explicitement son moyen de paiement avant chaque nouveau checkout : Wave, Orange Money, MTN Money, Moov Money, Djamo ou Jèko. Aucun moyen n'est présélectionné et le serveur refuse de créer une demande Jèko sans choix valide. À l'échéance d'un renouvellement automatique, l'application envoie la notification avec le montant dû, mais attend ce choix sur l'écran « Mon abonnement » avant de créer le lien de paiement.
 
-Jèko exige des montants multiples de 100 FCFA. Les proratas Jèko sont donc arrondis au multiple de 100 le plus proche avant l’enregistrement du devis et du paiement ; le montant affiché reste ainsi identique au montant encaissé.
+L’application conserve et affiche les montants en FCFA entiers. L’API Jèko attend `amountCents` en centimes, multiple de 100 : le montant FCFA est donc multiplié par 100 uniquement à la frontière API. Aucun arrondi n’est appliqué au prix de l’offre ni au prorata ; le montant affiché reste identique au montant encaissé.
 
 ## Parcours dans l’application Android
 

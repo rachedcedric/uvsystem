@@ -53,6 +53,7 @@ class SubscriptionBilling
     {
         $subscription = $this->manager->current($tenant) ?? throw new InvalidSubscriptionTransition('Aucun abonnement à régler.');
         $provider = $this->gateway($gateway);
+        $amount = $provider->payableAmount($this->amountDue($tenant));
         $pending = TenantContext::runAs((int) $tenant->getKey(), fn () => SubscriptionPayment::query()
             ->where('tenant_subscription_id', $subscription->getKey())
             ->where('gateway', $provider->name())
@@ -62,10 +63,20 @@ class SubscriptionBilling
             ->first(fn (SubscriptionPayment $payment) => ($payment->metadata['purpose'] ?? null) === 'renewal'));
 
         if ($pending !== null) {
-            return $pending;
+            $usesCurrentAmountUnit = $provider->name() !== JekoSubscriptionPaymentGateway::NAME
+                || ($pending->metadata['amount_unit_version'] ?? null) === JekoSubscriptionPaymentGateway::AMOUNT_UNIT_VERSION;
+
+            if ($pending->amount === $amount && $usesCurrentAmountUnit) {
+                return $pending;
+            }
+
+            TenantContext::runAs((int) $tenant->getKey(), fn () => $pending->forceFill([
+                'status' => SubscriptionPayment::CANCELLED,
+                'failure_reason' => 'Remplacé par un paiement au tarif actuel.',
+            ])->save());
         }
 
-        return $provider->initiate($subscription, $provider->payableAmount($this->amountDue($tenant)), array_filter([
+        return $provider->initiate($subscription, $amount, array_filter([
             'purpose' => 'renewal',
             'payment_method' => $this->jekoPaymentMethod($provider, $paymentMethod),
         ], fn (mixed $value): bool => $value !== null));

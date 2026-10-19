@@ -17,6 +17,8 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
 {
     public const NAME = 'jeko';
 
+    public const AMOUNT_UNIT_VERSION = 1;
+
     public function name(): string
     {
         return self::NAME;
@@ -28,15 +30,15 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
             throw new InvalidArgumentException('Le montant Jèko doit être positif.');
         }
 
-        return max(100, intdiv($amount + 50, 100) * 100);
+        return $amount;
     }
 
     public function initiate(TenantSubscription $subscription, int $amount, array $metadata = []): SubscriptionPayment
     {
         $this->assertConfigured();
 
-        if ($amount < 100 || $amount % 100 !== 0) {
-            throw new InvalidArgumentException('Jèko exige un montant d’au moins 100 FCFA et multiple de 100.');
+        if ($amount <= 0) {
+            throw new InvalidArgumentException('Le montant Jèko doit être positif.');
         }
 
         $paymentMethod = JekoPaymentMethod::tryFrom((string) ($metadata['payment_method'] ?? ''))
@@ -50,6 +52,7 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
             'gateway' => self::NAME,
             'metadata' => array_merge($metadata, [
                 'payment_method' => $paymentMethod->value,
+                'amount_unit_version' => self::AMOUNT_UNIT_VERSION,
             ]),
         ]));
 
@@ -58,7 +61,7 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
         try {
             $response = $this->client()->post('/partner_api/payment_requests', [
                 'storeId' => config('services.jeko.store_id'),
-                'amountCents' => $amount,
+                'amountCents' => $this->toMinorUnits($amount),
                 'currency' => 'XOF',
                 'reference' => $merchantReference,
                 'paymentDetails' => [
@@ -111,7 +114,7 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
             && ($proof['storeId'] ?? null) === config('services.jeko.store_id')
             && ($details['id'] ?? null) === $payment->provider_reference
             && ($details['reference'] ?? null) === ($payment->metadata['merchant_reference'] ?? null)
-            && ($amount['amount'] ?? null) === $payment->amount
+            && ($amount['amount'] ?? null) === $this->toMinorUnits($payment->amount)
             && ($amount['currency'] ?? null) === $payment->currency
             && is_string($proof['id'] ?? null)
             && trim($proof['id']) !== '';
@@ -211,5 +214,10 @@ class JekoSubscriptionPaymentGateway implements SubscriptionPaymentGateway
     private function callbackUrl(string $routeName, string $reference): string
     {
         return rtrim((string) config('app.url'), '/').route($routeName, ['reference' => $reference], false);
+    }
+
+    private function toMinorUnits(int $amount): int
+    {
+        return $amount * 100;
     }
 }
