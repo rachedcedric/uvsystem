@@ -80,8 +80,37 @@ Solde = Σ approvisionnements à crédit − Σ remboursements non annulés
 - Écrans : mobile `/m/rapports` (refonte) et `/m/dettes/historique` ; Web « Rapports & Exports » (partie catalogue
   ajoutée, exports détaillés conservés), « Historique des dettes et crédits », et action « Exporter une période »
   sur les listes.
-- Historique des dettes : `DebtHistoryService` reconstitue, pour chaque agent et fournisseur, solde d'ouverture,
-  dettes de la période, paiements, solde à la date de fin (consultation d'une date passée).
+- Historique des dettes et crédits : photographies quotidiennes figées (voir § 5 bis). `DebtHistoryService`
+  (reconstitution d'une période) reste utilisé par les catégories « Dettes agents », « Dettes fournisseurs » et
+  « Crédits et découverts ».
+
+## 5 bis. Historique des dettes et crédits : clôture quotidienne
+
+Photographie des soldes, pas liste d'opérations : une dette de 1 000 000 FCFA présente le 25/10 reste visible au
+25/10 même si elle est remboursée le 26/10.
+
+- Termes (point de vue du Master) : **Dette** = le Master doit (fournisseur créancier, agent ayant trop payé) ;
+  **Crédit** = le compte doit au Master (agent débiteur, découvert / avance chez un fournisseur).
+- Journée : 00:00 → 23:59:59, `Africa/Abidjan`. Solde d'une journée = tous les mouvements datés de cette journée ou
+  avant (mêmes formules qu'`Agent::soldeTotals()` et `FournisseurDebtService`, décimal exact).
+- Tables : `clotures_journalieres` (une par entreprise et par date, contrainte unique) et `cloture_soldes` (une
+  ligne par compte au solde non nul : nom et type copiés, nature, montant). Journée sans solde = clôture sans ligne.
+- `App\Services\ClotureSoldesService` / commande `soldes:cloturer` (par entreprise, `RunsPerTenant`) :
+  - planifiée à **00:01** (`--verifier`) : la clôture de la veille inclut donc les opérations de 23:59:59 ;
+  - **rattrapage** toutes les heures (hh:17) : toute journée terminée sans clôture est reconstituée depuis les
+    mouvements enregistrés (source « rattrapage »), jamais avant la première donnée de l'entreprise ;
+  - verrou + transaction atomique par journée + contrainte unique : aucun doublon ; une clôture n'est jamais
+    recalculée ; la journée en cours n'est jamais clôturée.
+- Corrections rétroactives (opération antidatée, modifiée ou annulée après la clôture) : `--verifier` compare les
+  31 dernières clôtures aux mouvements ; un écart est **signalé** (« Écart signalé », détail sur la clôture,
+  `activity_log` `cloture_ecart` / `cloture_ecart_resolu`) ; les soldes figés ne changent pas, les journées
+  suivantes intègrent la correction.
+- Écrans : Web `/master/historique-dettes`, mobile `/m/dettes/historique` — même service de lecture
+  (`ClotureHistoryService`) : période, Dette / Crédit, Agent / Fournisseur, recherche, journées avec / sans solde,
+  une section dépliable par journée (« 25/10/2025 — 2 dettes • 1 crédit », « Aucun solde »), pagination par
+  journée. Plus de widgets Total dettes / Total crédits / Solde net sur cette page.
+- Exports PDF / Excel (`historique_dettes`, paramètres `nature`, `type`, `q`, `jours`) : une ligne par solde, une
+  ligne « Aucun solde » par journée sans solde, sans ligne de total (une dette se répète chaque jour).
 
 ## 6. Permissions et abonnements
 
@@ -107,11 +136,15 @@ Migrations (additives, sans perte de données) :
 | `2026_10_25_100000_add_cancellation_to_remboursements_fournisseurs_table` | 3 colonnes nullables + index | supprime les colonnes (perd les annulations) |
 | `2026_10_25_110000_add_retour_agent_supplier_type` | enum `type` + `AGENT`, colonne `fournisseurs.agent_id`, entrée « Retour Agent » par entreprise | retire `agent_id` (l'enum n'est pas rétréci) |
 | `2026_10_25_120000_add_cancellation_to_caisse_mouvements_table` | 4 colonnes nullables + index | supprime les colonnes (les mouvements annulés redeviennent actifs) |
+| `2026_10_26_100000_create_clotures_soldes_tables` | tables `clotures_journalieres` et `cloture_soldes` (nouvelles) | supprime les deux tables (perd les photographies figées) |
 
 1. Sauvegarde vérifiée de la base (`deploy/scripts/backup.sh`), puis déploiement habituel (`deploy/scripts/deploy.sh`).
 2. `php artisan migrate --force`, puis `php artisan optimize:clear` (la 2FA lit la configuration).
 3. Optionnel : retirer `SECURITY_2FA_ENFORCE_FROM` du `.env` de production (sans effet désormais).
 4. Les assets mobiles (nouvelles classes de `resources/css/mobile.css`) sont compilés par `npm run build` (Dockerfile).
+5. Historique : lancer une fois `php artisan soldes:cloturer` (reconstitue les journées passées depuis la première
+   donnée, 1 000 journées au plus par exécution ; le rattrapage horaire termine le reste). Vérifier que le cron
+   `schedule:run` tourne (écran « Diagnostic des notifications »). Journal : `storage/logs/clotures-soldes.log`.
 
 Retour arrière : redéployer la version précédente. Les migrations peuvent rester en place (colonnes nullables,
 schéma compatible), **mais l'ancien code ignore les annulations** : un remboursement fournisseur ou un mouvement de

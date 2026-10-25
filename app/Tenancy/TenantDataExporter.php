@@ -9,6 +9,8 @@ use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
 use App\Models\Charge;
 use App\Models\ChargeCategorie;
+use App\Models\ClotureJournaliere;
+use App\Models\ClotureSolde;
 use App\Models\Commission;
 use App\Models\Fournisseur;
 use App\Models\MasterSolde;
@@ -57,6 +59,8 @@ class TenantDataExporter
         'charge_categories' => ChargeCategorie::class,
         'charges' => Charge::class,
         'master_soldes' => MasterSolde::class,
+        'clotures_journalieres' => ClotureJournaliere::class,
+        'cloture_soldes' => ClotureSolde::class,
     ];
 
     /** Chemin du ZIP temporaire généré pour le tenant courant (à supprimer après envoi). */

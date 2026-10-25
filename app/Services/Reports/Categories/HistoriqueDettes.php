@@ -2,12 +2,17 @@
 
 namespace App\Services\Reports\Categories;
 
+use App\Services\Reports\ClotureHistoryService;
 use App\Services\Reports\DateRange;
-use App\Services\Reports\DebtCategory;
+use App\Services\Reports\ReportCategory;
+use App\Services\Reports\ReportPresenter;
 use Illuminate\Support\Collection;
 
-/** Historique complet des dettes et crédits (agents et fournisseurs), filtrable par type et par statut. */
-class HistoriqueDettes extends DebtCategory
+/**
+ * Historique des dettes et crédits : soldes agents et fournisseurs figés à la clôture de chaque journée (Dette : le
+ * Master doit ; Crédit : le compte doit au Master). Une journée sans solde reste listée (« Aucun solde »).
+ */
+class HistoriqueDettes extends ReportCategory
 {
     public function key(): string
     {
@@ -26,7 +31,7 @@ class HistoriqueDettes extends DebtCategory
 
     public function description(): string
     {
-        return 'Dettes, paiements et soldes agents et fournisseurs';
+        return 'Soldes non réglés à la clôture de chaque journée';
     }
 
     protected function permissions(): array
@@ -34,17 +39,69 @@ class HistoriqueDettes extends DebtCategory
         return ['view_remboursements', 'view_remboursements_fournisseurs'];
     }
 
-    public function history(DateRange $range, array $filters = []): Collection
+    public function columns(): array
+    {
+        return [
+            ['label' => 'Date', 'type' => 'date'],
+            ['label' => 'Type', 'type' => 'text'],
+            ['label' => 'Nom', 'type' => 'text'],
+            ['label' => 'Nature', 'type' => 'status'],
+            ['label' => 'Montant (FCFA)', 'type' => 'money'],
+        ];
+    }
+
+    /**
+     * Filtres de l'utilisateur, restreints à ce qu'il a le droit de voir : agents avec view_remboursements,
+     * fournisseurs avec view_remboursements_fournisseurs (mêmes règles que l'écran Dettes).
+     */
+    public function filters(array $filters): array
     {
         $user = auth()->user();
-        $type = $filters['type'] ?? 'all';
-        // Chaque côté n'est visible qu'avec sa permission (mêmes règles que l'écran Dettes).
         if (! $user?->can('view_remboursements')) {
-            $type = 'fournisseur';
+            $filters['type'] = 'fournisseur';
         } elseif (! $user->can('view_remboursements_fournisseurs')) {
-            $type = 'agent';
+            $filters['type'] = 'agent';
         }
 
-        return parent::history($range, ['type' => $type] + $filters);
+        return $filters;
+    }
+
+    /** @return Collection<int, array<string, mixed>> journées (plus récente en premier) */
+    public function days(DateRange $range, array $filters = []): Collection
+    {
+        return app(ClotureHistoryService::class)->tous($range, $this->filters($filters));
+    }
+
+    public function rows(DateRange $range, array $filters = [], ?int $limit = null): Collection
+    {
+        $rows = $this->days($range, $filters)->flatMap(fn (array $day) => $day['lignes']->isEmpty()
+            ? [['cells' => [$day['date'], '—', $day['resume'], $day['resume'], 0], 'tone' => 'muted']]
+            : $day['lignes']->map(fn (array $l) => ['cells' => [$day['date'], $l['type_label'], $l['nom'], $l['nature_label'], $l['montant']], 'tone' => $l['tone']])->all());
+
+        return ($limit ? $rows->take($limit) : $rows)->values();
+    }
+
+    public function summary(DateRange $range, array $filters = []): array
+    {
+        $days = $this->days($range, $filters);
+        $latest = $days->first();
+
+        return [
+            'count' => $days->sum(fn (array $d) => max(1, $d['lignes']->count())),
+            'total' => $latest['total_dettes'] ?? 0.0,
+            'total_label' => 'Dettes à la dernière clôture'.($latest ? ' ('.$latest['date']->format('d/m/Y').')' : ''),
+            'extra' => [
+                'Journées' => (string) $days->count(),
+                'Sans solde' => (string) $days->filter(fn (array $d) => $d['lignes']->isEmpty())->count(),
+                'Crédits à la dernière clôture' => ReportPresenter::fcfa($latest['total_credits'] ?? 0),
+            ],
+            // Pas de ligne de total : une même dette figure à chaque journée où elle n'est pas soldée.
+            'footer' => null,
+        ];
+    }
+
+    public function searchPlaceholder(): string
+    {
+        return 'Nom de l\'agent ou du fournisseur';
     }
 }

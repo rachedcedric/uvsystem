@@ -57,13 +57,15 @@
                 <tr><td colspan="{{ count($columns) }}">Aucune opération sur cette période.</td></tr>
             @endforelse
         </tbody>
-        <tfoot>
-            <tr>
-                @foreach ($columns as $i => $column)
-                    <td class="{{ isset($footer[$i]) ? 'r' : '' }}">{{ $i === 0 ? 'Total' : (isset($footer[$i]) ? \App\Services\Reports\ReportPresenter::money($footer[$i]) : '') }}</td>
-                @endforeach
-            </tr>
-        </tfoot>
+        @if ($footer !== null)
+            <tfoot>
+                <tr>
+                    @foreach ($columns as $i => $column)
+                        <td class="{{ isset($footer[$i]) ? 'r' : '' }}">{{ $i === 0 ? 'Total' : (isset($footer[$i]) ? \App\Services\Reports\ReportPresenter::money($footer[$i]) : '') }}</td>
+                    @endforeach
+                </tr>
+            </tfoot>
+        @endif
     </table>
 </body>
 </html>

@@ -19,6 +19,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\ApprovisionnementService;
 use App\Services\CaisseService;
+use App\Services\ClotureSoldesService;
 use App\Services\FournisseurDebtService;
 use App\Services\Reports\DateRange;
 use App\Services\Reports\DebtHistoryService;
@@ -243,16 +244,19 @@ class RapportsEtExportsTest extends TestCase
         $this->assertCount(2, $service->rows($range, ['type' => 'fournisseur']));
     }
 
-    public function test_mobile_and_web_debt_history_screens_show_widgets_filters_and_exports(): void
+    public function test_mobile_and_web_debt_history_screens_show_daily_closings_filters_and_exports(): void
     {
+        // Clôtures jusqu'au 19/10 : l'agent doit 200 000 (crédit), le fournisseur a reçu une avance de 100 000 (crédit).
+        app(ClotureSoldesService::class)->cloturerJourneesManquantes();
+
         Livewire::test(Historique::class)
-            ->assertSee('Dettes agents')->assertSee('Découverts fournisseurs')->assertSee('Solde net global')
-            ->assertSee('Agent Koné')->assertSee('Grossiste Bamba')
+            ->assertSee('19/10/2026')
+            ->assertSee('Agent Koné')->assertSee('Grossiste Bamba')->assertSee('2 crédits')
+            ->assertDontSee('Solde net global')
             ->assertSeeHtml('exports/rapports/historique_dettes/pdf')
-            // Filtre « Fournisseurs » : plus la ligne de l'agent, mais son compte de retours (le Master lui doit 20 000).
             ->set('type', 'fournisseur')
             ->assertDontSeeHtml(route('m.dettes.agent', $this->agent))
-            ->assertSee('Retour Agent — Agent Koné')
+            ->assertSee('Grossiste Bamba')
             ->set('periode', 'custom')->set('du', '2026-10-20')->set('au', '2026-10-01')
             ->assertSee('La date de fin doit être égale ou postérieure')
             ->assertDontSeeHtml('exports/rapports/historique_dettes/pdf');
@@ -260,9 +264,9 @@ class RapportsEtExportsTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('admin'));
         $this->get(HistoriqueDettesPage::getUrl())->assertOk();
         Livewire::test(HistoriqueDettesPage::class)
-            ->assertSee('Total des découverts fournisseurs')
+            ->assertDontSee('Total des découverts fournisseurs')
             ->assertSee('Grossiste Bamba')
-            ->assertSee('-100 000 FCFA')
+            ->assertSee('100 000 FCFA')
             ->assertSeeHtml('exports/rapports/historique_dettes/xlsx');
     }
 

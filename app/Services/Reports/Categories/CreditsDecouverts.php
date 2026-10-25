@@ -41,6 +41,7 @@ class CreditsDecouverts extends DebtCategory
 
     public function history(DateRange $range, array $filters = []): Collection
     {
-        return (new HistoriqueDettes)->history($range, array_merge($filters, $this->scope()));
+        // Chaque côté n'est visible qu'avec sa permission (mêmes règles que l'écran Dettes et l'historique).
+        return parent::history($range, (new HistoriqueDettes)->filters(array_merge($filters, $this->scope())));
     }
 }

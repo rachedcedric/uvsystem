@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ReportCategoryExport;
+use App\Services\Reports\ClotureHistoryService;
 use App\Services\Reports\DateRange;
 use App\Services\Reports\DebtHistoryService;
 use App\Services\Reports\ReportCatalog;
@@ -39,6 +40,8 @@ class ReportExportController extends Controller
             'q' => trim((string) $request->query('q', '')),
             'type' => array_key_exists((string) $request->query('type'), DebtHistoryService::TYPES) ? (string) $request->query('type') : null,
             'statut' => array_key_exists((string) $request->query('statut'), DebtHistoryService::STATUTS) ? (string) $request->query('statut') : null,
+            'nature' => array_key_exists((string) $request->query('nature'), ClotureHistoryService::NATURES) ? (string) $request->query('nature') : null,
+            'jours' => array_key_exists((string) $request->query('jours'), ClotureHistoryService::JOURS) ? (string) $request->query('jours') : null,
         ], fn ($v) => $v !== null && $v !== '');
 
         $name = str_replace('_', '-', $report->key()).'_'.$range->from->format('Y-m-d').'_'.$range->to->format('Y-m-d').'.'.$format;
@@ -66,12 +69,15 @@ class ReportExportController extends Controller
                 'total' => number_format($summary['total'], 0, ',', ' '),
                 'totalLabel' => $summary['total_label'],
                 'extra' => $summary['extra'] ?? [],
-                'footer' => $summary['footer'] ?? [array_key_last($report->columns()) => $summary['total']],
+                // footer null : pas de ligne de total (historique des clôtures, où une dette se répète chaque jour).
+                'footer' => array_key_exists('footer', $summary) ? $summary['footer'] : [array_key_last($report->columns()) => $summary['total']],
                 'truncated' => $summary['count'] > $rows->count() ? $rows->count() : null,
                 'filtersLabel' => collect([
                     isset($filters['q']) ? 'recherche « '.$filters['q'].' »' : null,
                     isset($filters['type']) ? DebtHistoryService::TYPES[$filters['type']] : null,
                     isset($filters['statut']) ? DebtHistoryService::STATUTS[$filters['statut']] : null,
+                    isset($filters['nature']) ? ClotureHistoryService::NATURES[$filters['nature']] : null,
+                    isset($filters['jours']) ? ClotureHistoryService::JOURS[$filters['jours']] : null,
                 ])->filter()->implode(' · '),
                 'generatedAt' => now(),
                 'generatedBy' => $request->user()->name ?? 'Système',

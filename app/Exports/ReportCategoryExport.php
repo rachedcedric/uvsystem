@@ -23,6 +23,8 @@ class ReportCategoryExport implements FromArray, ShouldAutoSize, WithColumnForma
 {
     private ?array $data = null;
 
+    private bool $withTotal = true;
+
     public function __construct(
         private readonly ReportCategory $category,
         private readonly DateRange $range,
@@ -46,6 +48,13 @@ class ReportCategoryExport implements FromArray, ShouldAutoSize, WithColumnForma
             ->all();
 
         $summary = $this->category->summary($this->range, $this->filters);
+        // footer null : la catégorie n'a pas de ligne de total (ex. historique des clôtures).
+        if (array_key_exists('footer', $summary) && $summary['footer'] === null) {
+            $this->withTotal = false;
+
+            return $this->data = $rows;
+        }
+
         $total = array_fill(0, count($columns), '');
         $total[0] = 'Total ('.$summary['count'].' ligne'.($summary['count'] > 1 ? 's' : '').')';
         $footer = $summary['footer'] ?? [array_key_last($columns) => $summary['total']];
@@ -72,11 +81,13 @@ class ReportCategoryExport implements FromArray, ShouldAutoSize, WithColumnForma
     public function styles(Worksheet $sheet)
     {
         $last = count($this->array()) + 1;
+        $styles = [1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '0B6B3A']]]];
 
-        return [
-            1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']], 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '0B6B3A']]],
-            $last => ['font' => ['bold' => true]],
-        ];
+        if ($this->withTotal) {
+            $styles[$last] = ['font' => ['bold' => true]];
+        }
+
+        return $styles;
     }
 
     public function title(): string

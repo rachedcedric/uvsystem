@@ -106,6 +106,26 @@ Schedule::command('commissions:rattraper')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/commissions-rattrapage.log'));
 
+// Historique des dettes et crédits : photographie des soldes agents et fournisseurs de la journée écoulée
+// (solde à 23:59:59, Africa/Abidjan). Lancée juste après minuit pour inclure les opérations de la dernière
+// minute ; contrôle aussi les clôtures récentes (opérations antidatées ou annulées après coup : écart signalé,
+// soldes figés conservés).
+Schedule::command('soldes:cloturer --verifier')
+    ->dailyAt('00:01')
+    ->timezone(config('app.timezone'))
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/clotures-soldes.log'));
+
+// Rattrapage : toute journée terminée sans clôture (serveur arrêté, cron indisponible…) est reconstituée depuis
+// les mouvements enregistrés. Idempotent : sans journée manquante, rien n'est écrit.
+Schedule::command('soldes:cloturer')
+    ->hourlyAt(17)
+    ->timezone(config('app.timezone'))
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/clotures-soldes.log'));
+
 // Abonnements : expiration des essais/abonnements échus et avertissements J-7/J-3/J-1.
 // Idempotent (peut être relancé sans doublon) ; s'exécute dans le même planificateur que le reste.
 Schedule::command('subscriptions:process')

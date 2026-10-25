@@ -2386,3 +2386,29 @@ body:has(.m-offline[data-show]) .m-appbar {
 .m-export--range .m-quick { display: flex; gap: 8px; }
 .m-export--range a[aria-disabled="true"] { opacity: .5; pointer-events: none; }
 .m-export__info span.m-text-danger { color: var(--danger); }
+
+/* ------------------------------------------------ historique des dettes et crédits (une carte par journée) */
+.m-hday-note { margin: 10px 20px 8px; color: var(--fg-3); font-size: 13px; }
+.m-hdays { display: grid; gap: 8px; margin: 0 12px; }
+.m-hday { border-radius: var(--r-lg); background: var(--surface); overflow: hidden; }
+.m-hday__head { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 14px; list-style: none; cursor: pointer; }
+.m-hday__head::-webkit-details-marker { display: none; }
+.m-hday--empty .m-hday__head { cursor: default; }
+.m-hday__date { display: grid; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.m-hday__date small { font-weight: 500; font-size: 12.5px; color: var(--fg-3); }
+.m-hday__tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
+.m-hday__tag { padding: 3px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+.m-hday__tag--danger { background: var(--danger-soft); color: var(--danger); }
+.m-hday__tag--ok { background: var(--ok-soft); color: var(--ok); }
+.m-hday__tag--warn { background: var(--warn-soft); color: var(--warn); }
+.m-hday__tag--muted { background: var(--surface-2); color: var(--fg-2); }
+.m-hday__chev { flex: none; width: 18px; height: 18px; color: var(--fg-3); transition: transform 0.18s; }
+.m-hday[open] .m-hday__chev { transform: rotate(180deg); }
+.m-hday__lines { margin: 0; padding: 0 14px; list-style: none; box-shadow: inset 0 1px 0 var(--line); }
+.m-hday__line { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 0; }
+.m-hday__line + .m-hday__line { box-shadow: inset 0 1px 0 var(--line); }
+.m-hday__name { display: grid; flex: 1; min-width: 0; font-weight: 600; font-size: 14.5px; color: var(--fg); overflow-wrap: anywhere; }
+.m-hday__name small { font-weight: 500; font-size: 12.5px; color: var(--fg-3); }
+.m-hday__amount { display: grid; flex: none; text-align: right; font-weight: 700; font-size: 14.5px; }
+.m-hday__amount small { font-weight: 600; font-size: 12px; }
+.m-hday__meta { margin: 0; padding: 8px 14px 12px; color: var(--fg-3); font-size: 12.5px; }
