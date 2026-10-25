@@ -2,9 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Actions\ExportPeriodAction;
 use App\Models\Agent;
 use App\Models\Remboursement;
 use App\Models\UvTransaction;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -179,18 +181,20 @@ class DettesPage extends Page implements HasTable
             ])
             ->defaultSort('current_debt', 'desc')
             ->actions([
-                Tables\Actions\Action::make('encaisser')
-                    ->label('Encaisser')
-                    ->icon('heroicon-o-banknotes')
-                    ->color('success')
-                    ->url(fn (Agent $record) => "/master/remboursements/create?agent_id={$record->id}")
-                    ->visible(fn (Agent $record) => $record->current_debt > 0 && Auth::user()?->can('create_remboursements')),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('encaisser')
+                        ->label('Encaisser')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('success')
+                        ->url(fn (Agent $record) => "/master/remboursements/create?agent_id={$record->id}")
+                        ->visible(fn (Agent $record) => $record->current_debt > 0 && Auth::user()?->can('create_remboursements')),
 
-                Tables\Actions\Action::make('details')
-                    ->label('Détails')
-                    ->icon('heroicon-o-eye')
-                    ->color('gray')
-                    ->url(fn (Agent $record) => AgentDebtDetailPage::getUrl(['agent' => $record->id])),
+                    Tables\Actions\Action::make('details')
+                        ->label('Détails')
+                        ->icon('heroicon-o-eye')
+                        ->color('gray')
+                        ->url(fn (Agent $record) => AgentDebtDetailPage::getUrl(['agent' => $record->id])),
+                ])->tooltip('Actions'),
             ])
             ->paginated([10, 25, 50])
             ->defaultPaginationPageOption(10)
@@ -208,5 +212,14 @@ class DettesPage extends Page implements HasTable
         }
 
         return 'En cours';
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('historique')->label('Historique des dettes et crédits')->icon('heroicon-o-clock')->color('gray')
+                ->url(HistoriqueDettesPage::getUrl()),
+            ExportPeriodAction::make('dettes_agents'),
+        ];
     }
 }

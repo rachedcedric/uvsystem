@@ -105,7 +105,8 @@ class TenantDataExporter
     private function writeCsv(string $model, string $file): int
     {
         $handle = fopen($file, 'w');
-        $query = $model::query();
+        // Export complet : y compris les mouvements de caisse annulés (scope « actifs » levé, sans effet ailleurs).
+        $query = $model::query()->withoutGlobalScope(CaisseMouvement::SCOPE_ACTIFS);
 
         if (in_array(SoftDeletes::class, class_uses_recursive($model), true)) {
             $query->withTrashed();

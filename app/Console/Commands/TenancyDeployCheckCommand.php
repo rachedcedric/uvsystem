@@ -72,9 +72,10 @@ class TenancyDeployCheckCommand extends Command
             ? $this->add('OK', 'Expiration des tokens API', config('sanctum.expiration').' min')
             : $this->add('ERREUR', 'Expiration des tokens API', 'illimitée', 'SANCTUM_TOKEN_EXPIRATION > 0.');
 
-        config('security.authentication.2fa_enforce_from')
-            ? $this->add('OK', '2FA master/admin', 'obligatoire à partir du '.config('security.authentication.2fa_enforce_from'))
-            : $this->add('ATTENTION', '2FA master/admin', 'rappel seulement (SECURITY_2FA_ENFORCE_FROM vide)', 'Fixer une date quand tous l\'ont activée.');
+        $roles = (array) config('security.authentication.2fa_required_for_roles', []);
+        $roles === []
+            ? $this->add('OK', '2FA des entreprises', 'facultative (activable par chaque compte ; toujours exigée pour le super admin)')
+            : $this->add('OK', '2FA des entreprises', 'obligatoire pour '.implode(', ', $roles).(config('security.authentication.2fa_enforce_from') ? ' à partir du '.config('security.authentication.2fa_enforce_from') : ' (date non fixée : aucun blocage)'));
     }
 
     // ------------------------------------------------------------------ fichiers

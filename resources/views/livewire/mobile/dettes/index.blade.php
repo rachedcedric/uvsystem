@@ -38,9 +38,17 @@
                 <div class="m-stat__label"><x-m.icon name="arrow-uturn-left" class="m-ico-sm" /><span>Déjà payé</span></div>
                 <div class="m-stat__value m-num" style="color:var(--ok)">{{ \App\Support\Mobile\Fcfa::number($summary['totalRembourse']) }}<span class="m-stat__unit"> FCFA</span></div>
             </div>
+            <div class="m-stat">
+                <div class="m-stat__label"><x-m.icon name="exclamation-triangle" class="m-ico-sm" /><span>Reste à payer</span></div>
+                <div class="m-stat__value m-num" style="color:{{ $summary['resteAPayer'] > 0 ? 'var(--danger)' : 'var(--fg)' }}">{{ \App\Support\Mobile\Fcfa::number($summary['resteAPayer']) }}<span class="m-stat__unit"> FCFA</span></div>
+            </div>
+            <div class="m-stat">
+                <div class="m-stat__label"><x-m.icon name="banknotes" class="m-ico-sm" /><span>Découverts</span></div>
+                <div class="m-stat__value m-num" style="color:{{ $summary['totalDecouvert'] < 0 ? 'var(--ok)' : 'var(--fg)' }}">{{ \App\Support\Mobile\Fcfa::number($summary['totalDecouvert']) }}<span class="m-stat__unit"> FCFA</span></div>
+            </div>
             <div class="m-stat" style="grid-column: span 2">
-                <div class="m-stat__label"><x-m.icon name="exclamation-triangle" class="m-ico-sm" /><span>Reste à payer aux fournisseurs</span></div>
-                <div class="m-stat__value m-num" style="color:var(--warn)">{{ \App\Support\Mobile\Fcfa::number($summary['resteAPayer']) }}<span class="m-stat__unit">FCFA</span></div>
+                <div class="m-stat__label"><x-m.icon name="scale" class="m-ico-sm" /><span>Solde net fournisseurs</span></div>
+                <div class="m-stat__value m-num" style="color:{{ $summary['soldeNet'] > 0 ? 'var(--danger)' : ($summary['soldeNet'] < 0 ? 'var(--ok)' : 'var(--fg)') }}">{{ \App\Support\Mobile\Fcfa::number($summary['soldeNet']) }}<span class="m-stat__unit"> FCFA</span></div>
             </div>
         </div>
     @endif
@@ -67,11 +75,12 @@
         @else
             @forelse ($rows as $row)
                 @php($f = $row['model'])
-                <x-m.row :href="$canPay && $row['reste'] > 0 ? route('m.dettes.fournisseur', $f) : null" wire:key="f{{ $f->id }}" icon="building-library"
-                         :tone="$row['reste'] > 0 ? 'warn' : 'ok'" :title="$f->name" :sub="$f->contact ?: 'Fournisseur à crédit'">
+                @php($statut = \App\Services\FournisseurDebtService::statutPour($row['reste']))
+                <x-m.row :href="route('m.dettes.fournisseur.show', $f)" wire:key="f{{ $f->id }}" icon="building-library"
+                         :tone="match ($statut) { 'dette' => 'danger', 'decouvert' => 'ok', default => 'muted' }" :title="$f->name" :sub="$f->contact ?: 'Fournisseur à crédit'">
                     <x-slot:end>
-                        <span class="m-row__amount" style="display:block">{{ \App\Support\Mobile\Fcfa::number(max(0, $row['reste'])) }}</span>
-                        <span class="m-badge {{ $row['reste'] > 0 ? 'm-badge--warn' : 'm-badge--ok' }}">{{ $row['reste'] > 0 ? 'À payer' : 'Soldé' }}</span>
+                        <span class="m-row__amount" style="display:block;color:{{ match ($statut) { 'dette' => 'var(--danger)', 'decouvert' => 'var(--ok)', default => 'var(--fg)' } }}">{{ \App\Support\Mobile\Fcfa::number($row['reste']) }}</span>
+                        <x-m.status-badge :tone="match ($statut) { 'dette' => 'danger', 'decouvert' => 'ok', default => 'muted' }" :label="match ($statut) { 'dette' => 'À payer', 'decouvert' => 'Découvert', default => 'Soldé' }" />
                     </x-slot:end>
                 </x-m.row>
             @empty
@@ -84,6 +93,8 @@
         <div wire:intersect="loadMore"></div>
         <button type="button" class="m-more" wire:click="loadMore">Voir plus</button>
     @endif
+
+    <a href="{{ route('m.dettes.historique', ['type' => $mode === 'agents' ? 'agent' : 'fournisseur']) }}" wire:navigate class="m-more">Historique des dettes et crédits</a>
 
     @if ($mode === 'fournisseurs' && \Illuminate\Support\Facades\Route::has('m.remboursements-fournisseurs'))
         <a href="{{ route('m.remboursements-fournisseurs') }}" wire:navigate class="m-more">Historique des paiements fournisseurs</a>

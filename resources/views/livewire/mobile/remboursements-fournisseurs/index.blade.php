@@ -3,19 +3,25 @@
 
     <x-m.chips model="period" :current="$period" :options="['today' => 'Aujourd\'hui', 'week' => '7 jours', 'month' => 'Ce mois', 'all' => 'Tout']" />
 
-    <div class="m-summary">
-        <span>{{ $count }} {{ $count > 1 ? 'paiements' : 'paiement' }}</span>
+    <div class="m-actions m-space-top">
+        <button type="button" class="m-action m-action--wide" data-sheet-open="rf-export-sheet" data-haptic><x-m.icon name="arrow-down-tray" /> Exporter en PDF ou Excel</button>
+    </div>
+    <div id="rf-export-sheet" class="m-sheet" role="dialog" aria-label="Exporter les paiements fournisseurs" wire:ignore>
+        <div class="m-sheet__grip"></div>
+        <div class="m-sheet__title">Exporter les paiements fournisseurs</div>
+        <x-m.range-export category="remboursements_fournisseurs" />
+    </div>
+
+    <div class="m-summary" role="status" aria-live="polite">
+        <span>{{ $count }} {{ $count > 1 ? 'paiements' : 'paiement' }}@if ($cancelledCount) · {{ $cancelledCount }} annulé{{ $cancelledCount > 1 ? 's' : '' }}@endif</span>
         <strong>{{ \App\Support\Mobile\Fcfa::format($total) }}</strong>
     </div>
 
     @forelse ($groups as $date => $items)
-        <x-m.day :date="$date" :total="$items->sum('amount')" />
+        <x-m.day :date="$date" :total="$items->reject->isCancelled()->sum('amount')" />
         <div class="m-group">
             @foreach ($items as $r)
-                <x-m.row wire:key="rf{{ $r->id }}" icon="arrow-uturn-left" tone="ok" :chevron="false"
-                         :title="$r->fournisseur?->name ?? 'Fournisseur supprimé'" :sub="$r->reference.' · '.$r->payment_date->format('H:i')">
-                    <x-slot:end><span class="m-row__amount">−{{ \App\Support\Mobile\Fcfa::number($r->amount) }}</span></x-slot:end>
-                </x-m.row>
+                @include('livewire.mobile.partials.supplier-payment', ['r' => $r])
             @endforeach
         </div>
     @empty

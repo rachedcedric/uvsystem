@@ -65,7 +65,7 @@ class ApprovisionnementExport implements FromCollection, WithHeadings, WithMappi
             $approvisionnement->reference,
             $approvisionnement->date_approvisionnement->format('d/m/Y'),
             $approvisionnement->fournisseur->name ?? 'N/A',
-            $approvisionnement->fournisseur->type === 'AGENT_PREMIUM' ? 'Agent Premium' : 'Banque',
+            $approvisionnement->fournisseur?->typeLabel() ?? 'N/A',
             number_format($approvisionnement->amount, 0, ',', ' '),
             $approvisionnement->user->name ?? 'N/A',
             $approvisionnement->notes ?? '',

@@ -45,6 +45,15 @@ class CaisseMouvementPolicy
         return $user->can('delete_caisse');
     }
 
+    /**
+     * Annulation des mouvements d'une journée entière : opération sensible réservée au master et à l'admin de
+     * l'entreprise (qui ont la permission de suppression), jamais à la lecture seule.
+     */
+    public function cancelDay(User $user): bool
+    {
+        return $user->can('delete_caisse') && $user->hasAnyRole(['master', 'admin']) && ! $user->isReadOnly();
+    }
+
     public function forceDelete(User $user, CaisseMouvement $caisseMouvement): bool
     {
         // Suppression définitive interdite (données financières)

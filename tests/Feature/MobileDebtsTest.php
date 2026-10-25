@@ -10,6 +10,7 @@ use App\Models\Fournisseur;
 use App\Models\PaymentMethod;
 use App\Models\RemboursementFournisseur;
 use App\Models\User;
+use App\Services\FournisseurDebtService;
 use App\Services\UvDistributionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -107,11 +108,13 @@ class MobileDebtsTest extends TestCase
         $this->assertTrue($paiement->payment_date->equalTo($operationAt));
 
         Livewire::test(Dettes\PayFournisseur::class, ['fournisseur' => $f])
-            ->set('amount', '999999')->call('save')->assertHasErrors('amount');
-
-        Livewire::test(Dettes\PayFournisseur::class, ['fournisseur' => $f])
             ->call('payAll')->assertSet('amount', '250000')->call('save')->assertHasNoErrors();
         $this->assertEquals(400000, RemboursementFournisseur::sum('amount'));
+
+        // Au-delà de la dette : accepté, l'excédent devient un découvert (avance) signé.
+        Livewire::test(Dettes\PayFournisseur::class, ['fournisseur' => $f])
+            ->set('amount', '50000')->call('save')->assertHasNoErrors();
+        $this->assertSame(-50000.0, app(FournisseurDebtService::class)->detteRestante($f));
 
         Livewire::test(RemboursementsFournisseurs\Index::class)->assertSee('Premium Dealer');
     }

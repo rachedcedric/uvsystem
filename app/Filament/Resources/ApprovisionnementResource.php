@@ -4,8 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Exports\ApprovisionnementExport;
 use App\Filament\Resources\ApprovisionnementResource\Pages;
+use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
+use App\Services\RetourAgentService;
+use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists;
@@ -44,16 +47,21 @@ class ApprovisionnementResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('fournisseur_id')
                             ->label('Fournisseur')
-                            ->options(Fournisseur::where('is_active', true)->pluck('name', 'id'))
+                            // Création : tous les fournisseurs actifs + « Retour Agent » ; modification : jamais « Retour Agent »
+                            // (un approvisionnement ne devient pas un retour d'UV).
+                            ->options(fn (?Approvisionnement $record) => self::fournisseurOptions($record === null))
                             ->searchable()
                             ->required()
                             ->preload()
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
+                                $set('agent_id', null);
                                 if ($state) {
                                     $fournisseur = Fournisseur::find($state);
                                     if ($fournisseur) {
-                                        $set('_fournisseur_info', "Type: {$fournisseur->type} | Contact: {$fournisseur->phone}");
+                                        $set('_fournisseur_info', $fournisseur->isRetourAgent()
+                                            ? 'Retour d\'UV d\'un agent : choisissez l\'agent ci-dessous (compte « Agent », traité comme un Agent Premium).'
+                                            : "Type : {$fournisseur->typeLabel()} | Contact : {$fournisseur->contact}");
                                     }
                                 }
                             })
@@ -68,10 +76,7 @@ class ApprovisionnementResource extends Resource
                                     ->tel()
                                     ->required(),
                                 Forms\Components\Select::make('type')
-                                    ->options([
-                                        'AGENT_PREMIUM' => 'Agent Premium',
-                                        'BANQUE' => 'Banque',
-                                    ])
+                                    ->options(Fournisseur::SELECTABLE_TYPES)
                                     ->required()
                                     ->default('BANQUE'),
                                 Forms\Components\Toggle::make('is_active')
@@ -85,8 +90,30 @@ class ApprovisionnementResource extends Resource
                             ->columnSpan(1)
                             ->visible(fn ($get) => $get('fournisseur_id')),
 
+                        Forms\Components\Select::make('agent_id')
+                            ->label('Sélectionner un agent')
+                            ->options(fn () => Agent::query()->orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->live()
+                            ->visible(fn (Forms\Get $get) => self::isRetourAgent($get('fournisseur_id')))
+                            ->required(fn (Forms\Get $get) => self::isRetourAgent($get('fournisseur_id')))
+                            ->dehydrated(fn (Forms\Get $get) => self::isRetourAgent($get('fournisseur_id')))
+                            ->helperText(function (Forms\Get $get) {
+                                $agent = $get('agent_id') ? Agent::find($get('agent_id')) : null;
+                                if (! $agent) {
+                                    return 'Seuls les agents de votre entreprise sont proposés.';
+                                }
+
+                                $impact = app(RetourAgentService::class)->impact($agent, Money::toFloat($get('amount')));
+                                $money = fn (float $n) => number_format($n, 0, ',', ' ').' FCFA';
+
+                                return 'Dû à l\'agent (dettes fournisseurs) : '.$money($impact['du_avant']).' → après le retour : '.$money($impact['du_apres']).'. Sa dette d\'achats d\'UV ne change pas.';
+                            })
+                            ->columnSpan(2),
+
                         Forms\Components\TextInput::make('amount')
-                            ->label('Montant de l\'approvisionnement')
+                            ->label(fn (Forms\Get $get) => self::isRetourAgent($get('fournisseur_id')) ? 'Montant d\'UV retourné' : 'Montant')
                             ->required()
                             ->autocomplete(false)
                             ->money(min: 1)
@@ -95,7 +122,7 @@ class ApprovisionnementResource extends Resource
                             ->columnSpan(1),
 
                         Forms\Components\DateTimePicker::make('date_approvisionnement')
-                            ->label('Date et heure d\'approvisionnement')
+                            ->label('Date et heure')
                             ->required()
                             ->default(now())
                             ->maxDate(now())
@@ -130,6 +157,25 @@ class ApprovisionnementResource extends Resource
                     ->collapsed()
                     ->collapsible(),
             ]);
+    }
+
+    /** @return array<int, string> */
+    public static function fournisseurOptions(bool $withRetourAgent): array
+    {
+        if ($withRetourAgent) {
+            rescue(fn () => Fournisseur::retourAgent(), report: false); // accès restreint : formulaire sans « Retour Agent »
+        }
+
+        // Création : fournisseurs « réels » + entrée « Retour Agent » (les comptes d'agents passent par le choix de l'agent) ;
+        // modification : tout fournisseur approvisionnable (dont les comptes d'agents), jamais l'entrée de sélection.
+        return Fournisseur::query()->where('is_active', true)
+            ->when($withRetourAgent, fn (Builder $q) => $q->selectionnables(), fn (Builder $q) => $q->approvisionnables())
+            ->orderBy('name')->pluck('name', 'id')->all();
+    }
+
+    public static function isRetourAgent(mixed $fournisseurId): bool
+    {
+        return $fournisseurId && (bool) Fournisseur::find($fournisseurId)?->isRetourAgent();
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -210,14 +256,17 @@ class ApprovisionnementResource extends Resource
                     ->colors([
                         'success' => 'AGENT_PREMIUM',
                         'info' => 'BANQUE',
+                        'warning' => 'AGENT',
                     ])
                     ->icons([
                         'heroicon-o-star' => 'AGENT_PREMIUM',
                         'heroicon-o-building-library' => 'BANQUE',
+                        'heroicon-o-arrows-right-left' => 'AGENT',
                     ])
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'AGENT_PREMIUM' => 'Premium',
                         'BANQUE' => 'Banque',
+                        'AGENT' => 'Retour agent',
                         default => $state,
                     }),
 
@@ -282,6 +331,7 @@ class ApprovisionnementResource extends Resource
                     ->options([
                         'AGENT_PREMIUM' => '⭐ Agent Premium',
                         'BANQUE' => '🏦 Banque',
+                        'AGENT' => 'Retour agent',
                     ])
                     ->query(function (Builder $query, array $data) {
                         if ($data['value']) {

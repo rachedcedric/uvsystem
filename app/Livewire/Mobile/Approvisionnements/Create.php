@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Mobile\Approvisionnements;
 
+use App\Models\Agent;
 use App\Models\Approvisionnement;
 use App\Models\Fournisseur;
 use App\Services\ApprovisionnementService;
 use App\Services\MasterSoldeService;
+use App\Services\RetourAgentService;
 use App\Support\Mobile\Fcfa;
 use App\Support\Mobile\OperationDateTime;
 use App\Support\Money;
@@ -21,6 +23,9 @@ use Livewire\Component;
 class Create extends Component
 {
     public ?int $fournisseurId = null;
+
+    /** Agent qui rend ses UV, quand le fournisseur choisi est « Retour Agent ». */
+    public ?int $agentId = null;
 
     public string $amount = '';
 
@@ -40,7 +45,41 @@ class Create extends Component
     #[Computed]
     public function fournisseurs()
     {
-        return Fournisseur::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        // Entrée « Retour Agent » (créée par la migration ; rattrapage ici). Si l'écriture est refusée (accès restreint),
+        // le formulaire reste utilisable sans elle.
+        rescue(fn () => Fournisseur::retourAgent(), report: false);
+
+        return Fournisseur::where('is_active', true)->selectionnables()->orderBy('name')->get(['id', 'name', 'type', 'agent_id']);
+    }
+
+    #[Computed]
+    public function isRetour(): bool
+    {
+        return (bool) $this->fournisseurs->firstWhere('id', $this->fournisseurId)?->isRetourAgent();
+    }
+
+    #[Computed]
+    public function agents()
+    {
+        return Agent::query()->orderBy('name')->get(['id', 'name', 'phone', 'current_debt']);
+    }
+
+    #[Computed]
+    public function selectedAgent(): ?Agent
+    {
+        return $this->agentId ? $this->agents->firstWhere('id', $this->agentId) : null;
+    }
+
+    /** @return array{du_avant: float, du_apres: float}|null */
+    #[Computed]
+    public function impact(): ?array
+    {
+        return $this->selectedAgent ? app(RetourAgentService::class)->impact($this->selectedAgent, $this->numericAmount) : null;
+    }
+
+    public function updatedFournisseurId(): void
+    {
+        $this->agentId = null;
     }
 
     #[Computed]
@@ -79,6 +118,10 @@ class Create extends Component
             throw ValidationException::withMessages(['fournisseurId' => 'Ce fournisseur est introuvable ou inactif.']);
         }
 
+        if ($this->isRetour) {
+            return $this->saveRetour();
+        }
+
         $appro = app(ApprovisionnementService::class)->create([
             'user_id' => auth()->id(),
             'fournisseur_id' => $this->fournisseurId,
@@ -88,6 +131,29 @@ class Create extends Component
         ]);
 
         session()->flash('m-toast', 'Approvisionnement de '.Fcfa::format($appro->amount).' enregistré.');
+
+        return $this->redirectRoute('m.approvisionnements', navigate: true);
+    }
+
+    /** Retour d'UV d'un agent : approvisionnement à crédit sur le compte fournisseur de l'agent (RetourAgentService). */
+    private function saveRetour()
+    {
+        if (! $this->agentId) {
+            throw ValidationException::withMessages(['agentId' => 'Sélectionnez l\'agent qui rend ses UV.']);
+        }
+
+        try {
+            $retour = app(RetourAgentService::class)->enregistrer(
+                $this->agentId,
+                $this->numericAmount,
+                OperationDateTime::fromInputs($this->date, $this->time),
+                $this->notes !== '' ? $this->notes : null,
+            );
+        } catch (ValidationException $e) {
+            throw ValidationException::withMessages(['agentId' => collect($e->errors())->flatten()->implode(' ')]);
+        }
+
+        session()->flash('m-toast', 'Retour de '.Fcfa::format($retour->amount).' enregistré : à payer à l\'agent dans « Dettes fournisseurs ».');
 
         return $this->redirectRoute('m.approvisionnements', navigate: true);
     }

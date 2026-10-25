@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ShortReferenceGenerator;
 use App\Tenancy\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -34,9 +35,11 @@ class RemboursementFournisseur extends Model
         'notes',
     ];
 
+    /** Annulation : renseignée uniquement par FournisseurDebtService::cancel(), jamais par un formulaire. */
     protected $casts = [
         'amount' => 'decimal:2',
         'payment_date' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     public function fournisseur(): BelongsTo
@@ -47,6 +50,22 @@ class RemboursementFournisseur extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    /** Remboursements qui comptent dans le solde du fournisseur (non annulés). */
+    public function scopeActifs(Builder $query): Builder
+    {
+        return $query->whereNull('cancelled_at');
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->cancelled_at !== null;
     }
 
     protected static function boot()

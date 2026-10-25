@@ -3,6 +3,7 @@
 use App\Http\Controllers\Mobile\ExportController;
 use App\Http\Controllers\Mobile\LogoutController;
 use App\Http\Controllers\Mobile\PushTokenController;
+use App\Http\Controllers\ReportExportController;
 use App\Livewire\Mobile\Account\Profile;
 use App\Livewire\Mobile\Admin;
 use App\Livewire\Mobile\Agents;
@@ -87,6 +88,10 @@ Route::prefix('m')->name('m.')->group(function () {
         Route::get('scoring/{agent}', Analytics\ScoringAgent::class)->name('scoring.agent');
         Route::get('rapports', Analytics\Reports::class)->name('rapports');
         Route::get('exports/rapport/{type}/{format}', [ExportController::class, 'report'])->name('exports.report')->middleware('not.read-only');
+        // Rapports et exports par catégorie (dates libres, fin incluse) : même contrôleur que l'interface Web.
+        Route::get('exports/rapports/{category}/{format}', ReportExportController::class)->name('exports.categorie')->middleware('not.read-only')
+            ->where(['category' => '[a-z_]+', 'format' => 'pdf|xlsx']);
+        Route::get('dettes/historique', Dettes\Historique::class)->name('dettes.historique');
 
         Route::get('commissions', Commissions\Index::class)->name('commissions');
         Route::get('commissions/{commission}', Commissions\Show::class)->name('commissions.show');
@@ -94,6 +99,7 @@ Route::prefix('m')->name('m.')->group(function () {
 
         Route::get('dettes', Dettes\Index::class)->name('dettes');
         Route::get('dettes/agent/{agent}', Dettes\AgentDetail::class)->name('dettes.agent');
+        Route::get('dettes/fournisseur/{fournisseur}', Dettes\FournisseurDetail::class)->name('dettes.fournisseur.show');
         Route::get('dettes/fournisseur/{fournisseur}/payer', Dettes\PayFournisseur::class)->name('dettes.fournisseur');
         Route::get('paiements-fournisseurs', RemboursementsFournisseurs\Index::class)->name('remboursements-fournisseurs');
 

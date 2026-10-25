@@ -89,9 +89,10 @@ class UvDistributionService
         Agent $agent,
         float $amount,
         ?string $transactionDate = null,
-        ?string $notes = null
+        ?string $notes = null,
+        ?Fournisseur $fournisseur = null
     ): UvTransaction {
-        return DB::transaction(function () use ($agent, $amount, $transactionDate, $notes) {
+        return DB::transaction(function () use ($agent, $amount, $transactionDate, $notes, $fournisseur) {
             $this->masterSoldeService->lockLedgerForUpdate();
 
             $soldeAvant = $this->masterSoldeService->getAvailableBalance();
@@ -99,6 +100,7 @@ class UvDistributionService
 
             $transaction = UvTransaction::create([
                 'agent_id' => $agent->id,
+                'fournisseur_id' => $fournisseur?->id,
                 'amount' => $montant,
                 'transaction_type' => 'retour',
                 'transaction_date' => $transactionDate ?? now(),

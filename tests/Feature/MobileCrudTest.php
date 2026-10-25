@@ -62,7 +62,7 @@ class MobileCrudTest extends TestCase
             ->assertHasNoErrors()
             ->assertRedirect();
 
-        $f = Fournisseur::firstOrFail();
+        $f = Fournisseur::where('name', 'Banque Atlantique')->firstOrFail();
         $this->assertSame('Banque Atlantique', $f->name);
         $this->assertTrue((bool) $f->is_active);
 
@@ -75,7 +75,7 @@ class MobileCrudTest extends TestCase
 
         Livewire::test(Crud\Index::class, ['resource' => 'fournisseurs'])->assertSee('Banque Atlantique')->assertSee('Inactif');
         Livewire::test(Crud\Show::class, ['resource' => 'fournisseurs', 'id' => (string) $f->id])->call('delete');
-        $this->assertSame(0, Fournisseur::count());
+        $this->assertSame(0, Fournisseur::where('name', 'like', 'Banque Atlantique%')->count());
     }
 
     public function test_validation_uses_french_messages_and_required_fields(): void

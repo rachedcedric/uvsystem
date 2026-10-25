@@ -7,10 +7,9 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
- * 3 tuiles de la page Dettes Fournisseurs : Dette actuelle / Déjà
- * remboursée / Dette restante. Rendues comme un StatsOverviewWidget natif
- * pour rester visuellement alignées avec les autres widgets du projet.
- * Aucun calcul propre : délègue entièrement à FournisseurDebtService.
+ * Tuiles de la page Dettes Fournisseurs : cumul à crédit / déjà remboursé / dette restante / découverts (avances,
+ * toujours affichés avec le signe « − »). Rendues comme un StatsOverviewWidget natif pour rester alignées avec les
+ * autres widgets du projet. Aucun calcul propre : délègue entièrement à FournisseurDebtService.
  */
 class FournisseurDebtStatsWidget extends BaseWidget
 {
@@ -18,7 +17,7 @@ class FournisseurDebtStatsWidget extends BaseWidget
 
     protected function getColumns(): int
     {
-        return 3;
+        return 4;
     }
 
     protected function getStats(): array
@@ -32,12 +31,19 @@ class FournisseurDebtStatsWidget extends BaseWidget
                 ->color('primary'),
 
             Stat::make('Déjà remboursée', $this->formatMoney($summary['totalRembourse']))
+                ->description('Remboursements non annulés')
                 ->icon('heroicon-o-arrow-uturn-left')
                 ->color('success'),
 
             Stat::make('Dette restante', $this->formatMoney($summary['resteAPayer']))
+                ->description($summary['nbEndettes'].' fournisseur(s) à payer')
                 ->icon('heroicon-o-exclamation-triangle')
-                ->color($summary['resteAPayer'] > 0 ? 'danger' : 'success'),
+                ->color($summary['resteAPayer'] > 0 ? 'danger' : 'gray'),
+
+            Stat::make('Découverts fournisseurs', $this->formatMoney($summary['totalDecouvert']))
+                ->description($summary['nbDecouverts'] > 0 ? $summary['nbDecouverts'].' avance(s) disponible(s)' : 'Aucune avance en cours')
+                ->icon('heroicon-o-banknotes')
+                ->color($summary['totalDecouvert'] < 0 ? 'success' : 'gray'),
         ];
     }
 

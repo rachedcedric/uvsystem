@@ -50,7 +50,6 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
         'statistiques_avancees' => 'test_statistiques_avancees',
         'exports_pdf' => 'test_exports_pdf_and_excel',
         'exports_excel' => 'test_exports_pdf_and_excel',
-        'exports_avances' => 'test_exports_avances',
         'notifications_dettes' => 'test_notifications_dettes',
         'notifications_push' => 'test_notifications_push',
         'import_donnees' => 'SubscriptionTenantAccessTest::test_the_mobile_import_depends_on_the_plan_features',
@@ -95,7 +94,7 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
 
     public function test_statistics_and_scoring_are_open_to_every_master_whatever_the_plan(): void
     {
-        $this->assertSame(['statistiques_essentielles', 'scoring_agents'], FeatureCatalog::openFeatures());
+        $this->assertSame(['statistiques_essentielles', 'scoring_agents', 'exports_avances'], FeatureCatalog::openFeatures());
         $this->assertNotContains('scoring_agents', FeatureCatalog::enforcedFeatures());
 
         // Offre sans ces fonctionnalités, puis tenant sans aucun abonnement : les pages restent ouvertes au master.
@@ -160,17 +159,25 @@ class SubscriptionFeaturesTest extends SubscriptionTestCase
         $this->assertNull(ExportGate::featureForPdfView('receipts.remboursement'));
     }
 
-    public function test_exports_avances(): void
+    /**
+     * Correctif du 403 « Accès refusé » à l'export des commissions : un Master dont l'abonnement est actif exporte ses
+     * commissions, sa caisse et ses périodes avec les exports PDF/Excel de son offre, sans « exports avancés ».
+     */
+    public function test_commission_caisse_and_period_exports_are_open_to_every_plan_with_exports(): void
     {
         [, $basic] = $this->tenantWith(['exports_pdf', 'exports_excel']);
-        [, $advanced] = $this->tenantWith(['exports_pdf', 'exports_excel', 'exports_avances']);
+        [, $none] = $this->tenantWith(['statistiques_essentielles']);
+
+        $this->assertNotContains('exports_avances', FeatureCatalog::enforcedFeatures());
 
         foreach (['/m/exports/commissions/pdf', '/m/exports/commissions/xlsx', '/m/exports/periode/ventes/month/pdf', '/m/exports/caisse/historique'] as $url) {
             $this->actingAs($basic);
-            $this->get($url)->assertForbidden();
-            $this->actingAs($advanced);
             $this->assertContains($this->get($url)->getStatusCode(), [200, 302], $url);
         }
+
+        // Sans aucun export dans l'offre, le refus reste légitime et son motif est affiché (plus de 403 générique).
+        $this->actingAs($none);
+        $this->get('/m/exports/commissions/pdf')->assertForbidden()->assertSee('pas inclus dans votre offre');
     }
 
     // ---------------------------------------------------------------- notifications

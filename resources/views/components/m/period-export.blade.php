@@ -30,4 +30,7 @@
             @endif
         </div>
     @endforeach
+
+    {{-- Dates libres : même contenu que la catégorie correspondante de « Rapports et exports ». --}}
+    <x-m.range-export :category="$module" />
 </div>

@@ -9,6 +9,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Public\PricingController;
 use App\Http\Controllers\Public\SubscribeController;
 use App\Http\Controllers\RemboursementReceiptController;
+use App\Http\Controllers\ReportExportController;
 use App\Http\Controllers\TenantBackupController;
 use App\Http\Controllers\TenantBrandingLogoController;
 use App\Http\Controllers\TenantDataExportController;
@@ -97,6 +98,12 @@ Route::middleware(['web', 'auth', '2fa', 'staff', 'not.read-only', 'throttle:3,1
 // Sauvegardes dédiées du tenant (offre avec « sauvegardes_dediees »)
 Route::middleware(['web', 'auth', '2fa', 'staff', 'not.read-only', 'throttle:10,10'])->get('/exports/mes-sauvegardes/{file}', [TenantBackupController::class, 'download'])
     ->name('exports.tenant-backup');
+
+// Rapports et exports par catégorie (interface Web) : même contrôleur et mêmes règles que l'application mobile.
+Route::middleware(['web', 'auth', '2fa', 'staff', 'not.read-only', 'throttle:30,1'])
+    ->get('/exports/rapports/{category}/{format}', ReportExportController::class)
+    ->where(['category' => '[a-z_]+', 'format' => 'pdf|xlsx'])
+    ->name('exports.categorie');
 
 // Export Download Route (protected)
 Route::middleware(['web', 'auth', 'staff', 'not.read-only'])->group(function () {

@@ -113,14 +113,18 @@ class MobileAnalyticsTest extends TestCase
             ->assertSee('82')->assertSee('Volume')->assertSee('Relancer le paiement');
     }
 
-    public function test_reports_screen_builds_export_links_from_the_filters(): void
+    public function test_reports_screen_builds_export_links_from_the_period_and_the_search(): void
     {
         $agent = $this->seedSales();
+        foreach (['view_uv_transactions', 'view_remboursements'] as $permission) {
+            $this->user->givePermissionTo(Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']));
+        }
 
         Livewire::test(Analytics\Reports::class)
-            ->set('agentId', $agent->id)->set('type', 'distribution')
-            ->assertSeeHtml('exports/rapport/transactions/pdf')->assertSeeHtml('agent='.$agent->id)
-            ->set('report', 'remboursements')->assertSeeHtml('exports/rapport/remboursements/xlsx')->assertDontSeeHtml('exports/rapport/remboursements/pdf');
+            ->set('categorie', 'ventes')->set('q', $agent->name)
+            ->assertSeeHtml('exports/rapports/ventes/pdf')->assertSeeHtml('exports/rapports/ventes/xlsx')
+            ->assertSeeHtml('q='.rawurlencode($agent->name))
+            ->set('categorie', 'remboursements')->assertSeeHtml('exports/rapports/remboursements/pdf')->assertSeeHtml('exports/rapports/remboursements/xlsx');
     }
 
     public function test_report_exports_download_pdf_and_excel(): void

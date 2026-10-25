@@ -38,7 +38,7 @@ Le refus a lieu **dans les modèles** (trait `BelongsToTenant`), donc Filament, 
 | `statistiques_essentielles` | _Ouverte_ : `m.statistiques` et la page Filament Statistiques s'ouvrent à tout compte ayant la permission, quelle que soit l'offre | `SubscriptionFeaturesTest::test_statistics_and_scoring_are_open_to_every_master_whatever_the_plan` |
 | `statistiques_avancees` | page Filament « Rapports & Statistiques » | `…::test_statistiques_avancees` |
 | `exports_pdf`, `exports_excel` | **toute** génération PDF/Excel (Filament, `/m`, API, commandes) via `GatedPdf`/`GatedExcel` + `ExportGate` ; PDF = `exports_pdf`, Excel/CSV = `exports_excel` | `…::test_exports_pdf_and_excel`, `…::test_every_pdf_and_excel_generation_goes_through_the_gate…` |
-| `exports_avances` | commissions, caisse (jour/historique), fiche agent, exports par période | `…::test_exports_avances` |
+| `exports_avances` | **Ouverte** (non appliquée) : les exports de commissions, caisse, fiche agent et par période sont des exports `exports_pdf` / `exports_excel` ordinaires, permis à tout Master dont l'abonnement est actif (correctif du 403 sur l'export des commissions) | `…::test_commission_caisse_and_period_exports_are_open_to_every_plan_with_exports` |
 | `rapports_avances` | rapports quotidiens et planifiés (`uv:daily-report`, `reports:generate`) : le tenant est ignoré s'il ne l'a pas | `…::test_rapports_avances` |
 | `notifications_dettes` | alertes, rappels, SMS de dettes : `via()` des notifications (tous les points d'envoi) | `…::test_notifications_dettes` |
 | `notifications_push` | canal Firebase + enregistrement du jeton push | `…::test_notifications_push` |

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Mobile\RemboursementsFournisseurs;
 
+use App\Livewire\Concerns\CancelsSupplierPayments;
 use App\Models\RemboursementFournisseur;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
@@ -14,6 +15,8 @@ use Livewire\Component;
 #[Title('Paiements fournisseurs')]
 class Index extends Component
 {
+    use CancelsSupplierPayments;
+
     private const PAGE = 30;
 
     #[Url(as: 'p', except: 'month')]
@@ -46,11 +49,13 @@ class Index extends Component
 
     public function render()
     {
-        $rows = $this->filtered()->with('fournisseur:id,name')->orderByDesc('payment_date')->orderByDesc('id')->limit($this->limit + 1)->get();
-        $summary = $this->filtered()->selectRaw('COUNT(*) as n, COALESCE(SUM(amount), 0) as total')->first();
+        $rows = $this->filtered()->with(['fournisseur:id,name', 'user:id,name', 'cancelledBy:id,name'])->orderByDesc('payment_date')->orderByDesc('id')->limit($this->limit + 1)->get();
+        // Les paiements annulés restent listés (barrés) mais ne comptent pas dans le total.
+        $summary = $this->filtered()->actifs()->selectRaw('COUNT(*) as n, COALESCE(SUM(amount), 0) as total')->first();
 
         return view('livewire.mobile.remboursements-fournisseurs.index', [
             'groups' => $rows->take($this->limit)->groupBy(fn ($r) => $r->payment_date->toDateString()),
+            'cancelledCount' => $this->filtered()->whereNotNull('cancelled_at')->count(),
             'hasMore' => $rows->count() > $this->limit,
             'count' => (int) $summary->n,
             'total' => (float) $summary->total,

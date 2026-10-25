@@ -32,16 +32,12 @@ L'authentification à deux facteurs (2FA) ajoute une couche de sécurité suppl�
 
 ### Rôles concernés
 
-Le 2FA est **obligatoire** pour :
+Le 2FA est **obligatoire** uniquement pour le **super admin de plateforme** (`/platform`).
 
--   **Master** : Accès complet au système
--   **Admin** : Gestion des utilisateurs et configuration
-
-Le 2FA est **optionnel** pour :
-
--   **Comptable** : Peut l'activer volontairement
--   **Commercial** : Peut l'activer volontairement
--   **Agent** : N'a pas accès au panel admin
+Le 2FA est **facultatif** pour tous les comptes des entreprises (**Master**, **Admin**, **Comptable**, **Commercial**,
+**Lecture seule**) : chacun peut l'activer volontairement dans ses paramètres de sécurité (`/master` → Sécurité 2FA,
+ou `/m/securite`). Aucun bandeau ni compte à rebours n'impose son activation. Une 2FA déjà activée reste exigée à
+chaque connexion tant que l'utilisateur ne la désactive pas lui-même (mot de passe requis).
 
 ---
 

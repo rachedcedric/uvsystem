@@ -12,11 +12,13 @@ use App\Support\Money;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Remboursements versés aux fournisseurs "Agent Premium" (qui approvisionnent
@@ -75,15 +77,19 @@ class RemboursementFournisseurResource extends Resource
                                     return new HtmlString('<span style="color: #6b7280;">-</span>');
                                 }
 
-                                $totaux = app(FournisseurDebtService::class)->soldeTotals($fournisseur);
-                                $reste = $totaux['distribue'] - $totaux['rembourse'];
-                                $resteColor = $reste > 0 ? '#dc2626' : '#22c55e';
+                                $s = app(FournisseurDebtService::class)->situation($fournisseur);
+                                $color = match ($s['statut']) {
+                                    FournisseurDebtService::STATUT_DETTE => '#dc2626',
+                                    FournisseurDebtService::STATUT_DECOUVERT => '#16a34a',
+                                    default => '#6b7280',
+                                };
+                                $money = fn (float $n) => number_format($n, 0, ',', ' ').' FCFA';
 
                                 return new HtmlString(
                                     '<div style="display:flex; flex-direction:column; gap:2px;">'
-                                    .'<span>Dette totale : <strong>'.number_format($totaux['distribue'], 0, ',', ' ').' FCFA</strong></span>'
-                                    .'<span>Déjà remboursé : <strong style="color:#22c55e;">'.number_format($totaux['rembourse'], 0, ',', ' ').' FCFA</strong></span>'
-                                    .'<span>Reste à payer : <strong style="color:'.$resteColor.';">'.number_format($reste, 0, ',', ' ').' FCFA</strong></span>'
+                                    .'<span>Dette totale : <strong>'.$money($s['total_credit']).'</strong></span>'
+                                    .'<span>Déjà remboursé : <strong style="color:#16a34a;">'.$money($s['total_rembourse']).'</strong></span>'
+                                    .'<span>Solde net : <strong style="color:'.$color.';">'.$money($s['solde']).'</strong> ('.e($s['statut_label']).')</span>'
                                     .'</div>'
                                 );
                             })
@@ -95,33 +101,25 @@ class RemboursementFournisseurResource extends Resource
                             ->autocomplete(false)
                             ->money(min: 1)
                             ->live(debounce: 500)
-                            ->rules([
-                                fn (Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $fournisseurId = $get('fournisseur_id');
-                                    if (! $fournisseurId) {
-                                        return;
-                                    }
-
-                                    $fournisseur = Fournisseur::find($fournisseurId);
-                                    if (! $fournisseur) {
-                                        return;
-                                    }
-
-                                    $reste = app(FournisseurDebtService::class)->detteRestante($fournisseur);
-
-                                    if (Money::toFloat($value) > $reste) {
-                                        $fail('Le montant du remboursement ne peut pas dépasser le reste à payer.');
-                                    }
-                                },
-                            ])
                             ->helperText(function (Get $get) {
-                                if (! $get('fournisseur_id')) {
+                                $fournisseur = $get('fournisseur_id') ? Fournisseur::find($get('fournisseur_id')) : null;
+                                if (! $fournisseur) {
                                     return 'Sélectionnez d\'abord un fournisseur';
                                 }
-                                $fournisseur = Fournisseur::find($get('fournisseur_id'));
-                                $reste = $fournisseur ? app(FournisseurDebtService::class)->detteRestante($fournisseur) : 0.0;
 
-                                return '⚠️ Maximum: '.number_format($reste, 0, ',', ' ').' FCFA';
+                                $solde = app(FournisseurDebtService::class)->detteRestante($fournisseur);
+                                $apres = $solde - Money::toFloat($get('amount'));
+                                $money = fn (float $n) => number_format($n, 0, ',', ' ').' FCFA';
+
+                                if (Money::toFloat($get('amount')) <= 0) {
+                                    return 'Solde actuel : '.$money($solde).'. Un montant supérieur à la dette est enregistré comme découvert (avance).';
+                                }
+
+                                return match (FournisseurDebtService::statutPour($apres)) {
+                                    FournisseurDebtService::STATUT_DECOUVERT => 'Après ce paiement : découvert de '.$money($apres).' (avance, compensée par les prochains approvisionnements à crédit).',
+                                    FournisseurDebtService::STATUT_DETTE => 'Après ce paiement : reste à payer '.$money($apres).'.',
+                                    default => 'Après ce paiement : compte soldé.',
+                                };
                             }),
 
                         Forms\Components\Select::make('payment_method')
@@ -160,6 +158,7 @@ class RemboursementFournisseurResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['fournisseur', 'cancelledBy:id,name']))
             ->columns([
                 Tables\Columns\TextColumn::make('reference')
                     ->label('Référence')
@@ -179,10 +178,21 @@ class RemboursementFournisseurResource extends Resource
                     ->label('Montant remboursé')
                     ->formatStateUsing(fn ($state) => number_format($state, 0, ',', ' ').' FCFA')
                     ->sortable()
-                    ->color('success')
+                    ->color(fn (RemboursementFournisseur $record) => $record->isCancelled() ? 'gray' : 'success')
+                    ->extraAttributes(fn (RemboursementFournisseur $record) => $record->isCancelled() ? ['style' => 'text-decoration: line-through'] : [])
                     ->weight('bold')
                     ->icon('heroicon-m-arrow-trending-down')
                     ->alignEnd(),
+
+                Tables\Columns\TextColumn::make('statut')
+                    ->label('Statut')
+                    ->badge()
+                    ->getStateUsing(fn (RemboursementFournisseur $record) => $record->isCancelled() ? 'Annulé' : 'Validé')
+                    ->color(fn (string $state) => $state === 'Annulé' ? 'gray' : 'success')
+                    ->description(fn (RemboursementFournisseur $record) => $record->isCancelled()
+                        ? 'Le '.$record->cancelled_at->format('d/m/Y H:i').($record->cancelledBy ? ' par '.$record->cancelledBy->name : '').' — '.$record->cancellation_reason
+                        : null)
+                    ->wrap(),
 
                 Tables\Columns\TextColumn::make('payment_method')
                     ->label('Mode')
@@ -221,6 +231,15 @@ class RemboursementFournisseurResource extends Resource
             ->striped()
             ->defaultSort('payment_date', 'desc')
             ->filters([
+                Tables\Filters\SelectFilter::make('statut')
+                    ->label('Statut')
+                    ->options(['valide' => 'Validés', 'annule' => 'Annulés'])
+                    ->query(fn (Builder $query, array $data) => match ($data['value'] ?? null) {
+                        'valide' => $query->whereNull('cancelled_at'),
+                        'annule' => $query->whereNotNull('cancelled_at'),
+                        default => $query,
+                    }),
+
                 Tables\Filters\SelectFilter::make('payment_method')
                     ->label('Mode de paiement')
                     ->options(fn () => PaymentMethod::getActiveOptions()),
@@ -244,10 +263,11 @@ class RemboursementFournisseurResource extends Resource
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make()
-                        ->label('Voir'),
+                        ->label('Voir les détails'),
                     Tables\Actions\EditAction::make()
                         ->label('Modifier'),
-                ]),
+                    self::cancelAction(),
+                ])->tooltip('Actions'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -263,6 +283,47 @@ class RemboursementFournisseurResource extends Resource
                     ->label('Nouveau remboursement'),
             ])
             ->poll('30s');
+    }
+
+    /**
+     * « Annuler le remboursement » : confirmation avec le récapitulatif de l'opération et un motif obligatoire, puis
+     * FournisseurDebtService::cancel() (atomique, audité, jamais deux fois). Visible seulement si la policy l'autorise.
+     */
+    public static function cancelAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('cancel')
+            ->label('Annuler le remboursement')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->visible(fn (RemboursementFournisseur $record) => auth()->user()?->can('cancel', $record) ?? false)
+            ->modalHeading('Annuler ce remboursement ?')
+            ->modalIcon('heroicon-o-exclamation-triangle')
+            ->modalDescription(fn (RemboursementFournisseur $record) => new HtmlString(
+                'Remboursement <strong>'.e($record->reference).'</strong> de <strong>'.number_format((float) $record->amount, 0, ',', ' ').' FCFA</strong>'
+                .' versé à <strong>'.e($record->fournisseur?->name ?? '—').'</strong> le '.$record->payment_date?->format('d/m/Y à H:i').'.<br>'
+                .'L\'opération restera dans l\'historique avec le statut « Annulé » et ne comptera plus dans le solde du fournisseur.'
+            ))
+            ->modalSubmitActionLabel('Confirmer l\'annulation')
+            ->form([
+                Forms\Components\Textarea::make('reason')
+                    ->label('Motif de l\'annulation')
+                    ->required()
+                    ->minLength(3)
+                    ->maxLength(500)
+                    ->rows(3),
+            ])
+            ->action(function (RemboursementFournisseur $record, array $data, Tables\Actions\Action $action) {
+                abort_unless(auth()->user()?->can('cancel', $record), 403);
+
+                try {
+                    app(FournisseurDebtService::class)->cancel($record, $data['reason'], auth()->user());
+                } catch (ValidationException $e) {
+                    Notification::make()->danger()->title('Annulation impossible')->body(collect($e->errors())->flatten()->implode(' '))->send();
+                    $action->halt();
+                }
+
+                Notification::make()->success()->title('Remboursement annulé')->body('Le solde du fournisseur a été recalculé.')->send();
+            });
     }
 
     public static function getRelations(): array

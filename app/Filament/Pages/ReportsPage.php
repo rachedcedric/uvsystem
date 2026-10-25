@@ -5,8 +5,12 @@ namespace App\Filament\Pages;
 use App\Exports\AgentSituationExport;
 use App\Exports\RemboursementsExport;
 use App\Exports\UvTransactionsExport;
+use App\Livewire\Concerns\WithReportPeriod;
 use App\Models\Agent;
 use App\Models\UvTransaction;
+use App\Services\Reports\DateRange;
+use App\Services\Reports\ReportCatalog;
+use App\Services\Reports\ReportDashboard;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -16,11 +20,77 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Livewire\Attributes\Url;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportsPage extends Page implements HasForms
 {
     use InteractsWithForms;
+    use WithReportPeriod;
+
+    public const PAGE = 25;
+
+    /** Catégorie ouverte dans la visionneuse (vide : tableau de bord seul). */
+    #[Url(as: 'c', except: '')]
+    public string $categorie = '';
+
+    #[Url(as: 'q', except: '')]
+    public string $q = '';
+
+    public int $limit = self::PAGE;
+
+    public function selectCategorie(string $key): void
+    {
+        $this->categorie = $key;
+        $this->q = '';
+        $this->limit = self::PAGE;
+    }
+
+    public function updatedQ(): void
+    {
+        $this->limit = self::PAGE;
+    }
+
+    public function loadMore(): void
+    {
+        $this->limit += self::PAGE;
+    }
+
+    /**
+     * Données de la partie « catalogue » (période, tuiles, catégories, opérations) : même ReportCatalog et même
+     * ReportDashboard que l'écran mobile /m/rapports.
+     *
+     * @return array<string, mixed>
+     */
+    public function reportData(): array
+    {
+        $user = auth()->user();
+        $categories = app(ReportCatalog::class)->for($user);
+        [$range, $error] = $this->resolveRange();
+        $category = $categories[$this->categorie] ?? null;
+        $data = [
+            'presets' => DateRange::PRESETS,
+            'range' => $range,
+            'error' => $error,
+            'categories' => $categories,
+            'category' => $category,
+            'tiles' => $range ? app(ReportDashboard::class)->tiles($range, $user) : [],
+            'canExport' => $user->can('export_reports') || $user->hasAnyRole(['master', 'admin']),
+        ];
+
+        if ($range && $category) {
+            $filters = array_filter(['q' => trim($this->q)]);
+            $rows = $category->rows($range, $filters, $this->limit + 1);
+            $data += [
+                'summary' => $category->summary($range, $filters),
+                'rows' => $rows->take($this->limit),
+                'hasMore' => $rows->count() > $this->limit,
+                'exportQuery' => $range->toQuery() + $filters,
+            ];
+        }
+
+        return $data;
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-document-arrow-down';
 

@@ -54,12 +54,14 @@ class TenancyDeployCheckTest extends TestCase
         $this->assertStringContainsString('APP_DEBUG', Artisan::output());
     }
 
-    public function test_missing_2fa_enforcement_date_is_flagged(): void
+    public function test_optional_2fa_for_tenant_accounts_is_reported_without_warning(): void
     {
         config(['security.authentication.2fa_enforce_from' => null]);
 
         $this->assertSame(0, Artisan::call('tenancy:deploy-check'));
-        $this->assertStringContainsString('SECURITY_2FA_ENFORCE_FROM vide', Artisan::output());
+        $output = Artisan::output();
+        $this->assertStringContainsString('2FA des entreprises', $output);
+        $this->assertStringContainsString('facultative', $output);
     }
 
     public function test_it_never_modifies_anything(): void

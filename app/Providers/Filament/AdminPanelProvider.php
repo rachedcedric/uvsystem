@@ -138,10 +138,6 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_START,
-                fn () => view('components.two-factor-reminder'),
-            )
-            ->renderHook(
-                PanelsRenderHook::BODY_START,
                 fn () => Filament::auth()->check() ? view('components.subscription-banner') : '',
             )
             ->renderHook(

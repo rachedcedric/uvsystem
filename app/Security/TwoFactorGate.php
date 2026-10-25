@@ -11,11 +11,11 @@ use Illuminate\Support\Facades\Cookie;
  * Politique 2FA centralisée : qui doit l'avoir, depuis quand c'est obligatoire, et si la
  * session / l'appareil courant a déjà prouvé le second facteur.
  *
- * Verrouillage évité par construction :
- *  - maîtres/masters : bandeau de rappel tant que `security.authentication.2fa_enforce_from`
- *    n'est pas atteinte (vide = jamais bloquant) ;
- *  - jamais de blocage pour qui n'a pas la 2FA avant la date ; la page d'activation reste toujours
- *    accessible ; codes de récupération et réinitialisation par la plateforme en secours.
+ * Comptes des entreprises (master compris) : 2FA facultative, activable dans les paramètres de sécurité ;
+ * une fois activée, le code est exigé à chaque connexion (voir isVerified()). Seuls les rôles listés dans
+ * `security.authentication.2fa_required_for_roles` (vide par défaut) et le super admin de plateforme
+ * peuvent y être contraints ; la page d'activation reste toujours accessible, codes de récupération et
+ * réinitialisation par la plateforme en secours.
  */
 class TwoFactorGate
 {
@@ -32,7 +32,7 @@ class TwoFactorGate
     public function isRequiredFor(User $user): bool
     {
         return $this->featureEnabled()
-            && ($user->isSuperAdmin() || $user->hasAnyRole(config('security.authentication.2fa_required_for_roles', ['master', 'admin'])));
+            && ($user->isSuperAdmin() || $user->hasAnyRole((array) config('security.authentication.2fa_required_for_roles', [])));
     }
 
     public function enforceFrom(): ?CarbonImmutable
@@ -56,23 +56,6 @@ class TwoFactorGate
         $from = $this->enforceFrom();
 
         return $from !== null && $from->isPast();
-    }
-
-    /** Jours restants avant l'obligation (null : pas de date, ou déjà obligatoire / non concerné). */
-    public function reminderDaysLeft(User $user): int|false|null
-    {
-        if (! $this->isRequiredFor($user) || $user->hasTwoFactorEnabled() || $this->mustEnrollNow($user)) {
-            return false; // pas de rappel
-        }
-
-        $from = $this->enforceFrom();
-
-        return $from ? max(0, (int) ceil(now()->diffInDays($from, false))) : null;
-    }
-
-    public function needsReminder(User $user): bool
-    {
-        return $this->reminderDaysLeft($user) !== false;
     }
 
     /** L'utilisateur peut-il désactiver sa 2FA ? Non si son rôle l'impose et que l'obligation est en vigueur. */

@@ -55,6 +55,52 @@
         </div>
     </x-m.section>
 
+    @if ($annules->isNotEmpty())
+        <x-m.section title="Mouvements annulés">
+            <div class="m-group">
+                @foreach ($annules as $m)
+                    @php($in = $m->type === 'entree')
+                    {{-- Ligne dépliée : le motif et l'auteur de l'annulation doivent rester lisibles. --}}
+                    <x-m.row icon="x-circle" tone="muted" :chevron="false" :title="$m->libelle" wire:key="mx{{ $m->id }}" class="m-row--top"
+                             :sub="$m->reference.' · '.$m->date_mouvement->format('H:i').' · annulé le '.$m->cancelled_at->format('d/m/Y H:i').($m->cancelledBy ? ' par '.$m->cancelledBy->name : '').' — '.$m->cancellation_reason">
+                        <x-slot:end><x-m.amount :value="$m->amount" :sign="$in ? '+' : '−'" :cancelled="true" class="m-row__amount" /></x-slot:end>
+                    </x-m.row>
+                @endforeach
+            </div>
+        </x-m.section>
+    @endif
+
+    @if ($canCancelDay && $totals['count'] > 0)
+        <div style="margin-top:18px">
+            <x-m.sheet-action sheet="cancel-day-sheet" icon="trash" :outline="true">Supprimer les mouvements de cette journée</x-m.sheet-action>
+        </div>
+
+        <div id="cancel-day-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Supprimer les mouvements de la journée" aria-hidden="true" tabindex="-1">
+            <div class="m-sheet__grip"></div>
+            <div class="m-sheet__title">Supprimer les mouvements du {{ $day->format('d/m/Y') }}</div>
+            <div style="padding:0 16px">
+                <x-m.callout tone="danger" icon="exclamation-triangle">Attention : vous êtes sur le point de supprimer les mouvements du {{ $day->format('d/m/Y') }}. Cette action modifiera les historiques et les soldes concernés.</x-m.callout>
+                <x-m.kv-list :items="[
+                    'Mouvements' => (string) $totals['count'],
+                    'Entrées' => \App\Support\Mobile\Fcfa::format($totals['entrees']),
+                    'Sorties' => \App\Support\Mobile\Fcfa::format($totals['sorties']),
+                    'Résultat' => \App\Support\Mobile\Fcfa::format($totals['solde']),
+                ]" />
+                <p class="m-note">Les mouvements ne sont pas effacés : ils sont annulés, restent visibles dans « Mouvements annulés » avec le motif, et ne comptent plus dans les soldes. Les autres journées ne changent pas.</p>
+                <x-m.field label="Motif" for="cancel-day-reason">
+                    <textarea id="cancel-day-reason" wire:model="cancelReason" rows="2" maxlength="500" class="m-input" style="height:auto;padding:12px 14px" placeholder="Ex. : journée saisie par erreur"></textarea>
+                </x-m.field>
+                <x-m.field label="Pour confirmer, saisissez la date {{ $day->format('d/m/Y') }}" for="cancel-day-confirm">
+                    <input id="cancel-day-confirm" type="text" inputmode="numeric" wire:model="cancelConfirmation" class="m-input" placeholder="{{ $day->format('d/m/Y') }}" autocomplete="off">
+                </x-m.field>
+            </div>
+            <div class="m-sheet__actions">
+                <button type="button" class="m-btn m-btn--danger" wire:click="cancelDay" @click="MobileUI.closeSheets()">Supprimer les mouvements de cette journée</button>
+                <button type="button" class="m-btn m-btn--ghost" data-sheet-close data-sheet-initial-focus>Annuler</button>
+            </div>
+        </div>
+    @endif
+
     @if ($canCreate)
         <x-m.fab :href="route('m.caisse.create', ['date' => $day->toDateString()])" label="Mouvement" />
     @endif

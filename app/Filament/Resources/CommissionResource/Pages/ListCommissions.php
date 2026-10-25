@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CommissionResource\Pages;
 
 use App\Exports\CommissionsExport;
+use App\Filament\Actions\ExportPeriodAction;
 use App\Filament\Resources\CommissionResource;
 use App\Filament\Widgets\CommissionKpisWidget;
 use App\Filament\Widgets\CommissionMonthlyChartWidget;
@@ -35,6 +36,7 @@ class ListCommissions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ExportPeriodAction::make('commissions'),
             Actions\Action::make('voirBareme')
                 ->label('📊 Barème')
                 ->icon('heroicon-o-chart-bar')

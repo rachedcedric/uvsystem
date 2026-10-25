@@ -1,6 +1,9 @@
 <x-filament-panels::page>
     <div class="space-y-6">
-        
+        @include('filament.partials.report-catalog', ['data' => $this->reportData()])
+
+        <h2 class="pt-4 text-lg font-semibold text-gray-950 dark:text-white">Exports détaillés</h2>
+
         {{-- Export Transactions --}}
         <x-filament::section>
             <x-slot name="heading">

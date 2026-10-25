@@ -48,5 +48,35 @@
         </x-filament::section>
 
         {{ $this->table }}
+
+        @php($annules = $this->cancelledRows())
+        @if ($annules->isNotEmpty())
+            <x-filament::section heading="Mouvements annulés" description="Annulations tracées : ces mouvements ne comptent plus dans les soldes." compact>
+                <div class="overflow-x-auto">
+                    <table class="fi-ta-table w-full text-start">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-white/10">
+                                @foreach (['Heure', 'Référence', 'Libellé', 'Montant', 'Annulé le', 'Par', 'Motif'] as $h)
+                                    <th class="px-2.5 py-1.5 text-start text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ $h }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-white/5">
+                            @foreach ($annules as $m)
+                                <tr wire:key="annule-{{ $m->id }}" style="opacity:.7">
+                                    <td class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $m->date_mouvement->format('H:i') }}</td>
+                                    <td class="px-2.5 py-1.5 font-mono text-xs text-gray-700 dark:text-gray-300">{{ $m->reference }}</td>
+                                    <td class="px-2.5 py-1.5 text-sm text-gray-950 dark:text-white">{{ $m->libelle }}</td>
+                                    <td class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300" style="text-decoration:line-through">{{ $m->type === 'entree' ? '+' : '−' }}{{ \App\Services\CaisseService::fcfa($m->amount) }}<span class="sr-only"> (annulé)</span></td>
+                                    <td class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $m->cancelled_at->format('d/m/Y H:i') }}</td>
+                                    <td class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $m->cancelledBy?->name ?? '—' }}</td>
+                                    <td class="px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-300">{{ $m->cancellation_reason }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </x-filament::section>
+        @endif
     </div>
 </x-filament-panels::page>

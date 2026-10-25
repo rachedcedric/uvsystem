@@ -20,9 +20,9 @@ use App\Services\CaissePeriodResolver;
 use App\Services\CaisseService;
 use App\Services\Mobile\AgentHistory;
 use App\Services\Mobile\PeriodStats;
-use App\Services\Subscriptions\SubscriptionEntitlements;
 use App\Services\TenantDocumentBranding;
 use App\Support\Mobile\ChargePeriods;
+use App\Support\PdfLimits;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
@@ -159,7 +159,6 @@ class ExportController extends Controller
      */
     public function period(string $module, string $period, string $format)
     {
-        app(SubscriptionEntitlements::class)->abortUnlessFeature('exports_avances');
         abort_unless(in_array($module, PeriodStats::MODULES, true) && array_key_exists($period, PeriodStats::PERIODS) && in_array($format, ['pdf', 'xlsx'], true), 404);
 
         $user = request()->user();
@@ -218,7 +217,7 @@ class ExportController extends Controller
             'approvisionnements' => [
                 'Rapport des approvisionnements',
                 [['label' => 'Référence'], ['label' => 'Date'], ['label' => 'Fournisseur'], ['label' => 'Type'], ['label' => 'Montant (FCFA)', 'right' => true]],
-                $rows->map(fn ($a) => [$a->reference, $a->date_approvisionnement?->format('d/m/Y H:i'), $a->fournisseur?->name ?? '-', $a->fournisseur?->type === 'AGENT_PREMIUM' ? 'Agent Premium' : 'Banque', $money($a->amount)]),
+                $rows->map(fn ($a) => [$a->reference, $a->date_approvisionnement?->format('d/m/Y H:i'), $a->fournisseur?->name ?? '-', $a->fournisseur?->typeLabel() ?? '-', $money($a->amount)]),
             ],
         };
 
@@ -301,13 +300,7 @@ class ExportController extends Controller
      */
     private function raisePdfLimits(): void
     {
-        $current = self::bytes((string) ini_get('memory_limit'));
-
-        if ($current !== -1 && $current < 512 * 1048576) {
-            @ini_set('memory_limit', '512M');
-        }
-
-        @set_time_limit(120);
+        PdfLimits::raise();
     }
 
     /** Lignes maximum d'un PDF : configurable, sinon déduit de la mémoire réellement disponible (~0,3 Mo/ligne). */
@@ -317,31 +310,13 @@ class ExportController extends Controller
             return max(1, (int) $configured);
         }
 
-        $limit = self::bytes((string) ini_get('memory_limit'));
+        $limit = PdfLimits::bytes((string) ini_get('memory_limit'));
 
         if ($limit === -1) {
             return 500;
         }
 
         return (int) max(50, min(500, floor(($limit / 1048576 - 80) / 0.3)));
-    }
-
-    private static function bytes(string $value): int
-    {
-        $value = trim($value);
-
-        if ($value === '' || $value === '-1') {
-            return -1;
-        }
-
-        $number = (int) $value;
-
-        return match (strtolower(substr($value, -1))) {
-            'g' => $number * 1073741824,
-            'm' => $number * 1048576,
-            'k' => $number * 1024,
-            default => $number,
-        };
     }
 
     /** Téléchargement d'une sauvegarde (master / admin, archives .zip du dossier de sauvegarde uniquement). */

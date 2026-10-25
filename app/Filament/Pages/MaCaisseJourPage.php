@@ -110,32 +110,34 @@ class MaCaisseJourPage extends Page implements HasTable
             ])
             ->defaultSort('date_mouvement', 'asc')
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->form([
-                        Forms\Components\Select::make('type')->label('Type')->required()->native(false)
-                            ->options([CaisseMouvement::TYPE_ENTREE => 'Entrée', CaisseMouvement::TYPE_SORTIE => 'Sortie']),
-                        Forms\Components\Select::make('caisse_categorie_id')->label('Catégorie')->required()->native(false)
-                            ->options(fn () => MaCaissePage::activeCategoryOptions()),
-                        Forms\Components\TextInput::make('libelle')->label('Libellé')->required()->maxLength(255),
-                        Forms\Components\TextInput::make('amount')->label('Montant')->money(min: 1)->required(),
-                        Forms\Components\DateTimePicker::make('date_mouvement')->label('Date et heure')
-                            ->required()->maxDate(now())->seconds(false)->native(false),
-                    ])
-                    ->using(function (CaisseMouvement $record, array $data) {
-                        try {
-                            app(CaisseService::class)->validateMouvement($data['type'], (float) $data['amount']);
-                        } catch (ValidationException $e) {
-                            Notification::make()->danger()->title('Validation échouée')
-                                ->body(collect($e->errors())->flatten()->implode(' '))->persistent()->send();
-                            throw $e;
-                        }
-                        $record->update($data);
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()
+                        ->form([
+                            Forms\Components\Select::make('type')->label('Type')->required()->native(false)
+                                ->options([CaisseMouvement::TYPE_ENTREE => 'Entrée', CaisseMouvement::TYPE_SORTIE => 'Sortie']),
+                            Forms\Components\Select::make('caisse_categorie_id')->label('Catégorie')->required()->native(false)
+                                ->options(fn () => MaCaissePage::activeCategoryOptions()),
+                            Forms\Components\TextInput::make('libelle')->label('Libellé')->required()->maxLength(255),
+                            Forms\Components\TextInput::make('amount')->label('Montant')->money(min: 1)->required(),
+                            Forms\Components\DateTimePicker::make('date_mouvement')->label('Date et heure')
+                                ->required()->maxDate(now())->seconds(false)->native(false),
+                        ])
+                        ->using(function (CaisseMouvement $record, array $data) {
+                            try {
+                                app(CaisseService::class)->validateMouvement($data['type'], (float) $data['amount']);
+                            } catch (ValidationException $e) {
+                                Notification::make()->danger()->title('Validation échouée')
+                                    ->body(collect($e->errors())->flatten()->implode(' '))->persistent()->send();
+                                throw $e;
+                            }
+                            $record->update($data);
 
-                        return $record;
-                    })
-                    ->visible(fn () => Auth::user()?->can('edit_caisse') ?? false),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => Auth::user()?->can('delete_caisse') ?? false),
+                            return $record;
+                        })
+                        ->visible(fn () => Auth::user()?->can('edit_caisse') ?? false),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn () => Auth::user()?->can('delete_caisse') ?? false),
+                ])->tooltip('Actions'),
             ])
             ->paginated([10, 25, 50])
             ->emptyStateHeading('Aucun mouvement ce jour-là');
@@ -166,6 +168,44 @@ class MaCaisseJourPage extends Page implements HasTable
                         'caisse_'.$date->format('Y-m-d').'.pdf'
                     );
                 }),
+            Action::make('cancelDay')->label('Supprimer les mouvements de cette journée')->icon('heroicon-o-trash')->color('danger')
+                ->visible(fn () => Auth::user()?->can('cancelDay', CaisseMouvement::class) && $this->totals()['count'] > 0)
+                ->modalHeading(fn () => 'Supprimer les mouvements du '.$this->businessDate()->format('d/m/Y'))
+                ->modalIcon('heroicon-o-exclamation-triangle')
+                ->modalDescription(function () {
+                    $t = $this->totals();
+
+                    return 'Attention : vous êtes sur le point de supprimer les mouvements du '.$this->businessDate()->format('d/m/Y').'. Cette action modifiera les historiques et les soldes concernés. '
+                        .$t['count'].' mouvement(s) — entrées '.CaisseService::fcfa($t['entrees']).', sorties '.CaisseService::fcfa($t['sorties']).'. '
+                        .'Les mouvements sont annulés (jamais effacés) : ils restent consultables avec le motif et ne comptent plus dans les soldes.';
+                })
+                ->modalSubmitActionLabel('Supprimer les mouvements')
+                ->form([
+                    Forms\Components\Textarea::make('reason')->label('Motif')->required()->minLength(3)->maxLength(500)->rows(2),
+                    Forms\Components\TextInput::make('confirmation')
+                        ->label(fn () => 'Pour confirmer, saisissez la date '.$this->businessDate()->format('d/m/Y'))
+                        ->required()
+                        ->placeholder(fn () => $this->businessDate()->format('d/m/Y')),
+                ])
+                ->action(function (array $data, Action $action) {
+                    abort_unless(Auth::user()?->can('cancelDay', CaisseMouvement::class), 403);
+
+                    try {
+                        $result = app(CaisseService::class)->annulerJournee($this->businessDate(), $data['reason'], $data['confirmation']);
+                    } catch (ValidationException $e) {
+                        Notification::make()->danger()->title('Annulation impossible')->body(collect($e->errors())->flatten()->implode(' '))->send();
+                        $action->halt();
+                    }
+
+                    Notification::make()->success()->title($result['count'].' mouvement(s) annulé(s)')
+                        ->body('Ils restent consultables dans « Mouvements annulés ».')->send();
+                }),
         ];
+    }
+
+    /** Mouvements annulés de la journée (traçabilité), affichés sous la table. */
+    public function cancelledRows()
+    {
+        return app(CaisseService::class)->mouvementsAnnulesQuery($this->businessDate())->with(['categorie', 'cancelledBy:id,name'])->get();
     }
 }

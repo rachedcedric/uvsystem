@@ -58,6 +58,7 @@
         <div class="m-actions">
             <a href="{{ route('m.exports.commissions', ['pdf', 'p' => $period]) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger les commissions au format PDF" data-download data-haptic><x-m.icon name="document-arrow-down" /> PDF</a>
             <a href="{{ route('m.exports.commissions', ['xlsx', 'p' => $period]) }}" target="_blank" rel="noopener" class="m-action" aria-label="Télécharger les commissions au format Excel" data-download data-haptic><x-m.icon name="table-cells" /> Excel</a>
+            <a href="{{ route('m.rapports', ['c' => 'commissions', 'periode' => 'custom', 'du' => now()->startOfMonth()->toDateString(), 'au' => now()->toDateString()]) }}" wire:navigate class="m-action" aria-label="Exporter les commissions sur une période personnalisée" data-haptic><x-m.icon name="calendar-days" /> Autre période</a>
         </div>
     @endif
 

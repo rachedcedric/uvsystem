@@ -131,9 +131,11 @@ class UserResource extends Resource
                     ->preload(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (User $record): bool => static::canDelete($record)),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn (User $record): bool => static::canDelete($record)),
+                ])->tooltip('Actions'),
             ]);
     }
 

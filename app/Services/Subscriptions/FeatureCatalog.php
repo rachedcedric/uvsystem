@@ -42,13 +42,14 @@ class FeatureCatalog
     /**
      * Fonctionnalités OUVERTES : toujours accessibles à tout compte qui en a la permission, quelle que soit l'offre (ou
      * même sans abonnement actif). Elles restent listées dans les offres (affichage commercial) mais ne verrouillent plus
-     * aucun écran.
+     * aucun écran. « exports_avances » : les exports de commissions, de caisse, de fiche agent et par période sont des
+     * exports PDF/Excel ordinaires (exports_pdf / exports_excel), ouverts à tout Master dont l'abonnement est actif.
      *
      * @return list<string>
      */
     public static function openFeatures(): array
     {
-        return ['statistiques_essentielles', 'scoring_agents'];
+        return ['statistiques_essentielles', 'scoring_agents', 'exports_avances'];
     }
 
     /** @return list<string> fonctionnalités techniques appliquées côté serveur */

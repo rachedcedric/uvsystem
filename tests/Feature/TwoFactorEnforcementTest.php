@@ -133,21 +133,32 @@ class TwoFactorEnforcementTest extends TestCase
         $this->actingAs($user->fresh())->withCookie(TwoFactorGate::COOKIE, $token)->get('/m')->assertRedirect(route('2fa.challenge'));
     }
 
-    // ---- obligation par rôle, sans verrouiller personne par surprise -------------------------------------
+    // ---- 2FA facultative pour les comptes des entreprises ; obligation possible uniquement par configuration ----------
 
-    public function test_admins_only_get_a_reminder_before_the_enforcement_date(): void
-    {
-        $master = $this->userWith('master');
-
-        $this->actingAs($master)->get('/m')->assertOk()->assertSee('Activer maintenant');
-
-        config(['security.authentication.2fa_enforce_from' => now()->addDays(10)->toDateString()]);
-        $this->actingAs($master)->get('/m')->assertOk()->assertSee('obligatoire dans');
-    }
-
-    public function test_after_the_enforcement_date_admins_must_enrol_but_other_roles_are_untouched(): void
+    public function test_masters_are_never_forced_nor_nagged_to_enable_2fa_even_after_the_old_enforcement_date(): void
     {
         config(['security.authentication.2fa_enforce_from' => now()->subDay()->toDateString()]);
+        $master = $this->userWith('master');
+        $admin = $this->userWith('admin');
+
+        foreach ([$master, $admin] as $user) {
+            $this->actingAs($user)->get('/m')->assertOk()
+                ->assertDontSee('Activer maintenant')
+                ->assertDontSee('obligatoire dans')
+                ->assertDontSee('Sécurisez votre compte');
+            $this->assertFalse(app(TwoFactorGate::class)->mustEnrollNow($user));
+        }
+
+        // l'activation volontaire reste proposée, sans mention d'obligation
+        $this->actingAs($master)->get('/security/2fa')->assertOk()->assertDontSee('Obligatoire pour votre rôle');
+    }
+
+    public function test_an_explicitly_configured_role_can_still_be_required_after_the_enforcement_date(): void
+    {
+        config([
+            'security.authentication.2fa_required_for_roles' => ['master'],
+            'security.authentication.2fa_enforce_from' => now()->subDay()->toDateString(),
+        ]);
         $master = $this->userWith('master');
         $commercial = $this->userWith('commercial');
 
@@ -176,7 +187,7 @@ class TwoFactorEnforcementTest extends TestCase
         $this->get('/m')->assertOk();
     }
 
-    public function test_disabling_requires_the_password_and_is_refused_once_the_role_imposes_2fa(): void
+    public function test_disabling_requires_the_password_and_is_only_refused_when_a_role_is_configured_as_mandatory(): void
     {
         $master = $this->userWith('master', twoFactor: true);
         $this->withSession([TwoFactorGate::SESSION_KEY => $master->id])->actingAs($master);
@@ -184,11 +195,14 @@ class TwoFactorEnforcementTest extends TestCase
         $this->post('/security/2fa/disable', ['password' => 'mauvais'])->assertSessionHasErrors('password');
         $this->assertTrue($master->fresh()->hasTwoFactorEnabled());
 
-        config(['security.authentication.2fa_enforce_from' => now()->subDay()->toDateString()]);
+        config([
+            'security.authentication.2fa_required_for_roles' => ['master'],
+            'security.authentication.2fa_enforce_from' => now()->subDay()->toDateString(),
+        ]);
         $this->post('/security/2fa/disable', ['password' => self::PASSWORD])->assertForbidden();
         $this->assertTrue($master->fresh()->hasTwoFactorEnabled());
 
-        config(['security.authentication.2fa_enforce_from' => null]);
+        config(['security.authentication.2fa_required_for_roles' => []]);
         $this->post('/security/2fa/disable', ['password' => self::PASSWORD])->assertRedirect(route('security.2fa'));
         $this->assertFalse($master->fresh()->hasTwoFactorEnabled());
     }

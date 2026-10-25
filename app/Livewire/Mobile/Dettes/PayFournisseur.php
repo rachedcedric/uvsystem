@@ -50,10 +50,18 @@ class PayFournisseur extends Component
         return app(FournisseurDebtService::class)->soldeTotals($this->fournisseur);
     }
 
+    /** Solde signé actuel (positif : dette ; négatif : découvert). */
     #[Computed]
     public function reste(): float
     {
-        return $this->totals['distribue'] - $this->totals['rembourse'];
+        return app(FournisseurDebtService::class)->detteRestante($this->fournisseur);
+    }
+
+    /** Solde après ce paiement : un montant au-delà de la dette devient un découvert (avance). */
+    #[Computed]
+    public function apres(): float
+    {
+        return $this->reste - $this->numericAmount;
     }
 
     #[Computed]
@@ -104,7 +112,7 @@ class PayFournisseur extends Component
 
         session()->flash('m-toast', 'Paiement de '.Fcfa::format($paiement->amount).' à '.$this->fournisseur->name.' enregistré.');
 
-        return $this->redirectRoute('m.dettes', ['v' => 'fournisseurs'], navigate: true);
+        return $this->redirectRoute('m.dettes.fournisseur.show', $this->fournisseur, navigate: true);
     }
 
     public function render()

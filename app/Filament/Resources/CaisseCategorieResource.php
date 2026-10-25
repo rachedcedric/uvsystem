@@ -89,20 +89,22 @@ class CaisseCategorieResource extends Resource
             ])
             ->defaultSort('sort_order')
             ->actions([
-                Tables\Actions\EditAction::make()->visible(fn () => static::canEdit(null)),
-                Tables\Actions\Action::make('deactivate')
-                    ->label('Désactiver')->icon('heroicon-o-eye-slash')->color('warning')
-                    ->requiresConfirmation()
-                    ->modalHeading('Désactiver la catégorie ?')
-                    ->modalDescription('Elle n\'apparaîtra plus dans les nouveaux formulaires, mais restera visible dans l\'historique et les exports.')
-                    ->visible(fn (CaisseCategorie $r) => $r->is_active && ! $r->is_system && static::canEdit($r))
-                    ->action(fn (CaisseCategorie $r) => $r->update(['is_active' => false])),
-                Tables\Actions\Action::make('activate')
-                    ->label('Réactiver')->icon('heroicon-o-eye')->color('success')
-                    ->visible(fn (CaisseCategorie $r) => ! $r->is_active && static::canEdit($r))
-                    ->action(fn (CaisseCategorie $r) => $r->update(['is_active' => true])),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (CaisseCategorie $r) => static::canDelete($r)),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make()->visible(fn () => static::canEdit(null)),
+                    Tables\Actions\Action::make('deactivate')
+                        ->label('Désactiver')->icon('heroicon-o-eye-slash')->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Désactiver la catégorie ?')
+                        ->modalDescription('Elle n\'apparaîtra plus dans les nouveaux formulaires, mais restera visible dans l\'historique et les exports.')
+                        ->visible(fn (CaisseCategorie $r) => $r->is_active && ! $r->is_system && static::canEdit($r))
+                        ->action(fn (CaisseCategorie $r) => $r->update(['is_active' => false])),
+                    Tables\Actions\Action::make('activate')
+                        ->label('Réactiver')->icon('heroicon-o-eye')->color('success')
+                        ->visible(fn (CaisseCategorie $r) => ! $r->is_active && static::canEdit($r))
+                        ->action(fn (CaisseCategorie $r) => $r->update(['is_active' => true])),
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn (CaisseCategorie $r) => static::canDelete($r)),
+                ])->tooltip('Actions'),
             ]);
     }
 

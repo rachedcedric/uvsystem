@@ -31,7 +31,20 @@ class RemboursementFournisseurPolicy
 
     public function update(User $user, RemboursementFournisseur $remboursementFournisseur): bool
     {
-        return $user->can('edit_remboursements_fournisseurs');
+        // Un remboursement annulé est figé : il reste consultable dans l'historique, jamais modifié.
+        return $user->can('edit_remboursements_fournisseurs') && ! $remboursementFournisseur->isCancelled();
+    }
+
+    /**
+     * Annulation (contre-passation logique) : réservée aux comptes explicitement autorisés à supprimer un
+     * remboursement fournisseur (master et admin de l'entreprise). Le scope d'entreprise garantit déjà qu'un
+     * remboursement d'une autre entreprise est introuvable ; une opération déjà annulée ne l'est jamais deux fois.
+     */
+    public function cancel(User $user, RemboursementFournisseur $remboursementFournisseur): bool
+    {
+        return $user->can('delete_remboursements_fournisseurs')
+            && ! $user->isReadOnly()
+            && ! $remboursementFournisseur->isCancelled();
     }
 
     public function delete(User $user, RemboursementFournisseur $remboursementFournisseur): bool

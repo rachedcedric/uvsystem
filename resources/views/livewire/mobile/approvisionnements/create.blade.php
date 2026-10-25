@@ -5,7 +5,7 @@
         <div class="m-callout">
             <dl><dt>Solde UV disponible</dt><dd>{{ \App\Support\Mobile\Fcfa::format($this->balance) }}</dd>
                 @if ($this->numericAmount > 0)
-                    <dt>Après approvisionnement</dt><dd style="color:var(--ok)">{{ \App\Support\Mobile\Fcfa::format($this->balance + $this->numericAmount) }}</dd>
+                    <dt>{{ $this->isRetour ? 'Après le retour' : 'Après approvisionnement' }}</dt><dd style="color:var(--ok)">{{ \App\Support\Mobile\Fcfa::format($this->balance + $this->numericAmount) }}</dd>
                 @endif
             </dl>
         </div>
@@ -20,7 +20,19 @@
             </div>
         </x-m.field>
 
-        <x-m.field label="Montant" :error="$errors->first('amount')">
+        @if ($this->isRetour)
+            <x-m.field label="Sélectionner un agent" :error="$errors->first('agentId')" hint="Seuls les agents de votre entreprise sont proposés.">
+                <x-m.agent-picker :agents="$this->agents" model="agentId" :selected="$this->selectedAgent" id="retour-agent-picker" label="Sélectionner un agent" />
+            </x-m.field>
+
+            @if ($this->impact)
+                <x-m.callout tone="info" icon="arrow-uturn-left">
+                    Dû à l'agent (dettes fournisseurs) : {{ \App\Support\Mobile\Fcfa::format($this->impact['du_avant']) }} → {{ \App\Support\Mobile\Fcfa::format($this->impact['du_apres']) }}. Sa dette d'achats d'UV ne change pas.
+                </x-m.callout>
+            @endif
+        @endif
+
+        <x-m.field :label="$this->isRetour ? 'Montant d\'UV retourné' : 'Montant'" :error="$errors->first('amount')">
             <x-m.money model="amount" :quick="['500 000' => 500000, '1 000 000' => 1000000, '3 000 000' => 3000000, '5 000 000' => 5000000]" />
         </x-m.field>
 
@@ -32,7 +44,7 @@
 
         <div class="m-submit">
             <button type="submit" class="m-btn" wire:loading.attr="disabled" wire:target="save">
-                <span wire:loading.remove wire:target="save">Enregistrer l'approvisionnement</span>
+                <span wire:loading.remove wire:target="save">{{ $this->isRetour ? 'Enregistrer le retour' : 'Enregistrer l\'approvisionnement' }}</span>
                 <span wire:loading wire:target="save" class="m-spin" role="status" aria-label="Chargement en cours"></span>
             </button>
         </div>

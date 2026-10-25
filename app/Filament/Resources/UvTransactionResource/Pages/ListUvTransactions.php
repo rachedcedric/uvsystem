@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UvTransactionResource\Pages;
 
 use App\Exports\UvTransactionsExport;
+use App\Filament\Actions\ExportPeriodAction;
 use App\Filament\Resources\UvTransactionResource;
 use App\Filament\Widgets\Top5AgentsTodayWidget;
 use App\Filament\Widgets\VentesUvStatsWidget;
@@ -37,6 +38,7 @@ class ListUvTransactions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ExportPeriodAction::make('ventes'),
             Actions\CreateAction::make()
                 ->label('Nouvelle Vente UV')
                 ->icon('heroicon-o-plus-circle'),

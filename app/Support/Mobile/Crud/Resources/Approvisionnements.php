@@ -48,7 +48,7 @@ class Approvisionnements extends MobileResource
     public static function fields(): array
     {
         return [
-            Field::select('fournisseur_id', 'Fournisseur', fn () => Fournisseur::orderBy('name')->pluck('name', 'id')->all())->required(),
+            Field::select('fournisseur_id', 'Fournisseur', fn () => Fournisseur::approvisionnables()->orderBy('name')->pluck('name', 'id')->all())->required(),
             Field::money('amount', 'Montant (FCFA)')->required()->min(1),
             Field::datetime('date_approvisionnement', 'Date et heure')->required(),
             Field::textarea('notes', 'Notes'),

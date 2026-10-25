@@ -3,6 +3,7 @@
 namespace App\Tenancy;
 
 use App\Models\CaisseCategorie;
+use App\Models\Fournisseur;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Subscriptions\SubscriptionAccessPolicy;
@@ -56,6 +57,7 @@ class TenantProvisioner
             CaisseCategorie::create(['name' => $name, 'sort_order' => $i + 1, 'is_active' => true, 'is_system' => false]);
         }
         CaisseCategorie::create(['name' => self::CAISSE_SYSTEM, 'sort_order' => 999, 'is_active' => true, 'is_system' => true]);
+        Fournisseur::retourAgent();
     }
 
     /** @param  array{name: string, email: string, password?: string, password_hash?: string}  $admin */

@@ -31,12 +31,14 @@ class FournisseurPolicy
 
     public function update(User $user, Fournisseur $fournisseur): bool
     {
-        return $user->can('edit_fournisseurs');
+        // « Retour Agent » et les comptes d'agents sont des entrées système (type « Agent ») : ni renommées ni changées de type.
+        return $user->can('edit_fournisseurs') && ! $fournisseur->isSystemAgentEntry();
     }
 
     public function delete(User $user, Fournisseur $fournisseur): bool
     {
-        return $user->can('delete_fournisseurs');
+        // Les entrées « Agent » portent l'historique et la dette des retours d'UV : jamais supprimées.
+        return $user->can('delete_fournisseurs') && ! $fournisseur->isSystemAgentEntry();
     }
 
     public function deleteAny(User $user): bool

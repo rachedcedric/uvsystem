@@ -2100,6 +2100,7 @@ body:has(.m-offline[data-show]) .m-appbar {
 
 .m-row__sub--detail {
     color: var(--fg-2);
+    white-space: normal;
 }
 
 .m-diagnostic__hint {
@@ -2371,3 +2372,17 @@ body:has(.m-offline[data-show]) .m-appbar {
     width: auto;
     padding: 0 18px;
 }
+
+/* ------------------------------------------------ rapports, dettes signées (Rapports et exports, historique) */
+/* Couleur d'un montant signé : dette (rouge), crédit / découvert (vert). Le signe « − » reste toujours affiché. */
+.m-tone-danger { color: var(--danger); }
+.m-tone-ok { color: var(--ok); }
+.m-stat--wide { grid-column: span 2; }
+.m-space-top { margin-top: 12px; }
+.m-space-top-sm { margin-top: 8px; }
+.m-block { display: block; }
+/* Bloc « Période personnalisée » des feuilles d'export : dates puis boutons, sur toute la largeur. */
+.m-export--range { flex-direction: column; align-items: stretch; gap: 8px; }
+.m-export--range .m-quick { display: flex; gap: 8px; }
+.m-export--range a[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+.m-export__info span.m-text-danger { color: var(--danger); }

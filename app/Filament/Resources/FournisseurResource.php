@@ -40,10 +40,7 @@ class FournisseurResource extends Resource
 
                         Forms\Components\Select::make('type')
                             ->label('Type de fournisseur')
-                            ->options([
-                                'AGENT_PREMIUM' => 'Agent Premium',
-                                'BANQUE' => 'Banque',
-                            ])
+                            ->options(Fournisseur::SELECTABLE_TYPES)
                             ->required()
                             ->native(false)
                             ->default('BANQUE'),
@@ -101,13 +98,10 @@ class FournisseurResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'AGENT_PREMIUM' => 'success',
                         'BANQUE' => 'primary',
+                        'AGENT' => 'warning',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'AGENT_PREMIUM' => 'Agent Premium',
-                        'BANQUE' => 'Banque',
-                        default => $state,
-                    }),
+                    ->formatStateUsing(fn (string $state): string => Fournisseur::TYPE_LABELS[$state] ?? $state),
 
                 Tables\Columns\TextColumn::make('contact')
                     ->label('Téléphone')
@@ -144,10 +138,7 @@ class FournisseurResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
                     ->label('Type')
-                    ->options([
-                        'AGENT_PREMIUM' => 'Agent Premium',
-                        'BANQUE' => 'Banque',
-                    ]),
+                    ->options(Fournisseur::TYPE_LABELS),
 
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Status')
@@ -159,9 +150,11 @@ class FournisseurResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make()->label('Voir la fiche'),
+                    Tables\Actions\EditAction::make()->label('Modifier'),
+                    Tables\Actions\DeleteAction::make()->label('Supprimer'),
+                ])->tooltip('Actions'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -185,6 +178,7 @@ class FournisseurResource extends Resource
         return [
             'index' => Pages\ListFournisseurs::route('/'),
             'create' => Pages\CreateFournisseur::route('/create'),
+            'view' => Pages\ViewFournisseur::route('/{record}'),
             'edit' => Pages\EditFournisseur::route('/{record}/edit'),
         ];
     }

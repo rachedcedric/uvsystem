@@ -79,10 +79,12 @@ class Index extends Component
             $service = app(FournisseurDebtService::class);
             $term = trim($this->search);
 
+            $soldes = $service->soldesParFournisseur();
+            // Dettes d'abord (plus grosse en tête), puis comptes équilibrés, puis découverts (plus grosse avance en dernier).
             $rows = Fournisseur::query()->creditFournisseurs()->where('is_active', true)
                 ->when($term !== '', fn (Builder $q) => $q->where('name', 'like', "%{$term}%"))
                 ->orderBy('name')->get()
-                ->map(fn (Fournisseur $f) => ['model' => $f, 'reste' => $service->detteRestante($f)])
+                ->map(fn (Fournisseur $f) => ['model' => $f, 'reste' => (float) ($soldes[$f->id]['solde'] ?? 0)])
                 ->sortByDesc('reste')->values();
 
             return view('livewire.mobile.dettes.index', $data + [

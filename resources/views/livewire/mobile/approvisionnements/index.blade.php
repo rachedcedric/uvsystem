@@ -3,6 +3,8 @@
 
     <x-m.period-dashboard module="approvisionnements" :summary="$stats" :yesterday="$yesterday" :daily="$daily" :trend="$trend" noun="approvisionnement" nouns="approvisionnements" :can-export="$canExport" />
 
+    <a href="{{ route('m.rapports', ['c' => 'retours_agents']) }}" wire:navigate class="m-more">Historique des retours agents</a>
+
     <x-m.chips model="period" :current="$period"
                :options="['today' => 'Aujourd\'hui', 'week' => '7 jours', 'month' => 'Ce mois', 'all' => 'Tout']" />
 

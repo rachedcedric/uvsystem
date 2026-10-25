@@ -56,7 +56,7 @@ class Fournisseurs extends MobileResource
 
     public static function filters(): array
     {
-        return ['all' => 'Tous', 'BANQUE' => 'Banques', 'AGENT_PREMIUM' => 'Agents premium', 'inactive' => 'Inactifs'];
+        return ['all' => 'Tous', 'BANQUE' => 'Banques', 'AGENT_PREMIUM' => 'Agents premium', 'AGENT' => 'Retour agent', 'inactive' => 'Inactifs'];
     }
 
     public static function applyFilter(Builder $query, string $filter): Builder
@@ -86,7 +86,7 @@ class Fournisseurs extends MobileResource
     {
         return [
             'title' => $record->name,
-            'sub' => collect([self::TYPES[$record->type] ?? $record->type, $record->contact])->filter()->implode(' · '),
+            'sub' => collect([$record->typeLabel(), $record->contact])->filter()->implode(' · '),
             'badge' => $record->is_active ? null : 'Inactif',
         ];
     }
@@ -94,17 +94,19 @@ class Fournisseurs extends MobileResource
     public static function details(Model $record): array
     {
         $debt = [];
-        if ($record->type === 'AGENT_PREMIUM') {
-            $totals = app(FournisseurDebtService::class)->soldeTotals($record);
+        if ($record->isCreditFournisseur()) {
+            $s = app(FournisseurDebtService::class)->situation($record);
             $debt = [
-                'Total à crédit' => Fcfa::format($totals['distribue']),
-                'Déjà payé' => Fcfa::format($totals['rembourse']),
-                'Reste à payer' => Fcfa::format($totals['distribue'] - $totals['rembourse']),
+                'Total à crédit' => Fcfa::format($s['total_credit']),
+                'Déjà payé' => Fcfa::format($s['total_rembourse']),
+                'Reste à payer' => Fcfa::format($s['dette']),
+                'Découvert' => Fcfa::format($s['decouvert']),
+                'Solde net' => Fcfa::format($s['solde']).' ('.$s['statut_label'].')',
             ];
         }
 
         return $debt + [
-            'Type' => self::TYPES[$record->type] ?? (string) $record->type,
+            'Type' => $record->typeLabel(),
             'Statut' => $record->is_active ? 'Actif' : 'Inactif',
             'Téléphone' => (string) $record->contact,
             'E-mail' => (string) $record->email,

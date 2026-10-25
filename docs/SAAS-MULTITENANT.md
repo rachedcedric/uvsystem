@@ -114,13 +114,12 @@ L'APK n'a pas besoin d'être reconstruit : tout est côté serveur.
 | Population | Règle |
 |---|---|
 | Tout utilisateur qui a activé la 2FA | Code exigé à chaque nouvelle session sur `/master`, `/agent`, `/platform`, `/m` (y compris actions Livewire) et à la connexion API (`otp`). Option « faire confiance à cet appareil » 30 jours (liée au secret : réinitialiser la 2FA invalide les appareils) |
-| `master`, `admin` | Bandeau de rappel tant que `SECURITY_2FA_ENFORCE_FROM` est vide ou dans le futur ; **obligatoire** (redirection vers l'activation) à partir de cette date |
+| `master`, `admin`, `comptable`, `commercial`, `lecture_seule` | **Facultative** : activable dans les paramètres de sécurité, sans bandeau ni échéance. Une obligation ne peut être rétablie qu'en listant le rôle dans `security.authentication.2fa_required_for_roles` (vide par défaut), avec `SECURITY_2FA_ENFORCE_FROM` |
 | `super_admin` | Toujours obligatoire, sans délai |
-| `comptable`, `commercial` | Facultative |
 
 Garde-fous : codes jamais rejouables, 5 essais / 5 min par compte et IP, codes de récupération à usage unique, désactivation = mot de passe requis et refusée si le rôle impose la 2FA, page d'activation autonome `/security/2fa` toujours accessible (aucun verrouillage sans issue), `SECURITY_2FA_ENABLED=false` coupe tout en urgence.
 
-**Déploiement progressif recommandé** : 1) déployer sans `SECURITY_2FA_ENFORCE_FROM` (rappel seulement) ; 2) quand les `master`/`admin` ont activé leur 2FA, fixer par exemple `SECURITY_2FA_ENFORCE_FROM=2026-11-15` dans `.env` puis `php artisan config:clear` ; 3) en cas de téléphone perdu : le super admin utilise « Réinitialiser la 2FA » sur l'utilisateur dans `/platform`, ou `php artisan platform:2fa-reset email@…` (le seul moyen pour le super admin lui-même).
+**Téléphone perdu** : le super admin utilise « Réinitialiser la 2FA » sur l'utilisateur dans `/platform`, ou `php artisan platform:2fa-reset email@…` (le seul moyen pour le super admin lui-même).
 
 Le premier super admin doit activer sa 2FA dès sa première connexion à `/platform` (redirection automatique).
 

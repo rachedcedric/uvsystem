@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ShortReferenceGenerator;
 use App\Tenancy\BelongsToTenant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -37,14 +38,35 @@ class CaisseMouvement extends Model
         'date_mouvement',
     ];
 
+    /** Annulation : renseignée uniquement par CaisseService::annulerJournee(), jamais par un formulaire. */
     protected $casts = [
         'amount' => 'decimal:2',
         'date_mouvement' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
+
+    /** Nom du scope global qui écarte les mouvements annulés de tous les soldes, totaux, listes et exports. */
+    public const SCOPE_ACTIFS = 'actifs';
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    /** Mouvements annulés uniquement (consultation de l'historique des annulations). */
+    public function scopeAnnules(Builder $query): Builder
+    {
+        return $query->withoutGlobalScope(self::SCOPE_ACTIFS)->whereNotNull($query->qualifyColumn('cancelled_at'));
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->cancelled_at !== null;
     }
 
     public function categorie(): BelongsTo
@@ -55,6 +77,10 @@ class CaisseMouvement extends Model
     protected static function boot()
     {
         parent::boot();
+
+        // Un mouvement annulé ne compte plus nulle part (solde, totaux, catégories, listes, exports) ; il reste
+        // consultable via annules() et le journal d'activité.
+        static::addGlobalScope(self::SCOPE_ACTIFS, fn (Builder $query) => $query->whereNull($query->qualifyColumn('cancelled_at')));
 
         static::creating(function (self $mouvement) {
             if (! $mouvement->reference) {

@@ -24,11 +24,13 @@ return [
 
         // Authentification à deux facteurs (2FA)
         '2fa_enabled' => env('SECURITY_2FA_ENABLED', true),
-        '2fa_required_for_roles' => ['master', 'admin'],
+        // Rôles des entreprises pour lesquels la 2FA est OBLIGATOIRE. Vide : la 2FA est facultative pour tous les
+        // comptes des entreprises (master compris) ; chacun peut l'activer dans ses paramètres de sécurité, et une
+        // 2FA déjà activée reste exigée à chaque connexion. Le super admin de plateforme y est toujours soumis.
+        '2fa_required_for_roles' => [],
 
         // Date (AAAA-MM-JJ) à partir de laquelle les rôles ci-dessus DOIVENT avoir activé la 2FA pour
-        // continuer. Avant cette date (ou si vide) : simple bandeau de rappel, personne n'est bloqué.
-        // Le super admin de plateforme est toujours soumis à la 2FA, sans délai.
+        // continuer. Sans effet tant que la liste des rôles est vide.
         '2fa_enforce_from' => env('SECURITY_2FA_ENFORCE_FROM'),
 
         // Durée pendant laquelle un appareil « de confiance » ne redemande pas le code (jours).

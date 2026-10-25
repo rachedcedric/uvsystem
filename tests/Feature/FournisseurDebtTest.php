@@ -90,12 +90,21 @@ describe('FournisseurDebtService — single source of truth', function () {
             ->and(app(FournisseurDebtService::class)->detteRestante($fournisseur->fresh()))->toBe(300_000.0);
     });
 
-    it('rejects a repayment exceeding the remaining debt', function () {
+    it('accepts a repayment exceeding the remaining debt as a signed supplier overdraft', function () {
         $fournisseur = creditFournisseur();
         $admin = fournisseurDebtAdmin();
         approvisionnerFournisseur($fournisseur, $admin, 100_000);
+        $this->actingAs($admin);
 
-        expect(fn () => app(FournisseurDebtService::class)->process($fournisseur, 150_000, 'cash'))
+        app(FournisseurDebtService::class)->process($fournisseur, 150_000, 'cash');
+
+        expect(app(FournisseurDebtService::class)->detteRestante($fournisseur->fresh()))->toBe(-50_000.0);
+    });
+
+    it('still rejects a zero or negative repayment', function () {
+        $fournisseur = creditFournisseur();
+
+        expect(fn () => app(FournisseurDebtService::class)->process($fournisseur, 0, 'cash'))
             ->toThrow(ValidationException::class);
     });
 

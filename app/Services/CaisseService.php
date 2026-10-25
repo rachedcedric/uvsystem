@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
+use App\Tenancy\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -352,6 +354,107 @@ class CaisseService
         }
 
         return $map;
+    }
+
+    /** Mouvements annulés d'une journée (consultation de l'historique), dans l'ordre chronologique. */
+    public function mouvementsAnnulesQuery(Carbon $businessDate): Builder
+    {
+        $b = $this->periods->bounds($businessDate);
+
+        return CaisseMouvement::query()->annules()
+            ->where('date_mouvement', '>=', $b['start'])
+            ->where('date_mouvement', '<', $b['end'])
+            ->orderBy('date_mouvement')->orderBy('id');
+    }
+
+    /**
+     * « Supprimer les mouvements de cette journée » : ANNULATION LOGIQUE de tous les mouvements actifs de la journée
+     * (jamais de suppression physique). Chaque ligne garde sa référence, son auteur et sa date d'origine, et reçoit la
+     * date, l'auteur, le motif et le lot d'annulation ; elle sort de tous les soldes (scope « actifs »).
+     *
+     * Confirmation renforcée : la date doit être ressaisie (JJ/MM/AAAA) et un motif est obligatoire. Un verrou par
+     * entreprise et par journée, puis un verrou sur les lignes, empêchent deux annulations simultanées ; une journée
+     * déjà annulée est refusée. Les journées de caisse sont indépendantes (le solde repart à zéro à minuit) : annuler
+     * une journée ne modifie aucune autre journée. Les mouvements déjà annulés sont exclus et signalés.
+     *
+     * @return array{batch: string, count: int, entrees: string, sorties: string, references: list<string>, exclus: int}
+     *
+     * @throws ValidationException
+     */
+    public function annulerJournee(Carbon $businessDate, string $reason, string $confirmation): array
+    {
+        $day = $businessDate->copy()->startOfDay();
+        $reason = trim($reason);
+        $expected = $day->format('d/m/Y');
+
+        if ($day->greaterThan($this->periods->currentDate())) {
+            throw ValidationException::withMessages(['date' => 'Impossible d\'annuler une journée future.']);
+        }
+
+        if (trim($confirmation) !== $expected) {
+            throw ValidationException::withMessages(['confirmation' => "Saisissez la date {$expected} pour confirmer l'annulation."]);
+        }
+
+        if (mb_strlen($reason) < 3 || mb_strlen($reason) > 500) {
+            throw ValidationException::withMessages(['reason' => 'Indiquez le motif de l\'annulation (3 à 500 caractères).']);
+        }
+
+        $lock = Cache::lock('caisse:annulation:'.(TenantContext::id() ?? 0).':'.$day->toDateString(), 30);
+
+        if (! $lock->get()) {
+            throw ValidationException::withMessages(['date' => 'Une annulation de cette journée est déjà en cours.']);
+        }
+
+        try {
+            return DB::transaction(function () use ($day, $reason, $expected) {
+                $mouvements = $this->mouvementsQuery($day)->orderBy('date_mouvement')->orderBy('id')->lockForUpdate()->get();
+
+                if ($mouvements->isEmpty()) {
+                    throw ValidationException::withMessages(['date' => "Aucun mouvement actif à annuler le {$expected} (journée vide ou déjà annulée)."]);
+                }
+
+                $batch = (string) Str::uuid();
+                $totaux = $this->accumulate($mouvements);
+                $exclus = $this->mouvementsAnnulesQuery($day)->count();
+                $now = now();
+
+                foreach ($mouvements as $mouvement) {
+                    $mouvement->forceFill([
+                        'cancelled_at' => $now,
+                        'cancelled_by' => Auth::id(),
+                        'cancellation_reason' => $reason,
+                        'cancellation_batch' => $batch,
+                    ])->saveQuietly();
+                }
+
+                activity('caisse')
+                    ->causedBy(Auth::user())
+                    ->event('day_cancelled')
+                    ->withProperties([
+                        'journee' => $day->toDateString(),
+                        'lot' => $batch,
+                        'motif' => $reason,
+                        'nombre' => $totaux['count'],
+                        'entrees' => (float) $totaux['entrees'],
+                        'sorties' => (float) $totaux['sorties'],
+                        'solde' => (float) $totaux['solde'],
+                        'references' => $mouvements->pluck('reference')->all(),
+                        'deja_annules_exclus' => $exclus,
+                    ])
+                    ->log("Mouvements de caisse du {$expected} annulés ({$totaux['count']})");
+
+                return [
+                    'batch' => $batch,
+                    'count' => $totaux['count'],
+                    'entrees' => $totaux['entrees'],
+                    'sorties' => $totaux['sorties'],
+                    'references' => $mouvements->pluck('reference')->all(),
+                    'exclus' => $exclus,
+                ];
+            });
+        } finally {
+            $lock->release();
+        }
     }
 
     public function soldeAujourdhui(): string

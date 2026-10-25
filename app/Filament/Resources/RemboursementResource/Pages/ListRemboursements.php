@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\RemboursementResource\Pages;
 
 use App\Exports\RemboursementsExport;
+use App\Filament\Actions\ExportPeriodAction;
 use App\Filament\Resources\RemboursementResource;
 use App\Filament\Widgets\RemboursementsStatsWidget;
 use App\Models\Agent;
@@ -30,6 +31,7 @@ class ListRemboursements extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            ExportPeriodAction::make('remboursements'),
             Actions\CreateAction::make()
                 ->label('Nouveau Remboursement')
                 ->icon('heroicon-o-plus-circle'),

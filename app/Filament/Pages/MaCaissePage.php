@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Actions\ExportPeriodAction;
 use App\Filament\Resources\CaisseCategorieResource;
 use App\Models\CaisseCategorie;
 use App\Models\CaisseMouvement;
@@ -220,6 +221,7 @@ class MaCaissePage extends Page
     protected function getHeaderActions(): array
     {
         return [
+            ExportPeriodAction::make('mouvements'),
             Action::make('add')
                 ->label('Ajouter un mouvement')
                 ->icon('heroicon-o-plus')

@@ -2,65 +2,94 @@
 
 namespace App\Livewire\Mobile\Analytics;
 
-use App\Models\Agent;
-use App\Models\PaymentMethod;
+use App\Livewire\Concerns\WithReportPeriod;
+use App\Services\Reports\DateRange;
+use App\Services\Reports\ReportCatalog;
+use App\Services\Reports\ReportDashboard;
+use App\Services\Reports\ReportPresenter;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
-/** Rapports & exports : choix des filtres puis téléchargement (PDF / Excel). */
+/**
+ * Rapports et exports (mobile) : tableau de bord de la période, puis une catégorie (ventes, approvisionnements,
+ * remboursements, commissions, dettes, crédits et découverts, retours agents, mouvements…) avec ses opérations, sa
+ * recherche et ses exports PDF / Excel. Même catalogue, mêmes chiffres et mêmes exports que l'interface Web.
+ */
 #[Layout('components.layouts.mobile')]
 #[Title('Rapports et exports')]
 class Reports extends Component
 {
-    public string $report = 'transactions';
+    use WithReportPeriod;
 
-    // Transactions / remboursements
-    public ?int $agentId = null;
+    public const PAGE = 30;
 
-    public string $from = '';
+    #[Url(as: 'c', except: '')]
+    public string $categorie = '';
 
-    public string $to = '';
+    #[Url(as: 'q', except: '')]
+    public string $q = '';
 
-    public string $type = '';
-
-    public string $method = '';
-
-    // Situation des agents
-    public string $status = '';
-
-    public bool $withDebtOnly = false;
+    public int $limit = self::PAGE;
 
     public function mount(): void
     {
         abort_unless(auth()->user()->can('view_reports') || auth()->user()->can('export_reports'), 403);
+    }
 
-        $this->from = now()->startOfMonth()->toDateString();
-        $this->to = now()->toDateString();
+    public function updatedCategorie(): void
+    {
+        $this->q = '';
+        $this->limit = self::PAGE;
+    }
+
+    public function updatedQ(): void
+    {
+        $this->limit = self::PAGE;
+    }
+
+    public function loadMore(): void
+    {
+        $this->limit += self::PAGE;
+    }
+
+    public function resetFilters(): void
+    {
+        $this->q = '';
+        $this->limit = self::PAGE;
     }
 
     public function render()
     {
-        $params = array_filter([
-            'agent' => $this->agentId,
-            'from' => $this->from,
-            'to' => $this->to,
-            'type' => $this->report === 'transactions' ? $this->type : null,
-            'method' => $this->report === 'remboursements' ? $this->method : null,
-            'status' => $this->report === 'agents' ? $this->status : null,
-            'debt' => $this->report === 'agents' && $this->withDebtOnly ? 1 : null,
-        ], fn ($v) => $v !== null && $v !== '');
+        $user = auth()->user();
+        $catalog = app(ReportCatalog::class);
+        $categories = $catalog->for($user);
+        [$range, $error] = $this->resolveRange();
+        $category = $categories[$this->categorie] ?? null;
+        $data = [
+            'categories' => $categories,
+            'category' => $category,
+            'range' => $range,
+            'error' => $error,
+            'canExport' => $user->can('export_reports') || $user->hasAnyRole(['master', 'admin']),
+            'presets' => DateRange::PRESETS,
+        ];
 
-        if ($this->report === 'agents') {
-            unset($params['agent'], $params['from'], $params['to']);
+        if ($range && $category) {
+            $filters = array_filter(['q' => trim($this->q)]);
+            $rows = $category->rows($range, $filters, $this->limit + 1);
+
+            return view('livewire.mobile.analytics.reports', $data + [
+                'summary' => $category->summary($range, $filters),
+                'rows' => $rows->take($this->limit)->map(fn (array $row) => ReportPresenter::mobile($row, $category->columns(), $category->label()) + ['raw' => $row['raw'] ?? null]),
+                'hasMore' => $rows->count() > $this->limit,
+                'exportQuery' => $range->toQuery() + $filters,
+            ]);
         }
 
-        return view('livewire.mobile.analytics.reports', [
-            'agents' => Agent::orderBy('name')->get(['id', 'name', 'phone', 'current_debt']),
-            'selectedAgent' => $this->agentId ? Agent::find($this->agentId) : null,
-            'methods' => PaymentMethod::getActiveOptions(),
-            'params' => $params,
-            'canExport' => auth()->user()->can('export_reports'),
+        return view('livewire.mobile.analytics.reports', $data + [
+            'tiles' => $range ? app(ReportDashboard::class)->tiles($range, $user) : [],
         ]);
     }
 }
